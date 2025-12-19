@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#f97316">
+  <meta name="description" content="HablaConmigo - 免费AI西班牙语口语练习">
+  <title>HablaConmigo - 西语口语助手</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇪🇸</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body, #app { height: 100%; margin: 0; overflow: hidden; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+    .mic-recording { position: relative; }
+    .mic-recording::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; background: rgba(239,68,68,0.3); animation: pulse-ring 1.5s ease-out infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(-25%); } 50% { transform: translateY(0); } }
+    .animate-bounce { animation: bounce 0.6s infinite; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+    input, button, textarea { font-size: 16px !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  
+  <script>
+    // ==================== 配置 ====================
+    const TUTORS = {
+      maria: {
+        id: 'maria', name: 'María', avatar: '👩🏻',
+        role: '温柔老师', roleEs: 'Profesora amable',
+        description: '来自马德里，耐心细致，擅长纠正语法',
+        color: 'from-pink-500 to-rose-500',
+        greeting: '¡Hola! Soy María, tu profesora de español. ¿Cómo te llamas? ¿Qué te gustaría practicar hoy?',
+        prompt: `Eres María, una profesora de español de Madrid, amable y paciente.
+- Hablas de forma cálida y animas al estudiante
+- Corriges los errores gramaticales de forma natural
+- Cuando encuentres un error, márcalo así: 【纠正】frase original → forma correcta (explicación breve en chino)
+- Responde en español, puedes añadir (traducción china) para palabras importantes
+- Respuestas cortas y naturales, 2-4 frases`
+      },
+      carlos: {
+        id: 'carlos', name: 'Carlos', avatar: '👨🏻',
+        role: '健谈朋友', roleEs: 'Amigo hablador',
+        description: '巴塞罗那小伙，热情开朗，聊足球美食',
+        color: 'from-blue-500 to-indigo-500',
+        greeting: '¡Ey, qué tal! Soy Carlos, de Barcelona. ¿Qué pasa, tío? ¿De qué quieres hablar?',
+        prompt: `Eres Carlos, un chico de 25 años de Barcelona.
+- Eres alegre y hablas de forma informal, como un amigo
+- Te gusta el fútbol (fan del Barça), la comida y viajar
+- Usas expresiones coloquiales y jerga juvenil
+- Cuando encuentres un error: 【纠正】frase → corrección (explicación en chino)
+- Respuestas cortas y divertidas`
+      },
+      sofia: {
+        id: 'sofia', name: 'Sofía', avatar: '👩🏽',
+        role: '浪漫伴侣', roleEs: 'Pareja romántica',
+        description: '墨西哥女孩，温柔浪漫，分享生活',
+        color: 'from-purple-500 to-fuchsia-500',
+        greeting: '¡Hola, cariño! Soy Sofía, de México. ¡Qué alegría conocerte! ¿Cómo estás hoy?',
+        prompt: `Eres Sofía, una chica dulce de México.
+- Hablas de forma cariñosa, usando palabras como "cariño", "mi amor"
+- Compartes sobre la cultura, comida y música mexicana
+- Usas español latinoamericano
+- Cuando encuentres un error: 【纠正】frase → corrección (explicación en chino)
+- Respuestas cálidas y naturales`
+      },
+      profesor: {
+        id: 'profesor', name: 'Prof. García', avatar: '👨🏻‍🏫',
+        role: '严格教授', roleEs: 'Profesor estricto',
+        description: '大学教授，学术严谨，专注语法',
+        color: 'from-gray-600 to-gray-800',
+        greeting: 'Buenos días. Soy el Profesor García. ¿Cuál es su nivel de español? Empecemos nuestra clase.',
+        prompt: `Eres el Profesor García, un profesor universitario de español muy riguroso.
+- Hablas de forma formal y académica
+- Prestas mucha atención a la gramática y explicas las reglas en detalle
+- Usa 【语法点】para marcar puntos gramaticales importantes
+- Usa 【纠正】para TODOS los errores con explicación detallada en chino
+- Exiges respuestas en oraciones completas`
+      }
+    };
+
+    const SCENARIOS = [
+      { id: 'free', icon: '💬', name: '自由聊天', nameEs: 'Charla libre' },
+      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería' },
+      { id: 'travel', icon: '✈️', name: '旅行出行', nameEs: 'De viaje' },
+      { id: 'shopping', icon: '🛍️', name: '购物', nameEs: 'De compras' },
+      { id: 'restaurant', icon: '🍽️', name: '餐厅', nameEs: 'En el restaurante' },
+      { id: 'work', icon: '💼', name: '工作场景', nameEs: 'En el trabajo' },
+    ];
+
+    const LEVELS = ['A1', 'A2', 'B1', 'B2'];
+
+    // ==================== 状态 ====================
+    let state = {
+      view: 'welcome',
+      level: 'A2',
+      tutor: null,
+      scenario: null,
+      messages: [],
+      inputText: '',
+      isLoading: false,
+      isListening: false,
+      corrections: 0
+    };
+
+    let recognition = null;
+
+    // ==================== 工具函数 ====================
+    function $(sel) { return document.querySelector(sel); }
+    
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+        const clean = text.replace(/【.+?】/g, '');
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = 'es-ES';
+        u.rate = 0.85;
+        speechSynthesis.speak(u);
+      }
+    }
+
+    function initSpeechRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+      
+      const r = new SR();
+      r.continuous = true;
+      r.interimResults = true;
+      r.lang = 'es-ES';
+      
+      r.onresult = (e) => {
+        let final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        }
+        if (final) {
+          state.inputText += final;
+          render();
+        }
+      };
+      
+      r.onerror = (e) => {
+        console.log('Speech error:', e.error);
+        if (e.error === 'not-allowed') {
+          alert('请允许麦克风权限以使用语音输入');
+        }
+        state.isListening = false;
+        render();
+      };
+      
+      r.onend = () => {
+        if (state.isListening) {
+          try { r.start(); } catch(e) {}
+        }
+      };
+      
+      return r;
+    }
+
+    function toggleListening() {
+      if (!recognition) recognition = initSpeechRecognition();
+      if (!recognition) {
+        alert('您的浏览器不支持语音识别，请使用Chrome浏览器');
+        return;
+      }
+      
+      state.isListening = !state.isListening;
+      if (state.isListening) {
+        try { recognition.start(); } catch(e) {}
+      } else {
+        try { recognition.stop(); } catch(e) {}
+      }
+      render();
+    }
+
+    async function callAPI(userMessage) {
+      const systemPrompt = `${state.tutor.prompt}
+
+Contexto de la conversación: ${state.scenario?.nameEs || 'Charla libre'}
+Nivel del estudiante: ${state.level}
+
+IMPORTANTE:
+1. Responde SOLO en español
+2. Ajusta la dificultad según el nivel ${state.level}
+3. Entiende y responde al contenido del estudiante, no solo hagas preguntas
+4. Marca errores con formato 【纠正】
+5. Respuestas breves y naturales, 2-4 frases`;
+
+      const history = state.messages.map(m => ({
+        role: m.type === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system: systemPrompt,
+            messages: [...history, { role: 'user', content: userMessage }]
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || '请求失败');
+        }
+
+        const data = await res.json();
+        const text = data.content?.[0]?.text || '抱歉，请重试。';
+        
+        const match = text.match(/【纠正】(.+?)(?=\n|$)/s);
+        return {
+          response: text.replace(/【纠正】.+?(?=\n|$)/gs, '').trim(),
+          correction: match ? match[1].trim() : null
+        };
+      } catch (err) {
+        console.error('API Error:', err);
+        return { response: '连接出错，请重试: ' + err.message, correction: null };
+      }
+    }
+
+    async function sendMessage() {
+      const text = state.inputText.trim();
+      if (!text || state.isLoading) return;
+      
+      // 停止录音
+      state.isListening = false;
+      if (recognition) try { recognition.stop(); } catch(e) {}
+      
+      state.inputText = '';
+      state.messages.push({ id: Date.now(), type: 'user', text });
+      state.isLoading = true;
+      render();
+      scrollToBottom();
+      
+      const { response, correction } = await callAPI(text);
+      
+      state.messages.push({ 
+        id: Date.now() + 1, 
+        type: 'ai', 
+        text: response,
+        correction 
+      });
+      
+      if (correction) state.corrections++;
+      state.isLoading = false;
+      render();
+      scrollToBottom();
+      speak(response);
+    }
+
+    function startChat(tutor, scenario) {
+      state.tutor = tutor;
+      state.scenario = scenario;
+      state.messages = [];
+      state.corrections = 0;
+      state.view = 'chat';
+      
+      setTimeout(() => {
+        state.messages = [{ id: 1, type: 'ai', text: tutor.greeting }];
+        render();
+        scrollToBottom();
+        speak(tutor.greeting);
+      }, 300);
+      
+      render();
+    }
+
+    function scrollToBottom() {
+      setTimeout(() => {
+        const container = document.getElementById('messages');
+        if (container) container.scrollTop = container.scrollHeight;
+      }, 100);
+    }
+
+    // ==================== 渲染 ====================
+    function render() {
+      const app = document.getElementById('app');
+      
+      if (state.view === 'welcome') {
+        app.innerHTML = renderWelcome();
+      } else if (state.view === 'level') {
+        app.innerHTML = renderLevel();
+      } else if (state.view === 'tutor') {
+        app.innerHTML = renderTutor();
+      } else if (state.view === 'scenario') {
+        app.innerHTML = renderScenario();
+      } else if (state.view === 'chat') {
+        app.innerHTML = renderChat();
+      }
+    }
+
+    function renderWelcome() {
+      return `
+        <div class="h-full bg-gradient-to-br from-orange-500 via-red-500 to-yellow-500 flex flex-col items-center justify-center p-6 text-center">
+          <div class="text-7xl mb-4">🇪🇸</div>
+          <h1 class="text-4xl font-bold text-white mb-2">¡Hola!</h1>
+          <h2 class="text-xl text-white/90 mb-2">HablaConmigo</h2>
+          <p class="text-white/80 mb-6 max-w-xs">与AI伙伴真实对话<br>语音输入 · 智能纠错 · 完全免费</p>
+          
+          <button onclick="state.view='level';render()" class="bg-white text-orange-600 font-bold py-4 px-10 rounded-full text-lg shadow-xl hover:scale-105 active:scale-95 transition-transform">
+            开始学习 →
+          </button>
+          
+          <div class="mt-8 grid grid-cols-3 gap-6 text-white/80 text-sm">
+            <div class="text-center"><div class="text-2xl mb-1">🎤</div>语音输入</div>
+            <div class="text-center"><div class="text-2xl mb-1">🎭</div>4种角色</div>
+            <div class="text-center"><div class="text-2xl mb-1">✏️</div>实时纠错</div>
+          </div>
+          
+          <div class="mt-6 text-white/50 text-xs">完全免费 · 无需注册 · 推荐Chrome</div>
+        </div>
+      `;
+    }
+
+    function renderLevel() {
+      return `
+        <div class="h-full bg-gray-50 p-5 overflow-auto">
+          <div class="max-w-md mx-auto">
+            <button onclick="state.view='welcome';render()" class="text-gray-500 mb-4 text-sm">← 返回</button>
+            <h1 class="text-xl font-bold text-gray-800 mb-1">你的西语水平？</h1>
+            <p class="text-gray-500 text-sm mb-5">AI会根据水平调整难度</p>
+            
+            <div class="grid grid-cols-2 gap-3">
+              ${LEVELS.map(l => `
+                <button onclick="state.level='${l}';state.view='tutor';render()" class="p-4 rounded-xl border-2 transition-all ${state.level === l ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-orange-200'}">
+                  <div class="font-bold text-xl text-gray-800">${l}</div>
+                  <div class="text-xs text-gray-500">${l === 'A1' ? '入门' : l === 'A2' ? '基础' : l === 'B1' ? '中级' : '高级'}</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTutor() {
+      return `
+        <div class="h-full bg-gray-50 p-5 overflow-auto">
+          <div class="max-w-md mx-auto">
+            <button onclick="state.view='level';render()" class="text-gray-500 mb-4 text-sm">← 返回</button>
+            <h1 class="text-xl font-bold text-gray-800 mb-1">选择对话伙伴</h1>
+            <p class="text-gray-500 text-sm mb-5">不同角色有不同风格</p>
+            
+            <div class="space-y-3">
+              ${Object.values(TUTORS).map(t => `
+                <button onclick="state.tutor=TUTORS['${t.id}'];state.view='scenario';render()" class="w-full bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 hover:shadow-md active:scale-98 transition-all text-left">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center text-2xl">${t.avatar}</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-gray-800">${t.name}</div>
+                    <div class="text-xs text-orange-500">${t.role}</div>
+                    <div class="text-xs text-gray-400 truncate">${t.description}</div>
+                  </div>
+                  <div class="text-gray-300">→</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScenario() {
+      const t = state.tutor;
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r ${t.color} p-5 text-white">
+            <button onclick="state.view='tutor';render()" class="text-white/80 text-sm mb-3">← 返回</button>
+            <div class="flex items-center gap-3">
+              <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-3xl">${t.avatar}</div>
+              <div>
+                <div class="font-bold text-lg">${t.name}</div>
+                <div class="text-white/80 text-sm">${t.role}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-5">
+            <h3 class="text-gray-500 text-sm mb-3">选择场景</h3>
+            <div class="grid grid-cols-2 gap-3">
+              ${SCENARIOS.map(s => `
+                <button onclick="startChat(state.tutor, ${JSON.stringify(s).replace(/"/g, '&quot;')})" class="bg-white p-4 rounded-xl shadow-sm text-left hover:shadow-md active:scale-95 transition-all">
+                  <div class="text-2xl mb-1">${s.icon}</div>
+                  <div class="font-bold text-gray-800 text-sm">${s.name}</div>
+                  <div class="text-xs text-gray-400">${s.nameEs}</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="p-4 safe-bottom">
+            <button onclick="startChat(state.tutor, SCENARIOS[0])" class="w-full py-4 rounded-xl bg-gradient-to-r ${t.color} text-white font-bold shadow-lg active:scale-95 transition-transform">
+              🎤 直接开始对话
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChat() {
+      const t = state.tutor;
+      return `
+        <div class="h-full bg-gray-100 flex flex-col">
+          <!-- 顶栏 -->
+          <div class="bg-gradient-to-r ${t.color} text-white p-3 flex-shrink-0">
+            <div class="flex items-center justify-between max-w-lg mx-auto">
+              <button onclick="state.isListening=false;speechSynthesis.cancel();state.view='tutor';render()" class="text-white/80 text-sm">← 结束</button>
+              <div class="text-center">
+                <div class="font-bold text-sm">${t.avatar} ${t.name}</div>
+                <div class="text-xs text-white/70">${state.scenario?.name || '自由聊天'} · ${state.level}</div>
+              </div>
+              <div class="w-12"></div>
+            </div>
+          </div>
+          
+          <!-- 消息列表 -->
+          <div id="messages" class="flex-1 overflow-auto p-4 no-scrollbar">
+            <div class="max-w-lg mx-auto space-y-3">
+              ${state.messages.map(msg => `
+                <div class="flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}">
+                  <div class="max-w-[85%]">
+                    ${msg.type === 'ai' ? `<div class="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center text-sm mb-1">${t.avatar}</div>` : ''}
+                    <div onclick="${msg.type === 'ai' ? `speak('${msg.text.replace(/'/g, "\\'")}')` : ''}" class="p-3 rounded-2xl text-sm ${msg.type === 'user' ? 'bg-orange-500 text-white rounded-br-none' : 'bg-white shadow-sm rounded-bl-none cursor-pointer hover:bg-gray-50'}">
+                      ${msg.text}
+                      ${msg.type === 'ai' ? '<div class="text-xs text-blue-500 mt-1">🔊 点击朗读</div>' : ''}
+                    </div>
+                    ${msg.correction ? `
+                      <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
+                        <div class="font-medium text-yellow-800">✏️ 纠正</div>
+                        <div class="text-yellow-700 mt-1">${msg.correction}</div>
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              `).join('')}
+              
+              ${state.isLoading ? `
+                <div class="flex justify-start">
+                  <div class="bg-white p-3 rounded-2xl shadow-sm">
+                    <div class="flex gap-1">
+                      <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
+                      <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          
+          <!-- 纠正统计 -->
+          ${state.corrections > 0 ? `
+            <div class="bg-yellow-50 border-t border-yellow-100 py-1 text-center flex-shrink-0">
+              <span class="text-xs text-yellow-700">📝 已纠正 ${state.corrections} 处</span>
+            </div>
+          ` : ''}
+          
+          <!-- 输入区 -->
+          <div class="bg-white border-t p-3 flex-shrink-0 safe-bottom">
+            <div class="max-w-lg mx-auto">
+              <div class="flex gap-2 items-center">
+                <!-- 麦克风按钮 -->
+                <button onclick="toggleListening()" class="relative w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.isListening ? 'bg-red-500 text-white mic-recording' : 'bg-gray-100 hover:bg-gray-200'}">
+                  ${state.isListening ? '⏹️' : '🎤'}
+                </button>
+                
+                <!-- 输入框 -->
+                <input 
+                  id="input"
+                  type="text" 
+                  value="${state.inputText.replace(/"/g, '&quot;')}" 
+                  placeholder="${state.isListening ? '🎙️ 正在听你说西班牙语...' : '输入西班牙语...'}"
+                  oninput="state.inputText=this.value"
+                  onkeydown="if(event.key==='Enter')sendMessage()"
+                  class="flex-1 p-3 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${state.isListening ? 'bg-red-50 border-2 border-red-200' : 'bg-gray-100'}"
+                >
+                
+                <!-- 发送按钮 -->
+                <button onclick="sendMessage()" class="w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.inputText.trim() && !state.isLoading ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-400'}">
+                  ➤
+                </button>
+              </div>
+              
+              <!-- 快捷短语 -->
+              <div class="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+                ${['¡Hola!', 'No entiendo', '¿Puedes repetir?', 'Más despacio', '¿Qué significa?'].map(p => `
+                  <button onclick="state.inputText='${p}';render()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs whitespace-nowrap hover:bg-orange-50 hover:text-orange-600">${p}</button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 启动
+    render();
+  </script>
+</body>
+</html>
