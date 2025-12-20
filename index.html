@@ -109,13 +109,18 @@
         personality: '耐心、温柔、鼓励',
         description: '来自马德里的西语老师，擅长纠正语法，对学生非常有耐心',
         color: 'from-pink-500 to-rose-500', colorLight: 'bg-pink-50',
+        // 语音参数：温柔女声，语速稍慢
+        voice: { pitch: 1.2, rate: 0.8 },
         greeting: '¡Hola, {name}! Soy María, tu profesora de español. ¡Qué alegría conocerte! ¿Qué te gustaría practicar hoy?',
-        prompt: `Eres María, una profesora de español de Madrid, amable y muy paciente.
-- Hablas de forma cálida y siempre animas al estudiante
-- Corriges los errores gramaticales de forma natural y educativa
-- Cuando encuentres un error, usa el formato: 【纠正】"frase incorrecta" → "frase correcta" (explicación en chino)
-- Responde en español, añade (traducción china) para palabras difíciles según el nivel del estudiante
-- Mantén respuestas naturales de 2-4 frases`
+        prompt: `Eres María, una profesora de español de Madrid, amable y paciente.
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
+2. Habla de forma cálida y anima al estudiante
+3. Si hay errores gramaticales, usa este formato al FINAL:
+   【纠正】"错误" → "正确" (中文解释)
+4. Mantén respuestas cortas y naturales (2-3 frases)
+5. NO uses chino excepto dentro de 【纠正】`
       },
       carlos: {
         id: 'carlos', name: 'Carlos', avatar: '👨🏻', emoji: '⚽',
@@ -123,13 +128,17 @@
         personality: '热情、幽默、随性',
         description: '巴塞罗那的年轻人，热爱足球和美食，说话像朋友一样轻松',
         color: 'from-blue-500 to-indigo-500', colorLight: 'bg-blue-50',
+        // 语音参数：年轻男声，语速快
+        voice: { pitch: 0.9, rate: 1.0 },
         greeting: '¡Ey, qué tal, {name}! Soy Carlos, de Barcelona. ¿Qué pasa, tío? ¡Vamos a charlar!',
         prompt: `Eres Carlos, un chico de 25 años de Barcelona, amigable y divertido.
-- Hablas de forma informal y relajada, como un amigo
-- Te encanta el fútbol (fan del Barça), la comida y viajar
-- Usas expresiones coloquiales y jerga juvenil española
-- Cuando notes un error: 【纠正】"error" → "corrección" (explicación en chino)
-- Respuestas cortas y divertidas, como un chat entre amigos`
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
+2. Habla informal, como un amigo, usa "tío", "mola", "guay"
+3. Te encanta el fútbol (Barça), comida y viajar
+4. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+5. Respuestas cortas y divertidas, NO uses chino excepto en 【纠正】`
       },
       sofia: {
         id: 'sofia', name: 'Sofía', avatar: '👩🏽', emoji: '🌺',
@@ -137,13 +146,17 @@
         personality: '甜蜜、浪漫、关心',
         description: '来自墨西哥的女孩，温柔浪漫，喜欢分享拉美文化',
         color: 'from-purple-500 to-fuchsia-500', colorLight: 'bg-purple-50',
+        // 语音参数：甜美女声，语速适中
+        voice: { pitch: 1.3, rate: 0.85 },
         greeting: '¡Hola, cariño! Soy Sofía, de México. ¡Qué lindo conocerte, {name}! ¿Cómo estás hoy?',
         prompt: `Eres Sofía, una chica dulce y cariñosa de México.
-- Hablas de forma cálida y afectuosa, usando "cariño", "mi amor" ocasionalmente
-- Compartes sobre la cultura, comida y música mexicana y latinoamericana
-- Usas español latinoamericano con modismos mexicanos
-- Cuando notes un error: 【纠正】"error" → "corrección" (explicación en chino)
-- Respuestas cálidas y naturales, mostrando interés genuino`
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
+2. Habla cálida, usa "cariño", "mi amor" ocasionalmente
+3. Comparte cultura, comida y música mexicana/latinoamericana
+4. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+5. Respuestas cariñosas, NO uses chino excepto en 【纠正】`
       },
       profesor: {
         id: 'profesor', name: 'Prof. García', avatar: '👨🏻‍🏫', emoji: '📚',
@@ -151,13 +164,19 @@
         personality: '严谨、学术、权威',
         description: '大学西语教授，非常注重语法，适合想要严格学习的用户',
         color: 'from-slate-600 to-slate-800', colorLight: 'bg-slate-50',
+        // 语音参数：成熟男声，语速慢，正式
+        voice: { pitch: 0.8, rate: 0.75 },
         greeting: 'Buenos días, {name}. Soy el Profesor García. Estoy aquí para ayudarle a mejorar su español. ¿Comenzamos?',
         prompt: `Eres el Profesor García, un profesor universitario de español muy riguroso.
-- Hablas de forma formal y académica, usando "usted"
-- Prestas mucha atención a la gramática y explicas las reglas detalladamente
-- Usa 【语法】para explicar puntos gramaticales importantes
-- Usa 【纠正】para TODOS los errores con explicación detallada en chino
-- Exiges respuestas completas y bien estructuradas`
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
+2. Habla formal, usa "usted", tono académico
+3. Si hay errores gramaticales, usa al FINAL:
+   【纠正】"错误" → "正确" (解释detallada en chino)
+4. Para puntos gramaticales importantes, usa:
+   【语法】(explicación en chino)
+5. NO uses chino en tu respuesta principal, solo en 【纠正】y【语法】`
       }
     };
 
@@ -214,7 +233,37 @@
         const clean = text.replace(/【.+?】/g, '').replace(/\(.*?\)/g, '');
         const u = new SpeechSynthesisUtterance(clean);
         u.lang = 'es-ES';
-        u.rate = state.user?.speechRate || 0.85;
+        
+        // 获取用户设置的语速
+        const userRate = state.user?.speechRate || 0.85;
+        
+        // 根据角色调整语音参数
+        if (state.tutor && state.tutor.voice) {
+          u.pitch = state.tutor.voice.pitch || 1.0; // 音调
+          u.rate = userRate * (state.tutor.voice.rate || 1.0); // 语速 = 用户设置 × 角色系数
+        } else {
+          u.pitch = 1.0;
+          u.rate = userRate;
+        }
+        
+        // 尝试选择合适的西班牙语声音
+        const voices = speechSynthesis.getVoices();
+        const spanishVoices = voices.filter(v => v.lang.startsWith('es'));
+        
+        if (spanishVoices.length > 0) {
+          // 根据角色性别选择声音
+          if (state.tutor) {
+            const isFemale = ['maria', 'sofia'].includes(state.tutor.id);
+            const preferredVoice = spanishVoices.find(v => 
+              isFemale ? v.name.toLowerCase().includes('female') || v.name.includes('女') 
+                       : v.name.toLowerCase().includes('male') || v.name.includes('男')
+            );
+            u.voice = preferredVoice || spanishVoices[0];
+          } else {
+            u.voice = spanishVoices[0];
+          }
+        }
+        
         speechSynthesis.speak(u);
       }
     }
@@ -1211,6 +1260,16 @@
       Storage.remove('chatHistory');
       render();
     }
+    
+    // 删除单条历史记录
+    function deleteHistoryChat(index, event) {
+      event.stopPropagation(); // 阻止触发卡片点击事件
+      if (confirm('确定要删除这条对话记录吗？')) {
+        state.chatHistory.splice(index, 1);
+        Storage.set('chatHistory', state.chatHistory);
+        render();
+      }
+    }
 
     function renderHistory() {
       return `
@@ -1218,6 +1277,11 @@
           <div class="bg-white border-b p-4 flex items-center gap-3">
             <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
             <h1 class="font-bold text-gray-800">对话历史</h1>
+            ${state.chatHistory.length > 0 ? `
+              <div class="flex-1"></div>
+              <button onclick="if(confirm('确定要清除所有对话记录吗？'))clearHistory()" 
+                class="text-xs text-red-500 hover:text-red-700">清除全部</button>
+            ` : ''}
           </div>
           
           <div class="flex-1 overflow-auto p-4">
@@ -1228,19 +1292,24 @@
                   const scenario = SCENARIOS.find(s => s.id === chat.scenario);
                   const date = new Date(chat.date);
                   return `
-                    <div onclick="loadHistoryChat(${index})" class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:border-primary-200 active:scale-98 transition-all">
-                      <div class="flex items-center gap-3">
+                    <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all relative group">
+                      <div onclick="loadHistoryChat(${index})" class="flex items-center gap-3 cursor-pointer">
                         <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-2xl">${tutor?.avatar || '👤'}</div>
                         <div class="flex-1">
                           <div class="font-medium text-gray-800">${tutor?.name || '未知'}</div>
                           <div class="text-sm text-gray-500">${scenario?.name || '自由聊天'}</div>
                           <div class="text-xs text-gray-400">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right pr-6">
                           <div class="text-sm text-gray-600">${chat.messages?.length || 0} 条</div>
                           ${chat.corrections > 0 ? `<div class="text-xs text-amber-600">纠正 ${chat.corrections}</div>` : ''}
                         </div>
                       </div>
+                      <button onclick="deleteHistoryChat(${index}, event)" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                        title="删除">
+                        🗑️
+                      </button>
                     </div>
                   `;
                 }).join('')}
