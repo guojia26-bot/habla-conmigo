@@ -613,12 +613,12 @@
                   <button onclick="state.view='history';render()" class="text-sm text-primary-600">查看全部</button>
                 </div>
                 <div class="space-y-3">
-                  ${recentChats.map(chat => {
+                  ${recentChats.map((chat, index) => {
                     const tutor = TUTORS[chat.tutor];
                     const scenario = SCENARIOS.find(s => s.id === chat.scenario);
                     const date = new Date(chat.date);
                     return `
-                      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                      <div onclick="loadHistoryChat(${index})" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-primary-200 active:scale-98 transition-all">
                         <div class="flex items-center gap-3">
                           <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-xl">${tutor?.avatar || '👤'}</div>
                           <div class="flex-1 min-w-0">
@@ -896,6 +896,30 @@
       state.view = 'home';
       render();
     }
+    
+    // 加载历史对话
+    function loadHistoryChat(index) {
+      const chat = state.chatHistory[index];
+      if (!chat) return;
+      
+      const tutor = TUTORS[chat.tutor];
+      const scenario = SCENARIOS.find(s => s.id === chat.scenario);
+      
+      if (!tutor) {
+        alert('对话记录损坏，无法打开');
+        return;
+      }
+      
+      state.tutor = tutor;
+      state.scenario = scenario || SCENARIOS[0];
+      state.messages = chat.messages || [];
+      state.corrections = chat.corrections || 0;
+      state.showTranslation = {};
+      state.translationCache = {};
+      state.view = 'chat';
+      render();
+      scrollToBottom();
+    }
 
     function renderSettings() {
       const user = state.user;
@@ -1007,12 +1031,12 @@
           <div class="flex-1 overflow-auto p-4">
             ${state.chatHistory.length > 0 ? `
               <div class="max-w-md mx-auto space-y-3">
-                ${state.chatHistory.map(chat => {
+                ${state.chatHistory.map((chat, index) => {
                   const tutor = TUTORS[chat.tutor];
                   const scenario = SCENARIOS.find(s => s.id === chat.scenario);
                   const date = new Date(chat.date);
                   return `
-                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                    <div onclick="loadHistoryChat(${index})" class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:border-primary-200 active:scale-98 transition-all">
                       <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-2xl">${tutor?.avatar || '👤'}</div>
                         <div class="flex-1">
