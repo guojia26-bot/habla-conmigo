@@ -193,6 +193,9 @@
       corrections: 0,
       showTranslation: {}, // messageId -> boolean
       translationCache: {}, // messageId -> translation text
+      suggestions: [], // 对话建议
+      isLoadingSuggestions: false, // 是否正在加载建议
+      showSuggestions: false, // 是否显示建议面板
     };
 
     let recognition = null;
@@ -314,6 +317,8 @@
       if (recognition) try { recognition.stop(); } catch(e) {}
       
       state.inputText = '';
+      state.showSuggestions = false; // 发送消息后隐藏建议
+      state.suggestions = [];
       const userMsg = { id: Date.now(), type: 'user', text, time: new Date().toISOString() };
       state.messages.push(userMsg);
       state.isLoading = true;
@@ -349,6 +354,85 @@
       render();
       scrollToBottom();
       speak(cleanResponse);
+    }
+
+    // 获取对话建议
+    async function getSuggestions() {
+      if (state.isLoadingSuggestions || state.messages.length === 0) return;
+      
+      // 获取最后一条AI消息
+      const lastAiMsg = [...state.messages].reverse().find(m => m.type === 'ai');
+      if (!lastAiMsg) return;
+      
+      state.isLoadingSuggestions = true;
+      state.showSuggestions = true;
+      state.suggestions = [];
+      render();
+      
+      const user = state.user;
+      const systemPrompt = `你是一个西班牙语学习助手。根据对话内容，为${user.level}水平的学生生成3个合适的回复建议。
+
+要求：
+1. 每个建议必须是西班牙语
+2. 难度要匹配${user.level}水平
+3. 建议要自然、符合对话语境
+4. 每个建议后面加上简短的中文翻译，格式：西班牙语 (中文)
+5. 只输出3个建议，用换行分隔，不要编号，不要其他解释
+
+对话场景：${state.scenario?.nameEs || '自由对话'}`;
+
+      const messages = [
+        { role: 'user', content: `AI说: "${lastAiMsg.text}"\n\n请给出3个适合的回复建议：` }
+      ];
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ system: systemPrompt, messages })
+        });
+
+        const data = await res.json();
+        const text = data.content?.[0]?.text || '';
+        
+        // 解析建议（按换行分割）
+        const suggestions = text.split('\n')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.match(/^[0-9]+[\.\)]/)) // 过滤空行和编号
+          .slice(0, 3);
+        
+        state.suggestions = suggestions;
+      } catch (err) {
+        state.suggestions = ['Lo siento, no pude cargar sugerencias (抱歉，无法加载建议)'];
+      }
+      
+      state.isLoadingSuggestions = false;
+      render();
+    }
+
+    // 使用建议
+    function useSuggestion(index) {
+      const suggestion = state.suggestions[index];
+      if (!suggestion) return;
+      
+      // 提取西班牙语部分（去掉中文翻译）
+      const spanishText = suggestion.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      state.inputText = spanishText;
+      state.showSuggestions = false;
+      render();
+      
+      // 聚焦输入框
+      setTimeout(() => {
+        const input = document.getElementById('chatInput');
+        if (input) input.focus();
+      }, 100);
+    }
+
+    // 隐藏建议
+    function hideSuggestions() {
+      state.showSuggestions = false;
+      state.suggestions = [];
+      render();
     }
 
     async function getTranslation(msgId, text) {
@@ -774,6 +858,37 @@
             </div>
           ` : ''}
           
+          <!-- 智能建议面板 -->
+          ${state.showSuggestions ? `
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-200 p-3 slide-up">
+              <div class="max-w-lg mx-auto">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-green-800">💡 回复建议</span>
+                  <button onclick="hideSuggestions()" class="text-green-600 text-xs hover:text-green-800">收起 ✕</button>
+                </div>
+                ${state.isLoadingSuggestions ? `
+                  <div class="flex items-center justify-center py-4">
+                    <div class="flex gap-1.5">
+                      <div class="w-2 h-2 bg-green-400 rounded-full animate-bounce"></div>
+                      <div class="w-2 h-2 bg-green-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
+                      <div class="w-2 h-2 bg-green-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+                    </div>
+                    <span class="ml-2 text-sm text-green-600">正在生成建议...</span>
+                  </div>
+                ` : `
+                  <div class="space-y-2">
+                    ${state.suggestions.map((s, i) => `
+                      <button onclick="useSuggestion(${i})" 
+                        class="w-full text-left p-3 bg-white rounded-xl border border-green-200 text-sm hover:border-green-400 hover:shadow-sm active:scale-98 transition-all">
+                        <span class="text-gray-800">${s}</span>
+                      </button>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+            </div>
+          ` : ''}
+          
           <!-- 输入区 -->
           <div class="glass border-t p-3 safe-bottom">
             <div class="max-w-lg mx-auto">
@@ -796,7 +911,13 @@
               </div>
               
               <div class="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
-                ${['¡Hola!', 'No entiendo', '¿Puedes repetir?', 'Más despacio', '¿Qué significa?'].map(p => `
+                <!-- 智能建议按钮 -->
+                <button onclick="getSuggestions()" 
+                  class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs whitespace-nowrap hover:from-green-600 hover:to-emerald-600 shadow-sm flex items-center gap-1 ${state.isLoadingSuggestions ? 'opacity-50' : ''}">
+                  <span>💡</span>
+                  <span>不知道说什么？</span>
+                </button>
+                ${['No entiendo', '¿Puedes repetir?', 'Más despacio'].map(p => `
                   <button onclick="state.inputText='${p}';render()" 
                     class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs whitespace-nowrap hover:border-primary-300 hover:text-primary-600">${p}</button>
                 `).join('')}
