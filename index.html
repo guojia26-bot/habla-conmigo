@@ -823,7 +823,7 @@
             ` : ''}
             
             <div class="relative">
-              <div onclick="${!isUser ? `getTranslation(${msg.id}, '${msg.text.replace(/'/g, "\\'")}')` : ''}"
+              <div onclick="${!isUser ? `handleTranslateClick(${msg.id})` : ''}"
                 class="p-4 rounded-2xl text-sm ${isUser 
                   ? 'bg-primary-500 text-white rounded-br-sm' 
                   : 'bg-white shadow-sm rounded-bl-sm cursor-pointer hover:bg-gray-50'} transition-colors">
@@ -841,7 +841,7 @@
               ` : ''}
               
               ${!isUser ? `
-                <button onclick="speak('${msg.text.replace(/'/g, "\\'")}')" 
+                <button onclick="handleSpeakClick(${msg.id})" 
                   class="absolute -right-10 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-gray-50">
                   🔊
                 </button>
@@ -870,6 +870,22 @@
           </div>
         </div>
       `;
+    }
+    
+    // 处理翻译点击 - 通过ID获取消息文本，避免特殊字符问题
+    function handleTranslateClick(msgId) {
+      const msg = state.messages.find(m => m.id === msgId);
+      if (msg) {
+        getTranslation(msgId, msg.text);
+      }
+    }
+    
+    // 处理朗读点击 - 通过ID获取消息文本
+    function handleSpeakClick(msgId) {
+      const msg = state.messages.find(m => m.id === msgId);
+      if (msg) {
+        speak(msg.text);
+      }
     }
 
     function endChat() {
