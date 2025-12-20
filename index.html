@@ -223,49 +223,105 @@ REGLAS IMPORTANTES:
     };
 
     let recognition = null;
+    let voicesLoaded = false;
 
     // ==================== 工具函数 ====================
     function $(sel) { return document.querySelector(sel); }
     
-    function speak(text) {
-      if ('speechSynthesis' in window) {
-        speechSynthesis.cancel();
-        const clean = text.replace(/【.+?】/g, '').replace(/\(.*?\)/g, '');
-        const u = new SpeechSynthesisUtterance(clean);
-        u.lang = 'es-ES';
-        
-        // 获取用户设置的语速
-        const userRate = state.user?.speechRate || 0.85;
-        
-        // 根据角色调整语音参数
-        if (state.tutor && state.tutor.voice) {
-          u.pitch = state.tutor.voice.pitch || 1.0; // 音调
-          u.rate = userRate * (state.tutor.voice.rate || 1.0); // 语速 = 用户设置 × 角色系数
-        } else {
-          u.pitch = 1.0;
-          u.rate = userRate;
-        }
-        
-        // 尝试选择合适的西班牙语声音
+    // 预加载语音
+    function loadVoices() {
+      return new Promise((resolve) => {
         const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          voicesLoaded = true;
+          resolve(voices);
+        } else {
+          speechSynthesis.onvoiceschanged = () => {
+            voicesLoaded = true;
+            resolve(speechSynthesis.getVoices());
+          };
+          // 超时fallback
+          setTimeout(() => resolve(speechSynthesis.getVoices()), 1000);
+        }
+      });
+    }
+    
+    // 初始化时加载语音
+    if ('speechSynthesis' in window) {
+      loadVoices();
+    }
+    
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      
+      speechSynthesis.cancel();
+      const clean = text.replace(/【.+?】/g, '').replace(/\([^)]*\)/g, '').trim();
+      if (!clean) return;
+      
+      const u = new SpeechSynthesisUtterance(clean);
+      
+      // 获取用户设置的语速基准
+      const userRate = state.user?.speechRate || 0.85;
+      
+      // 根据角色设置不同参数
+      if (state.tutor && state.tutor.voice) {
+        u.pitch = state.tutor.voice.pitch || 1.0;
+        u.rate = userRate * (state.tutor.voice.rate || 1.0);
+      } else {
+        u.pitch = 1.0;
+        u.rate = userRate;
+      }
+      
+      // 选择语音
+      const voices = speechSynthesis.getVoices();
+      
+      // 优先找西班牙语语音
+      let selectedVoice = null;
+      
+      // 1. 先找西班牙语女声或男声
+      if (state.tutor) {
+        const isFemale = ['maria', 'sofia'].includes(state.tutor.id);
         const spanishVoices = voices.filter(v => v.lang.startsWith('es'));
         
         if (spanishVoices.length > 0) {
-          // 根据角色性别选择声音
-          if (state.tutor) {
-            const isFemale = ['maria', 'sofia'].includes(state.tutor.id);
-            const preferredVoice = spanishVoices.find(v => 
-              isFemale ? v.name.toLowerCase().includes('female') || v.name.includes('女') 
-                       : v.name.toLowerCase().includes('male') || v.name.includes('男')
-            );
-            u.voice = preferredVoice || spanishVoices[0];
-          } else {
-            u.voice = spanishVoices[0];
+          // 尝试根据性别选择
+          selectedVoice = spanishVoices.find(v => {
+            const name = v.name.toLowerCase();
+            if (isFemale) {
+              return name.includes('female') || name.includes('mujer') || 
+                     name.includes('paulina') || name.includes('monica') ||
+                     name.includes('helena') || name.includes('laura');
+            } else {
+              return name.includes('male') || name.includes('hombre') || 
+                     name.includes('jorge') || name.includes('diego') ||
+                     name.includes('pablo') || name.includes('carlos');
+            }
+          });
+          
+          // 如果没找到特定性别，就用第一个西班牙语语音
+          if (!selectedVoice) {
+            // 尝试不同地区的西班牙语
+            if (state.tutor.id === 'sofia') {
+              // Sofía是墨西哥人，优先找墨西哥西班牙语
+              selectedVoice = spanishVoices.find(v => v.lang === 'es-MX') || spanishVoices[0];
+            } else {
+              // 其他角色优先找西班牙西班牙语
+              selectedVoice = spanishVoices.find(v => v.lang === 'es-ES') || spanishVoices[0];
+            }
           }
         }
-        
-        speechSynthesis.speak(u);
       }
+      
+      // 2. 如果没有西班牙语语音，设置语言参数让系统选择
+      if (selectedVoice) {
+        u.voice = selectedVoice;
+        u.lang = selectedVoice.lang;
+      } else {
+        // Sofía用墨西哥西班牙语，其他用西班牙西班牙语
+        u.lang = (state.tutor?.id === 'sofia') ? 'es-MX' : 'es-ES';
+      }
+      
+      speechSynthesis.speak(u);
     }
 
     function initSpeechRecognition() {
@@ -1276,11 +1332,10 @@ REGLAS IMPORTANTES:
         <div class="h-full bg-gray-50 flex flex-col">
           <div class="bg-white border-b p-4 flex items-center gap-3">
             <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
-            <h1 class="font-bold text-gray-800">对话历史</h1>
+            <h1 class="font-bold text-gray-800 flex-1">对话历史</h1>
             ${state.chatHistory.length > 0 ? `
-              <div class="flex-1"></div>
               <button onclick="if(confirm('确定要清除所有对话记录吗？'))clearHistory()" 
-                class="text-xs text-red-500 hover:text-red-700">清除全部</button>
+                class="text-xs px-3 py-1 rounded-full bg-red-50 text-red-500 hover:bg-red-100">清除全部</button>
             ` : ''}
           </div>
           
@@ -1292,24 +1347,26 @@ REGLAS IMPORTANTES:
                   const scenario = SCENARIOS.find(s => s.id === chat.scenario);
                   const date = new Date(chat.date);
                   return `
-                    <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all relative group">
-                      <div onclick="loadHistoryChat(${index})" class="flex items-center gap-3 cursor-pointer">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-2xl">${tutor?.avatar || '👤'}</div>
-                        <div class="flex-1">
-                          <div class="font-medium text-gray-800">${tutor?.name || '未知'}</div>
-                          <div class="text-sm text-gray-500">${scenario?.name || '自由聊天'}</div>
-                          <div class="text-xs text-gray-400">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
+                      <div class="flex items-center gap-3">
+                        <div onclick="loadHistoryChat(${index})" class="flex items-center gap-3 flex-1 cursor-pointer">
+                          <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-2xl">${tutor?.avatar || '👤'}</div>
+                          <div class="flex-1 min-w-0">
+                            <div class="font-medium text-gray-800">${tutor?.name || '未知'}</div>
+                            <div class="text-sm text-gray-500">${scenario?.name || '自由聊天'}</div>
+                            <div class="text-xs text-gray-400">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+                          </div>
+                          <div class="text-right">
+                            <div class="text-sm text-gray-600">${chat.messages?.length || 0} 条</div>
+                            ${chat.corrections > 0 ? `<div class="text-xs text-amber-600">纠正 ${chat.corrections}</div>` : ''}
+                          </div>
                         </div>
-                        <div class="text-right pr-6">
-                          <div class="text-sm text-gray-600">${chat.messages?.length || 0} 条</div>
-                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600">纠正 ${chat.corrections}</div>` : ''}
-                        </div>
+                        <button onclick="deleteHistoryChat(${index}, event)" 
+                          class="w-10 h-10 rounded-full bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 flex items-center justify-center flex-shrink-0 transition-colors"
+                          title="删除">
+                          🗑️
+                        </button>
                       </div>
-                      <button onclick="deleteHistoryChat(${index}, event)" 
-                        class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                        title="删除">
-                        🗑️
-                      </button>
                     </div>
                   `;
                 }).join('')}
