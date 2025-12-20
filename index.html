@@ -5,108 +5,194 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#f97316">
-  <meta name="description" content="HablaConmigo - 免费AI西班牙语口语练习">
-  <title>HablaConmigo - 西语口语助手</title>
+  <meta name="theme-color" content="#6366f1">
+  <title>HablaConmigo - AI西语口语助手</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇪🇸</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            primary: { 50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
+            accent: { 500: '#f97316', 600: '#ea580c' }
+          }
+        }
+      }
+    }
+  </script>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body, #app { height: 100%; margin: 0; overflow: hidden; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
-    .mic-recording { position: relative; }
-    .mic-recording::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; background: rgba(239,68,68,0.3); animation: pulse-ring 1.5s ease-out infinite; }
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; }
+    
+    /* 动画 */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
     @keyframes bounce { 0%, 100% { transform: translateY(-25%); } 50% { transform: translateY(0); } }
+    
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .slide-up { animation: slideUp 0.3s ease-out; }
     .animate-bounce { animation: bounce 0.6s infinite; }
+    
+    .mic-recording { position: relative; }
+    .mic-recording::before { 
+      content: ''; position: absolute; inset: -8px; border-radius: 50%; 
+      background: rgba(239,68,68,0.3); animation: pulse-ring 1.5s ease-out infinite; 
+    }
+    
+    /* 滚动条 */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 安全区域 */
     .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
-    input, button, textarea { font-size: 16px !important; }
+    
+    /* 输入框 */
+    input, button, textarea, select { font-size: 16px !important; }
+    
+    /* 翻译提示 */
+    .translation-tooltip {
+      position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 8px 12px; border-radius: 8px;
+      font-size: 13px; white-space: nowrap; margin-bottom: 8px; z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .translation-tooltip::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: #1e293b;
+    }
+    
+    /* 纠正卡片 */
+    .correction-card {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-left: 4px solid #f59e0b;
+      border-radius: 0 12px 12px 0;
+    }
+    
+    /* 玻璃效果 */
+    .glass {
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
   </style>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app" class="h-full"></div>
   
   <script>
+    // ==================== 数据存储 ====================
+    const Storage = {
+      get(key, defaultVal = null) {
+        try {
+          const v = localStorage.getItem('habla_' + key);
+          return v ? JSON.parse(v) : defaultVal;
+        } catch { return defaultVal; }
+      },
+      set(key, val) {
+        try { localStorage.setItem('habla_' + key, JSON.stringify(val)); } catch {}
+      },
+      remove(key) {
+        try { localStorage.removeItem('habla_' + key); } catch {}
+      }
+    };
+
     // ==================== 配置 ====================
     const TUTORS = {
       maria: {
-        id: 'maria', name: 'María', avatar: '👩🏻',
+        id: 'maria', name: 'María', avatar: '👩🏻', emoji: '🌸',
         role: '温柔老师', roleEs: 'Profesora amable',
-        description: '来自马德里，耐心细致，擅长纠正语法',
-        color: 'from-pink-500 to-rose-500',
-        greeting: '¡Hola! Soy María, tu profesora de español. ¿Cómo te llamas? ¿Qué te gustaría practicar hoy?',
-        prompt: `Eres María, una profesora de español de Madrid, amable y paciente.
-- Hablas de forma cálida y animas al estudiante
-- Corriges los errores gramaticales de forma natural
-- Cuando encuentres un error, márcalo así: 【纠正】frase original → forma correcta (explicación breve en chino)
-- Responde en español, puedes añadir (traducción china) para palabras importantes
-- Respuestas cortas y naturales, 2-4 frases`
+        personality: '耐心、温柔、鼓励',
+        description: '来自马德里的西语老师，擅长纠正语法，对学生非常有耐心',
+        color: 'from-pink-500 to-rose-500', colorLight: 'bg-pink-50',
+        greeting: '¡Hola, {name}! Soy María, tu profesora de español. ¡Qué alegría conocerte! ¿Qué te gustaría practicar hoy?',
+        prompt: `Eres María, una profesora de español de Madrid, amable y muy paciente.
+- Hablas de forma cálida y siempre animas al estudiante
+- Corriges los errores gramaticales de forma natural y educativa
+- Cuando encuentres un error, usa el formato: 【纠正】"frase incorrecta" → "frase correcta" (explicación en chino)
+- Responde en español, añade (traducción china) para palabras difíciles según el nivel del estudiante
+- Mantén respuestas naturales de 2-4 frases`
       },
       carlos: {
-        id: 'carlos', name: 'Carlos', avatar: '👨🏻',
+        id: 'carlos', name: 'Carlos', avatar: '👨🏻', emoji: '⚽',
         role: '健谈朋友', roleEs: 'Amigo hablador',
-        description: '巴塞罗那小伙，热情开朗，聊足球美食',
-        color: 'from-blue-500 to-indigo-500',
-        greeting: '¡Ey, qué tal! Soy Carlos, de Barcelona. ¿Qué pasa, tío? ¿De qué quieres hablar?',
-        prompt: `Eres Carlos, un chico de 25 años de Barcelona.
-- Eres alegre y hablas de forma informal, como un amigo
-- Te gusta el fútbol (fan del Barça), la comida y viajar
-- Usas expresiones coloquiales y jerga juvenil
-- Cuando encuentres un error: 【纠正】frase → corrección (explicación en chino)
-- Respuestas cortas y divertidas`
+        personality: '热情、幽默、随性',
+        description: '巴塞罗那的年轻人，热爱足球和美食，说话像朋友一样轻松',
+        color: 'from-blue-500 to-indigo-500', colorLight: 'bg-blue-50',
+        greeting: '¡Ey, qué tal, {name}! Soy Carlos, de Barcelona. ¿Qué pasa, tío? ¡Vamos a charlar!',
+        prompt: `Eres Carlos, un chico de 25 años de Barcelona, amigable y divertido.
+- Hablas de forma informal y relajada, como un amigo
+- Te encanta el fútbol (fan del Barça), la comida y viajar
+- Usas expresiones coloquiales y jerga juvenil española
+- Cuando notes un error: 【纠正】"error" → "corrección" (explicación en chino)
+- Respuestas cortas y divertidas, como un chat entre amigos`
       },
       sofia: {
-        id: 'sofia', name: 'Sofía', avatar: '👩🏽',
-        role: '浪漫伴侣', roleEs: 'Pareja romántica',
-        description: '墨西哥女孩，温柔浪漫，分享生活',
-        color: 'from-purple-500 to-fuchsia-500',
-        greeting: '¡Hola, cariño! Soy Sofía, de México. ¡Qué alegría conocerte! ¿Cómo estás hoy?',
-        prompt: `Eres Sofía, una chica dulce de México.
-- Hablas de forma cariñosa, usando palabras como "cariño", "mi amor"
-- Compartes sobre la cultura, comida y música mexicana
-- Usas español latinoamericano
-- Cuando encuentres un error: 【纠正】frase → corrección (explicación en chino)
-- Respuestas cálidas y naturales`
+        id: 'sofia', name: 'Sofía', avatar: '👩🏽', emoji: '🌺',
+        role: '温柔伴侣', roleEs: 'Compañera cariñosa',
+        personality: '甜蜜、浪漫、关心',
+        description: '来自墨西哥的女孩，温柔浪漫，喜欢分享拉美文化',
+        color: 'from-purple-500 to-fuchsia-500', colorLight: 'bg-purple-50',
+        greeting: '¡Hola, cariño! Soy Sofía, de México. ¡Qué lindo conocerte, {name}! ¿Cómo estás hoy?',
+        prompt: `Eres Sofía, una chica dulce y cariñosa de México.
+- Hablas de forma cálida y afectuosa, usando "cariño", "mi amor" ocasionalmente
+- Compartes sobre la cultura, comida y música mexicana y latinoamericana
+- Usas español latinoamericano con modismos mexicanos
+- Cuando notes un error: 【纠正】"error" → "corrección" (explicación en chino)
+- Respuestas cálidas y naturales, mostrando interés genuino`
       },
       profesor: {
-        id: 'profesor', name: 'Prof. García', avatar: '👨🏻‍🏫',
+        id: 'profesor', name: 'Prof. García', avatar: '👨🏻‍🏫', emoji: '📚',
         role: '严格教授', roleEs: 'Profesor estricto',
-        description: '大学教授，学术严谨，专注语法',
-        color: 'from-gray-600 to-gray-800',
-        greeting: 'Buenos días. Soy el Profesor García. ¿Cuál es su nivel de español? Empecemos nuestra clase.',
+        personality: '严谨、学术、权威',
+        description: '大学西语教授，非常注重语法，适合想要严格学习的用户',
+        color: 'from-slate-600 to-slate-800', colorLight: 'bg-slate-50',
+        greeting: 'Buenos días, {name}. Soy el Profesor García. Estoy aquí para ayudarle a mejorar su español. ¿Comenzamos?',
         prompt: `Eres el Profesor García, un profesor universitario de español muy riguroso.
-- Hablas de forma formal y académica
-- Prestas mucha atención a la gramática y explicas las reglas en detalle
-- Usa 【语法点】para marcar puntos gramaticales importantes
+- Hablas de forma formal y académica, usando "usted"
+- Prestas mucha atención a la gramática y explicas las reglas detalladamente
+- Usa 【语法】para explicar puntos gramaticales importantes
 - Usa 【纠正】para TODOS los errores con explicación detallada en chino
-- Exiges respuestas en oraciones completas`
+- Exiges respuestas completas y bien estructuradas`
       }
     };
 
     const SCENARIOS = [
-      { id: 'free', icon: '💬', name: '自由聊天', nameEs: 'Charla libre' },
-      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería' },
-      { id: 'travel', icon: '✈️', name: '旅行出行', nameEs: 'De viaje' },
-      { id: 'shopping', icon: '🛍️', name: '购物', nameEs: 'De compras' },
-      { id: 'restaurant', icon: '🍽️', name: '餐厅', nameEs: 'En el restaurante' },
-      { id: 'work', icon: '💼', name: '工作场景', nameEs: 'En el trabajo' },
+      { id: 'free', icon: '💬', name: '自由聊天', nameEs: 'Charla libre', desc: '随便聊聊，练习日常对话' },
+      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería', desc: '点咖啡、甜点，和服务员交流' },
+      { id: 'restaurant', icon: '🍽️', name: '餐厅点餐', nameEs: 'En el restaurante', desc: '看菜单、点菜、结账' },
+      { id: 'shopping', icon: '🛍️', name: '购物', nameEs: 'De compras', desc: '询问价格、尺码、颜色' },
+      { id: 'travel', icon: '✈️', name: '旅行', nameEs: 'De viaje', desc: '问路、订票、酒店入住' },
+      { id: 'work', icon: '💼', name: '工作', nameEs: 'En el trabajo', desc: '会议、邮件、职场交流' },
+      { id: 'doctor', icon: '🏥', name: '看医生', nameEs: 'En el médico', desc: '描述症状、理解医嘱' },
+      { id: 'friends', icon: '🎉', name: '社交聚会', nameEs: 'Fiesta', desc: '认识新朋友、闲聊' },
     ];
 
-    const LEVELS = ['A1', 'A2', 'B1', 'B2'];
+    const LEVELS = [
+      { id: 'A1', name: '入门', desc: '刚开始学习，会简单词汇' },
+      { id: 'A2', name: '基础', desc: '能进行简单日常对话' },
+      { id: 'B1', name: '中级', desc: '能处理大多数旅行情况' },
+      { id: 'B2', name: '中高级', desc: '能流利讨论各种话题' },
+    ];
 
-    // ==================== 状态 ====================
+    // ==================== 应用状态 ====================
     let state = {
-      view: 'welcome',
-      level: 'A2',
+      view: 'loading', // loading, welcome, setup, home, tutor, scenario, chat, settings, history
+      user: Storage.get('user', null), // { name, level, showTranslation, correctionLevel, createdAt }
       tutor: null,
       scenario: null,
       messages: [],
+      chatHistory: Storage.get('chatHistory', []), // 历史对话记录
       inputText: '',
       isLoading: false,
       isListening: false,
-      corrections: 0
+      corrections: 0,
+      showTranslation: {}, // messageId -> boolean
+      translationCache: {}, // messageId -> translation text
     };
 
     let recognition = null;
@@ -117,10 +203,10 @@
     function speak(text) {
       if ('speechSynthesis' in window) {
         speechSynthesis.cancel();
-        const clean = text.replace(/【.+?】/g, '');
+        const clean = text.replace(/【.+?】/g, '').replace(/\(.*?\)/g, '');
         const u = new SpeechSynthesisUtterance(clean);
         u.lang = 'es-ES';
-        u.rate = 0.85;
+        u.rate = state.user?.speechRate || 0.85;
         speechSynthesis.speak(u);
       }
     }
@@ -146,10 +232,7 @@
       };
       
       r.onerror = (e) => {
-        console.log('Speech error:', e.error);
-        if (e.error === 'not-allowed') {
-          alert('请允许麦克风权限以使用语音输入');
-        }
+        if (e.error === 'not-allowed') alert('请允许麦克风权限以使用语音输入');
         state.isListening = false;
         render();
       };
@@ -166,7 +249,7 @@
     function toggleListening() {
       if (!recognition) recognition = initSpeechRecognition();
       if (!recognition) {
-        alert('您的浏览器不支持语音识别，请使用Chrome浏览器');
+        alert('您的浏览器不支持语音识别，请使用Chrome');
         return;
       }
       
@@ -179,50 +262,47 @@
       render();
     }
 
-    async function callAPI(userMessage) {
-      const systemPrompt = `${state.tutor.prompt}
+    // ==================== API 调用 ====================
+    async function callAPI(userMessage, forTranslation = false) {
+      const user = state.user;
+      
+      let systemPrompt;
+      if (forTranslation) {
+        systemPrompt = `你是一个翻译助手。请将以下西班牙语翻译成简洁的中文，只输出翻译结果，不要任何解释。`;
+      } else {
+        systemPrompt = `${state.tutor.prompt}
 
-Contexto de la conversación: ${state.scenario?.nameEs || 'Charla libre'}
-Nivel del estudiante: ${state.level}
+学生信息：
+- 名字：${user.name}
+- 西语水平：${user.level}
+- 对话场景：${state.scenario?.nameEs || '自由对话'}
 
-IMPORTANTE:
-1. Responde SOLO en español
-2. Ajusta la dificultad según el nivel ${state.level}
-3. Entiende y responde al contenido del estudiante, no solo hagas preguntas
-4. Marca errores con formato 【纠正】
-5. Respuestas breves y naturales, 2-4 frases`;
+重要规则：
+1. 根据学生的${user.level}水平调整词汇和句子难度
+2. 真正理解并回应学生说的内容
+3. 保持角色性格一致
+4. 语法错误务必用【纠正】格式指出
+5. ${user.level === 'A1' || user.level === 'A2' ? '多给重要词汇加上(中文翻译)' : '只给生僻词加翻译'}`;
+      }
 
-      const history = state.messages.map(m => ({
-        role: m.type === 'user' ? 'user' : 'assistant',
-        content: m.text
-      }));
+      const messages = forTranslation 
+        ? [{ role: 'user', content: userMessage }]
+        : [...state.messages.map(m => ({
+            role: m.type === 'user' ? 'user' : 'assistant',
+            content: m.text
+          })), { role: 'user', content: userMessage }];
 
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system: systemPrompt,
-            messages: [...history, { role: 'user', content: userMessage }]
-          })
+          body: JSON.stringify({ system: systemPrompt, messages })
         });
 
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || '请求失败');
-        }
-
         const data = await res.json();
-        const text = data.content?.[0]?.text || '抱歉，请重试。';
-        
-        const match = text.match(/【纠正】(.+?)(?=\n|$)/s);
-        return {
-          response: text.replace(/【纠正】.+?(?=\n|$)/gs, '').trim(),
-          correction: match ? match[1].trim() : null
-        };
+        return data.content?.[0]?.text || '抱歉，请重试。';
       } catch (err) {
-        console.error('API Error:', err);
-        return { response: '连接出错，请重试: ' + err.message, correction: null };
+        return '连接失败，请检查网络后重试。';
       }
     }
 
@@ -230,30 +310,78 @@ IMPORTANTE:
       const text = state.inputText.trim();
       if (!text || state.isLoading) return;
       
-      // 停止录音
       state.isListening = false;
       if (recognition) try { recognition.stop(); } catch(e) {}
       
       state.inputText = '';
-      state.messages.push({ id: Date.now(), type: 'user', text });
+      const userMsg = { id: Date.now(), type: 'user', text, time: new Date().toISOString() };
+      state.messages.push(userMsg);
       state.isLoading = true;
       render();
       scrollToBottom();
       
-      const { response, correction } = await callAPI(text);
+      const response = await callAPI(text);
       
-      state.messages.push({ 
+      // 解析纠正内容
+      const correctionMatch = response.match(/【纠正】(.+?)(?=\n|$)/s);
+      const grammarMatch = response.match(/【语法】(.+?)(?=\n|$)/s);
+      const cleanResponse = response
+        .replace(/【纠正】.+?(?=\n|$)/gs, '')
+        .replace(/【语法】.+?(?=\n|$)/gs, '')
+        .trim();
+      
+      const aiMsg = { 
         id: Date.now() + 1, 
         type: 'ai', 
-        text: response,
-        correction 
-      });
+        text: cleanResponse,
+        correction: correctionMatch ? correctionMatch[1].trim() : null,
+        grammar: grammarMatch ? grammarMatch[1].trim() : null,
+        time: new Date().toISOString()
+      };
       
-      if (correction) state.corrections++;
+      state.messages.push(aiMsg);
+      if (correctionMatch) state.corrections++;
       state.isLoading = false;
+      
+      // 保存对话历史
+      saveChatHistory();
+      
       render();
       scrollToBottom();
-      speak(response);
+      speak(cleanResponse);
+    }
+
+    async function getTranslation(msgId, text) {
+      if (state.translationCache[msgId]) {
+        state.showTranslation[msgId] = !state.showTranslation[msgId];
+        render();
+        return;
+      }
+      
+      state.showTranslation[msgId] = true;
+      state.translationCache[msgId] = '翻译中...';
+      render();
+      
+      const translation = await callAPI(text, true);
+      state.translationCache[msgId] = translation;
+      render();
+    }
+
+    function saveChatHistory() {
+      if (state.messages.length < 2) return;
+      
+      const chat = {
+        id: Date.now(),
+        tutor: state.tutor.id,
+        scenario: state.scenario?.id || 'free',
+        messages: state.messages.slice(-20), // 只保存最近20条
+        corrections: state.corrections,
+        date: new Date().toISOString()
+      };
+      
+      state.chatHistory.unshift(chat);
+      if (state.chatHistory.length > 50) state.chatHistory = state.chatHistory.slice(0, 50);
+      Storage.set('chatHistory', state.chatHistory);
     }
 
     function startChat(tutor, scenario) {
@@ -261,13 +389,15 @@ IMPORTANTE:
       state.scenario = scenario;
       state.messages = [];
       state.corrections = 0;
+      state.showTranslation = {};
+      state.translationCache = {};
       state.view = 'chat';
       
+      const greeting = tutor.greeting.replace('{name}', state.user.name);
       setTimeout(() => {
-        state.messages = [{ id: 1, type: 'ai', text: tutor.greeting }];
+        state.messages = [{ id: 1, type: 'ai', text: greeting, time: new Date().toISOString() }];
         render();
-        scrollToBottom();
-        speak(tutor.greeting);
+        speak(greeting);
       }, 300);
       
       render();
@@ -280,62 +410,235 @@ IMPORTANTE:
       }, 100);
     }
 
-    // ==================== 渲染 ====================
+    function saveUser(userData) {
+      state.user = { ...userData, createdAt: new Date().toISOString() };
+      Storage.set('user', state.user);
+    }
+
+    // ==================== 渲染函数 ====================
     function render() {
       const app = document.getElementById('app');
       
-      if (state.view === 'welcome') {
-        app.innerHTML = renderWelcome();
-      } else if (state.view === 'level') {
-        app.innerHTML = renderLevel();
-      } else if (state.view === 'tutor') {
-        app.innerHTML = renderTutor();
-      } else if (state.view === 'scenario') {
-        app.innerHTML = renderScenario();
-      } else if (state.view === 'chat') {
-        app.innerHTML = renderChat();
+      switch(state.view) {
+        case 'loading': app.innerHTML = renderLoading(); break;
+        case 'welcome': app.innerHTML = renderWelcome(); break;
+        case 'setup': app.innerHTML = renderSetup(); break;
+        case 'home': app.innerHTML = renderHome(); break;
+        case 'tutor': app.innerHTML = renderTutor(); break;
+        case 'scenario': app.innerHTML = renderScenario(); break;
+        case 'chat': app.innerHTML = renderChat(); break;
+        case 'settings': app.innerHTML = renderSettings(); break;
+        case 'history': app.innerHTML = renderHistory(); break;
       }
     }
 
-    function renderWelcome() {
+    function renderLoading() {
       return `
-        <div class="h-full bg-gradient-to-br from-orange-500 via-red-500 to-yellow-500 flex flex-col items-center justify-center p-6 text-center">
-          <div class="text-7xl mb-4">🇪🇸</div>
-          <h1 class="text-4xl font-bold text-white mb-2">¡Hola!</h1>
-          <h2 class="text-xl text-white/90 mb-2">HablaConmigo</h2>
-          <p class="text-white/80 mb-6 max-w-xs">与AI伙伴真实对话<br>语音输入 · 智能纠错 · 完全免费</p>
-          
-          <button onclick="state.view='level';render()" class="bg-white text-orange-600 font-bold py-4 px-10 rounded-full text-lg shadow-xl hover:scale-105 active:scale-95 transition-transform">
-            开始学习 →
-          </button>
-          
-          <div class="mt-8 grid grid-cols-3 gap-6 text-white/80 text-sm">
-            <div class="text-center"><div class="text-2xl mb-1">🎤</div>语音输入</div>
-            <div class="text-center"><div class="text-2xl mb-1">🎭</div>4种角色</div>
-            <div class="text-center"><div class="text-2xl mb-1">✏️</div>实时纠错</div>
+        <div class="h-full flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700">
+          <div class="text-center text-white">
+            <div class="text-6xl mb-4">🇪🇸</div>
+            <div class="text-xl font-semibold">HablaConmigo</div>
+            <div class="mt-4 flex justify-center gap-1">
+              <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay:0.1s"></div>
+              <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+            </div>
           </div>
-          
-          <div class="mt-6 text-white/50 text-xs">完全免费 · 无需注册 · 推荐Chrome</div>
         </div>
       `;
     }
 
-    function renderLevel() {
+    function renderWelcome() {
       return `
-        <div class="h-full bg-gray-50 p-5 overflow-auto">
-          <div class="max-w-md mx-auto">
-            <button onclick="state.view='welcome';render()" class="text-gray-500 mb-4 text-sm">← 返回</button>
-            <h1 class="text-xl font-bold text-gray-800 mb-1">你的西语水平？</h1>
-            <p class="text-gray-500 text-sm mb-5">AI会根据水平调整难度</p>
+        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700 flex flex-col items-center justify-center p-6 text-center">
+          <div class="fade-in">
+            <div class="text-7xl mb-4">🇪🇸</div>
+            <h1 class="text-4xl font-bold text-white mb-2">¡Hola!</h1>
+            <h2 class="text-xl text-white/90 mb-1">HablaConmigo</h2>
+            <p class="text-white/70 mb-8 max-w-xs text-sm">
+              与AI伙伴真实对话<br>
+              语音输入 · 智能纠错 · 即时翻译
+            </p>
             
-            <div class="grid grid-cols-2 gap-3">
-              ${LEVELS.map(l => `
-                <button onclick="state.level='${l}';state.view='tutor';render()" class="p-4 rounded-xl border-2 transition-all ${state.level === l ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-orange-200'}">
-                  <div class="font-bold text-xl text-gray-800">${l}</div>
-                  <div class="text-xs text-gray-500">${l === 'A1' ? '入门' : l === 'A2' ? '基础' : l === 'B1' ? '中级' : '高级'}</div>
-                </button>
-              `).join('')}
+            <button onclick="state.view='setup';render()" 
+              class="bg-white text-primary-600 font-bold py-4 px-10 rounded-2xl text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all">
+              开始使用 →
+            </button>
+            
+            <div class="mt-10 grid grid-cols-4 gap-4 text-white/80 text-xs">
+              <div class="text-center"><div class="text-2xl mb-1">🎤</div>语音</div>
+              <div class="text-center"><div class="text-2xl mb-1">🎭</div>角色</div>
+              <div class="text-center"><div class="text-2xl mb-1">✏️</div>纠错</div>
+              <div class="text-center"><div class="text-2xl mb-1">🌐</div>翻译</div>
             </div>
+            
+            <div class="mt-8 text-white/50 text-xs">完全免费 · 无需注册 · 数据存本地</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSetup() {
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
+            <h1 class="text-2xl font-bold">👋 欢迎！</h1>
+            <p class="text-white/80 text-sm mt-1">让我们先了解一下你</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-6">
+            <div class="max-w-md mx-auto space-y-6 fade-in">
+              <!-- 姓名 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">你的名字</label>
+                <input id="userName" type="text" placeholder="输入你的名字或昵称" 
+                  class="w-full p-4 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                  value="${state.user?.name || ''}">
+              </div>
+              
+              <!-- 水平 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">你的西语水平</label>
+                <div class="grid grid-cols-2 gap-3">
+                  ${LEVELS.map(l => `
+                    <button onclick="document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50');document.getElementById('selectedLevel').value='${l.id}'"
+                      class="level-btn p-4 rounded-xl border border-gray-200 text-left hover:border-primary-300 transition-all ${state.user?.level === l.id ? 'ring-2 ring-primary-500 bg-primary-50' : ''}">
+                      <div class="font-bold text-gray-800">${l.id}</div>
+                      <div class="text-sm text-gray-500">${l.name}</div>
+                      <div class="text-xs text-gray-400 mt-1">${l.desc}</div>
+                    </button>
+                  `).join('')}
+                </div>
+                <input type="hidden" id="selectedLevel" value="${state.user?.level || 'A2'}">
+              </div>
+              
+              <!-- 偏好 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">学习偏好</label>
+                <div class="space-y-3">
+                  <label class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300">
+                    <div>
+                      <div class="font-medium text-gray-800">显示中文翻译</div>
+                      <div class="text-xs text-gray-500">AI回复时自动显示翻译</div>
+                    </div>
+                    <input id="autoTranslate" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${state.user?.autoTranslate ? 'checked' : ''}>
+                  </label>
+                  
+                  <label class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300">
+                    <div>
+                      <div class="font-medium text-gray-800">严格纠错模式</div>
+                      <div class="text-xs text-gray-500">纠正所有语法错误，适合认真学习</div>
+                    </div>
+                    <input id="strictMode" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${state.user?.strictMode ? 'checked' : ''}>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-6 safe-bottom">
+            <button onclick="submitSetup()" 
+              class="w-full py-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-lg hover:shadow-xl active:scale-98 transition-all">
+              开始学习 🚀
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitSetup() {
+      const name = document.getElementById('userName').value.trim() || '学员';
+      const level = document.getElementById('selectedLevel').value;
+      const autoTranslate = document.getElementById('autoTranslate').checked;
+      const strictMode = document.getElementById('strictMode').checked;
+      
+      saveUser({ name, level, autoTranslate, strictMode, speechRate: 0.85 });
+      state.view = 'home';
+      render();
+    }
+
+    function renderHome() {
+      const user = state.user;
+      const recentChats = state.chatHistory.slice(0, 3);
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-sm text-white/70">¡Hola!</div>
+                <div class="text-2xl font-bold">${user.name}</div>
+              </div>
+              <button onclick="state.view='settings';render()" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                ⚙️
+              </button>
+            </div>
+            <div class="flex gap-4 text-sm">
+              <div class="bg-white/20 rounded-lg px-3 py-2">
+                <div class="text-white/70 text-xs">水平</div>
+                <div class="font-bold">${user.level}</div>
+              </div>
+              <div class="bg-white/20 rounded-lg px-3 py-2">
+                <div class="text-white/70 text-xs">对话</div>
+                <div class="font-bold">${state.chatHistory.length}</div>
+              </div>
+              <div class="bg-white/20 rounded-lg px-3 py-2">
+                <div class="text-white/70 text-xs">纠正</div>
+                <div class="font-bold">${state.chatHistory.reduce((sum, c) => sum + (c.corrections || 0), 0)}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-6">
+            <!-- 开始新对话 -->
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">开始新对话</h3>
+              <button onclick="state.view='tutor';render()" 
+                class="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md active:scale-98 transition-all">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-3xl">💬</div>
+                <div class="flex-1 text-left">
+                  <div class="font-bold text-gray-800">选择对话伙伴</div>
+                  <div class="text-sm text-gray-500">4种性格的AI角色等你来聊</div>
+                </div>
+                <div class="text-gray-300 text-xl">→</div>
+              </button>
+            </div>
+            
+            <!-- 最近对话 -->
+            ${recentChats.length > 0 ? `
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-sm font-medium text-gray-500">最近对话</h3>
+                  <button onclick="state.view='history';render()" class="text-sm text-primary-600">查看全部</button>
+                </div>
+                <div class="space-y-3">
+                  ${recentChats.map(chat => {
+                    const tutor = TUTORS[chat.tutor];
+                    const scenario = SCENARIOS.find(s => s.id === chat.scenario);
+                    const date = new Date(chat.date);
+                    return `
+                      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-xl">${tutor?.avatar || '👤'}</div>
+                          <div class="flex-1 min-w-0">
+                            <div class="font-medium text-gray-800">${tutor?.name || '未知'} · ${scenario?.name || '自由聊天'}</div>
+                            <div class="text-xs text-gray-400">${date.toLocaleDateString()} · ${chat.messages?.length || 0}条消息</div>
+                          </div>
+                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">纠正${chat.corrections}</div>` : ''}
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : `
+              <div class="text-center py-10 text-gray-400">
+                <div class="text-4xl mb-2">📚</div>
+                <div>还没有对话记录</div>
+                <div class="text-sm">开始你的第一次练习吧！</div>
+              </div>
+            `}
           </div>
         </div>
       `;
@@ -343,22 +646,34 @@ IMPORTANTE:
 
     function renderTutor() {
       return `
-        <div class="h-full bg-gray-50 p-5 overflow-auto">
-          <div class="max-w-md mx-auto">
-            <button onclick="state.view='level';render()" class="text-gray-500 mb-4 text-sm">← 返回</button>
-            <h1 class="text-xl font-bold text-gray-800 mb-1">选择对话伙伴</h1>
-            <p class="text-gray-500 text-sm mb-5">不同角色有不同风格</p>
-            
-            <div class="space-y-3">
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-white border-b p-4 flex items-center gap-3">
+            <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
+            <div>
+              <h1 class="font-bold text-gray-800">选择对话伙伴</h1>
+              <p class="text-xs text-gray-500">不同角色有不同的对话风格</p>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-md mx-auto space-y-4">
               ${Object.values(TUTORS).map(t => `
-                <button onclick="state.tutor=TUTORS['${t.id}'];state.view='scenario';render()" class="w-full bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 hover:shadow-md active:scale-98 transition-all text-left">
-                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center text-2xl">${t.avatar}</div>
-                  <div class="flex-1 min-w-0">
-                    <div class="font-bold text-gray-800">${t.name}</div>
-                    <div class="text-xs text-orange-500">${t.role}</div>
-                    <div class="text-xs text-gray-400 truncate">${t.description}</div>
+                <button onclick="state.tutor=TUTORS['${t.id}'];state.view='scenario';render()" 
+                  class="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-primary-200 active:scale-98 transition-all fade-in">
+                  <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${t.color} flex items-center justify-center text-3xl flex-shrink-0">${t.avatar}</div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold text-gray-800">${t.name}</span>
+                        <span class="text-sm">${t.emoji}</span>
+                      </div>
+                      <div class="text-sm text-primary-600">${t.role} · ${t.roleEs}</div>
+                      <div class="text-xs text-gray-500 mt-1">${t.description}</div>
+                      <div class="flex gap-1 mt-2">
+                        ${t.personality.split('、').map(p => `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${p}</span>`).join('')}
+                      </div>
+                    </div>
                   </div>
-                  <div class="text-gray-300">→</div>
                 </button>
               `).join('')}
             </div>
@@ -371,33 +686,38 @@ IMPORTANTE:
       const t = state.tutor;
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <div class="bg-gradient-to-r ${t.color} p-5 text-white">
-            <button onclick="state.view='tutor';render()" class="text-white/80 text-sm mb-3">← 返回</button>
-            <div class="flex items-center gap-3">
-              <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-3xl">${t.avatar}</div>
+          <!-- 角色信息 -->
+          <div class="bg-gradient-to-r ${t.color} p-6 text-white">
+            <button onclick="state.view='tutor';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-4xl">${t.avatar}</div>
               <div>
-                <div class="font-bold text-lg">${t.name}</div>
-                <div class="text-white/80 text-sm">${t.role}</div>
+                <div class="text-xl font-bold">${t.name} ${t.emoji}</div>
+                <div class="text-white/80">${t.role}</div>
+                <div class="text-white/60 text-sm">${t.personality}</div>
               </div>
             </div>
           </div>
           
-          <div class="flex-1 overflow-auto p-5">
-            <h3 class="text-gray-500 text-sm mb-3">选择场景</h3>
+          <div class="flex-1 overflow-auto p-4">
+            <h3 class="text-sm font-medium text-gray-500 mb-3">选择对话场景</h3>
             <div class="grid grid-cols-2 gap-3">
               ${SCENARIOS.map(s => `
-                <button onclick="startChat(state.tutor, ${JSON.stringify(s).replace(/"/g, '&quot;')})" class="bg-white p-4 rounded-xl shadow-sm text-left hover:shadow-md active:scale-95 transition-all">
-                  <div class="text-2xl mb-1">${s.icon}</div>
+                <button onclick='startChat(state.tutor, ${JSON.stringify(s).replace(/'/g, "\\'")})'
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-primary-200 active:scale-95 transition-all">
+                  <div class="text-2xl mb-2">${s.icon}</div>
                   <div class="font-bold text-gray-800 text-sm">${s.name}</div>
                   <div class="text-xs text-gray-400">${s.nameEs}</div>
+                  <div class="text-xs text-gray-500 mt-1">${s.desc}</div>
                 </button>
               `).join('')}
             </div>
           </div>
           
           <div class="p-4 safe-bottom">
-            <button onclick="startChat(state.tutor, SCENARIOS[0])" class="w-full py-4 rounded-xl bg-gradient-to-r ${t.color} text-white font-bold shadow-lg active:scale-95 transition-transform">
-              🎤 直接开始对话
+            <button onclick="startChat(state.tutor, SCENARIOS[0])" 
+              class="w-full py-4 rounded-xl bg-gradient-to-r ${t.color} text-white font-bold shadow-lg active:scale-98 transition-all">
+              🎤 直接开始自由对话
             </button>
           </div>
         </div>
@@ -406,48 +726,40 @@ IMPORTANTE:
 
     function renderChat() {
       const t = state.tutor;
+      const user = state.user;
+      
       return `
         <div class="h-full bg-gray-100 flex flex-col">
           <!-- 顶栏 -->
-          <div class="bg-gradient-to-r ${t.color} text-white p-3 flex-shrink-0">
+          <div class="glass border-b p-3">
             <div class="flex items-center justify-between max-w-lg mx-auto">
-              <button onclick="state.isListening=false;speechSynthesis.cancel();state.view='tutor';render()" class="text-white/80 text-sm">← 结束</button>
+              <button onclick="endChat()" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+                <span>←</span>
+                <span class="text-sm">结束</span>
+              </button>
               <div class="text-center">
-                <div class="font-bold text-sm">${t.avatar} ${t.name}</div>
-                <div class="text-xs text-white/70">${state.scenario?.name || '自由聊天'} · ${state.level}</div>
+                <div class="flex items-center justify-center gap-2">
+                  <span class="text-xl">${t.avatar}</span>
+                  <span class="font-bold text-gray-800">${t.name}</span>
+                </div>
+                <div class="text-xs text-gray-500">${state.scenario?.name || '自由聊天'} · ${user.level}</div>
               </div>
-              <div class="w-12"></div>
+              <div class="w-16"></div>
             </div>
           </div>
           
           <!-- 消息列表 -->
           <div id="messages" class="flex-1 overflow-auto p-4 no-scrollbar">
-            <div class="max-w-lg mx-auto space-y-3">
-              ${state.messages.map(msg => `
-                <div class="flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}">
-                  <div class="max-w-[85%]">
-                    ${msg.type === 'ai' ? `<div class="w-7 h-7 rounded-full bg-white shadow flex items-center justify-center text-sm mb-1">${t.avatar}</div>` : ''}
-                    <div onclick="${msg.type === 'ai' ? `speak('${msg.text.replace(/'/g, "\\'")}')` : ''}" class="p-3 rounded-2xl text-sm ${msg.type === 'user' ? 'bg-orange-500 text-white rounded-br-none' : 'bg-white shadow-sm rounded-bl-none cursor-pointer hover:bg-gray-50'}">
-                      ${msg.text}
-                      ${msg.type === 'ai' ? '<div class="text-xs text-blue-500 mt-1">🔊 点击朗读</div>' : ''}
-                    </div>
-                    ${msg.correction ? `
-                      <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
-                        <div class="font-medium text-yellow-800">✏️ 纠正</div>
-                        <div class="text-yellow-700 mt-1">${msg.correction}</div>
-                      </div>
-                    ` : ''}
-                  </div>
-                </div>
-              `).join('')}
+            <div class="max-w-lg mx-auto space-y-4">
+              ${state.messages.map(msg => renderMessage(msg, t)).join('')}
               
               ${state.isLoading ? `
-                <div class="flex justify-start">
-                  <div class="bg-white p-3 rounded-2xl shadow-sm">
-                    <div class="flex gap-1">
-                      <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
-                      <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+                <div class="flex justify-start fade-in">
+                  <div class="bg-white p-4 rounded-2xl shadow-sm">
+                    <div class="flex gap-1.5">
+                      <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></div>
+                      <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
+                      <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
                     </div>
                   </div>
                 </div>
@@ -457,41 +769,36 @@ IMPORTANTE:
           
           <!-- 纠正统计 -->
           ${state.corrections > 0 ? `
-            <div class="bg-yellow-50 border-t border-yellow-100 py-1 text-center flex-shrink-0">
-              <span class="text-xs text-yellow-700">📝 已纠正 ${state.corrections} 处</span>
+            <div class="bg-amber-50 border-t border-amber-100 py-2 text-center">
+              <span class="text-sm text-amber-700">📝 本次对话已纠正 <strong>${state.corrections}</strong> 处</span>
             </div>
           ` : ''}
           
           <!-- 输入区 -->
-          <div class="bg-white border-t p-3 flex-shrink-0 safe-bottom">
+          <div class="glass border-t p-3 safe-bottom">
             <div class="max-w-lg mx-auto">
               <div class="flex gap-2 items-center">
-                <!-- 麦克风按钮 -->
-                <button onclick="toggleListening()" class="relative w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.isListening ? 'bg-red-500 text-white mic-recording' : 'bg-gray-100 hover:bg-gray-200'}">
-                  ${state.isListening ? '⏹️' : '🎤'}
+                <button onclick="toggleListening()" 
+                  class="relative w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.isListening ? 'bg-red-500 text-white mic-recording' : 'bg-gray-200 hover:bg-gray-300'}">
+                  ${state.isListening ? '⏹' : '🎤'}
                 </button>
                 
-                <!-- 输入框 -->
-                <input 
-                  id="input"
-                  type="text" 
-                  value="${state.inputText.replace(/"/g, '&quot;')}" 
-                  placeholder="${state.isListening ? '🎙️ 正在听你说西班牙语...' : '输入西班牙语...'}"
+                <input id="chatInput" type="text" value="${state.inputText.replace(/"/g, '&quot;')}" 
+                  placeholder="${state.isListening ? '🎙️ 正在听...' : '用西班牙语输入...'}"
                   oninput="state.inputText=this.value"
                   onkeydown="if(event.key==='Enter')sendMessage()"
-                  class="flex-1 p-3 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${state.isListening ? 'bg-red-50 border-2 border-red-200' : 'bg-gray-100'}"
-                >
+                  class="flex-1 p-3 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${state.isListening ? 'bg-red-50 border-2 border-red-200' : 'bg-white border border-gray-200'}">
                 
-                <!-- 发送按钮 -->
-                <button onclick="sendMessage()" class="w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.inputText.trim() && !state.isLoading ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-400'}">
+                <button onclick="sendMessage()" 
+                  class="w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.inputText.trim() && !state.isLoading ? 'bg-primary-500 text-white shadow-lg' : 'bg-gray-200 text-gray-400'}">
                   ➤
                 </button>
               </div>
               
-              <!-- 快捷短语 -->
               <div class="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
                 ${['¡Hola!', 'No entiendo', '¿Puedes repetir?', 'Más despacio', '¿Qué significa?'].map(p => `
-                  <button onclick="state.inputText='${p}';render()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs whitespace-nowrap hover:bg-orange-50 hover:text-orange-600">${p}</button>
+                  <button onclick="state.inputText='${p}';render()" 
+                    class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs whitespace-nowrap hover:border-primary-300 hover:text-primary-600">${p}</button>
                 `).join('')}
               </div>
             </div>
@@ -500,8 +807,238 @@ IMPORTANTE:
       `;
     }
 
-    // 启动
-    render();
+    function renderMessage(msg, tutor) {
+      const isUser = msg.type === 'user';
+      const showTrans = state.showTranslation[msg.id];
+      const translation = state.translationCache[msg.id];
+      
+      return `
+        <div class="flex ${isUser ? 'justify-end' : 'justify-start'} fade-in">
+          <div class="max-w-[85%]">
+            ${!isUser ? `
+              <div class="flex items-center gap-2 mb-1">
+                <div class="w-7 h-7 rounded-full bg-gradient-to-br ${tutor.color} flex items-center justify-center text-sm">${tutor.avatar}</div>
+                <span class="text-xs text-gray-500">${tutor.name}</span>
+              </div>
+            ` : ''}
+            
+            <div class="relative">
+              <div onclick="${!isUser ? `getTranslation(${msg.id}, '${msg.text.replace(/'/g, "\\'")}')` : ''}"
+                class="p-4 rounded-2xl text-sm ${isUser 
+                  ? 'bg-primary-500 text-white rounded-br-sm' 
+                  : 'bg-white shadow-sm rounded-bl-sm cursor-pointer hover:bg-gray-50'} transition-colors">
+                ${msg.text}
+                ${!isUser ? `<div class="text-xs ${showTrans ? 'text-primary-600' : 'text-gray-400'} mt-2 flex items-center gap-1">
+                  <span>🌐</span> <span>${showTrans ? '隐藏翻译' : '点击翻译'}</span>
+                </div>` : ''}
+              </div>
+              
+              ${!isUser && showTrans && translation ? `
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
+                  <div class="text-xs text-blue-500 mb-1">🇨🇳 中文翻译</div>
+                  ${translation}
+                </div>
+              ` : ''}
+              
+              ${!isUser ? `
+                <button onclick="speak('${msg.text.replace(/'/g, "\\'")}')" 
+                  class="absolute -right-10 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-gray-50">
+                  🔊
+                </button>
+              ` : ''}
+            </div>
+            
+            ${msg.correction ? `
+              <div class="correction-card mt-3 p-4 slide-up">
+                <div class="flex items-center gap-2 text-amber-800 font-medium mb-2">
+                  <span class="text-lg">✏️</span>
+                  <span>语法纠正</span>
+                </div>
+                <div class="text-sm text-amber-900">${msg.correction}</div>
+              </div>
+            ` : ''}
+            
+            ${msg.grammar ? `
+              <div class="mt-3 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-xl slide-up">
+                <div class="flex items-center gap-2 text-blue-800 font-medium mb-2">
+                  <span class="text-lg">📚</span>
+                  <span>语法知识</span>
+                </div>
+                <div class="text-sm text-blue-900">${msg.grammar}</div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function endChat() {
+      saveChatHistory();
+      state.isListening = false;
+      speechSynthesis.cancel();
+      if (recognition) try { recognition.stop(); } catch(e) {}
+      state.view = 'home';
+      render();
+    }
+
+    function renderSettings() {
+      const user = state.user;
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-white border-b p-4 flex items-center gap-3">
+            <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
+            <h1 class="font-bold text-gray-800">设置</h1>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-md mx-auto space-y-6">
+              <!-- 个人信息 -->
+              <div class="bg-white rounded-2xl p-5 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">👤 个人信息</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm text-gray-500">名字</label>
+                    <input id="settingName" type="text" value="${user.name}" 
+                      class="w-full mt-1 p-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none">
+                  </div>
+                  <div>
+                    <label class="text-sm text-gray-500">西语水平</label>
+                    <select id="settingLevel" class="w-full mt-1 p-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none">
+                      ${LEVELS.map(l => `<option value="${l.id}" ${user.level === l.id ? 'selected' : ''}>${l.id} - ${l.name}</option>`).join('')}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 学习偏好 -->
+              <div class="bg-white rounded-2xl p-5 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">📚 学习偏好</h3>
+                <div class="space-y-4">
+                  <label class="flex items-center justify-between">
+                    <span class="text-gray-700">自动显示翻译</span>
+                    <input id="settingAutoTrans" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${user.autoTranslate ? 'checked' : ''}>
+                  </label>
+                  <label class="flex items-center justify-between">
+                    <span class="text-gray-700">严格纠错模式</span>
+                    <input id="settingStrict" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${user.strictMode ? 'checked' : ''}>
+                  </label>
+                  <div>
+                    <label class="text-gray-700">语音速度</label>
+                    <input id="settingSpeechRate" type="range" min="0.5" max="1.2" step="0.05" value="${user.speechRate || 0.85}"
+                      class="w-full mt-2" oninput="document.getElementById('rateValue').textContent=this.value">
+                    <div class="flex justify-between text-xs text-gray-400">
+                      <span>慢</span>
+                      <span id="rateValue">${user.speechRate || 0.85}</span>
+                      <span>快</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 数据管理 -->
+              <div class="bg-white rounded-2xl p-5 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">💾 数据管理</h3>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">对话记录</span>
+                    <span class="text-gray-800 font-medium">${state.chatHistory.length} 条</span>
+                  </div>
+                  <button onclick="if(confirm('确定要清除所有对话记录吗？'))clearHistory()" 
+                    class="w-full py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50">
+                    清除对话记录
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 safe-bottom">
+            <button onclick="saveSettings()" 
+              class="w-full py-4 rounded-xl bg-primary-500 text-white font-bold shadow-lg">
+              保存设置
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveSettings() {
+      const name = document.getElementById('settingName').value.trim() || '学员';
+      const level = document.getElementById('settingLevel').value;
+      const autoTranslate = document.getElementById('settingAutoTrans').checked;
+      const strictMode = document.getElementById('settingStrict').checked;
+      const speechRate = parseFloat(document.getElementById('settingSpeechRate').value);
+      
+      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate });
+      state.view = 'home';
+      render();
+    }
+
+    function clearHistory() {
+      state.chatHistory = [];
+      Storage.remove('chatHistory');
+      render();
+    }
+
+    function renderHistory() {
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-white border-b p-4 flex items-center gap-3">
+            <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
+            <h1 class="font-bold text-gray-800">对话历史</h1>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            ${state.chatHistory.length > 0 ? `
+              <div class="max-w-md mx-auto space-y-3">
+                ${state.chatHistory.map(chat => {
+                  const tutor = TUTORS[chat.tutor];
+                  const scenario = SCENARIOS.find(s => s.id === chat.scenario);
+                  const date = new Date(chat.date);
+                  return `
+                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                      <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-2xl">${tutor?.avatar || '👤'}</div>
+                        <div class="flex-1">
+                          <div class="font-medium text-gray-800">${tutor?.name || '未知'}</div>
+                          <div class="text-sm text-gray-500">${scenario?.name || '自由聊天'}</div>
+                          <div class="text-xs text-gray-400">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-sm text-gray-600">${chat.messages?.length || 0} 条</div>
+                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600">纠正 ${chat.corrections}</div>` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="text-center py-20 text-gray-400">
+                <div class="text-5xl mb-3">📭</div>
+                <div>暂无对话记录</div>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 初始化 ====================
+    function init() {
+      render();
+      
+      setTimeout(() => {
+        if (state.user) {
+          state.view = 'home';
+        } else {
+          state.view = 'welcome';
+        }
+        render();
+      }, 1000);
+    }
+
+    init();
   </script>
 </body>
 </html>
