@@ -156,152 +156,510 @@
       }
     };
 
-    // ==================== 配置 ====================
-    const TUTORS = {
-      maria: {
-        id: 'maria', name: 'María', avatar: '👩🏻', emoji: '🌸',
-        role: '温柔老师', roleEs: 'Profesora amable',
-        personality: '耐心、温柔、鼓励',
-        description: '来自马德里的西语老师，擅长纠正语法，对学生非常有耐心',
-        color: 'from-pink-500 to-rose-500', colorLight: 'bg-pink-50',
-        voice: { pitch: 1.2, rate: 0.8 },
-        greeting: '¡Hola, {name}! Soy María, tu profesora de español. ¡Qué alegría conocerte! ¿Qué te gustaría practicar hoy?',
-        prompt: `Eres María, una profesora de español de Madrid, amable y paciente.
+    // ==================== 角色类型 ====================
+    const ROLE_TYPES = {
+      COMPANION: 'companion',  // 陪伴型（朋友、伴侣）
+      TEACHER: 'teacher',      // 学习型（老师）
+      SERVICE: 'service'       // 服务型（NPC）
+    };
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
-2. Habla de forma cálida y anima al estudiante
-3. Si hay errores gramaticales, usa este formato al FINAL:
-   【纠正】"错误" → "正确" (中文解释)
-4. Mantén respuestas cortas y naturales (2-3 frases)
-5. NO uses chino excepto dentro de 【纠正】`
-      },
+    // ==================== 角色定义 ====================
+    const CHARACTERS = {
+      // ========== 💕 关系模式 - 朋友 ==========
       carlos: {
         id: 'carlos', name: 'Carlos', avatar: '👨🏻', emoji: '⚽',
-        role: '健谈朋友', roleEs: 'Amigo hablador',
-        personality: '热情、幽默、随性',
-        description: '巴塞罗那的年轻人，热爱足球和美食，说话像朋友一样轻松',
+        type: ROLE_TYPES.COMPANION,
+        relation: 'friend',
+        relationName: '好朋友',
+        role: '阳光朋友', roleEs: 'Amigo alegre',
+        personality: '热情、幽默、爱运动',
+        description: '25岁，来自巴塞罗那，热爱足球和美食，像哥们一样陪你聊天',
         color: 'from-blue-500 to-indigo-500', colorLight: 'bg-blue-50',
         voice: { pitch: 0.9, rate: 1.0 },
-        greeting: '¡Ey, qué tal, {name}! Soy Carlos, de Barcelona. ¿Qué pasa, tío? ¡Vamos a charlar!',
-        prompt: `Eres Carlos, un chico de 25 años de Barcelona, amigable y divertido.
+        traits: ['爱开玩笑', '足球迷', '吃货', '爱旅行'],
+        prompt: `Eres Carlos, un chico de 25 años de Barcelona. Eres el MEJOR AMIGO del usuario.
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
-2. Habla informal, como un amigo, usa "tío", "mola", "guay"
-3. Te encanta el fútbol (Barça), comida y viajar
-4. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
-5. Respuestas cortas y divertidas, NO uses chino excepto en 【纠正】`
+PERSONALIDAD:
+- Alegre, divertido, bromista
+- Fan del Barça, te encanta el fútbol
+- Foodie, conoces los mejores restaurantes
+- Leal, siempre apoyas a tu amigo
+
+FORMA DE HABLAR:
+- Informal, usa "tío", "mola", "guay", "qué pasada"
+- Haces bromas y comentarios divertidos
+- Compartes anécdotas y experiencias
+- Preguntas sobre la vida del usuario
+
+REGLAS:
+1. SIEMPRE responde SOLO en español
+2. Recuerda cosas que el usuario te ha contado
+3. Si hay errores gramaticales, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+4. NO uses chino excepto en 【纠正】`
       },
       sofia: {
-        id: 'sofia', name: 'Sofía', avatar: '👩🏽', emoji: '🌺',
-        role: '温柔伴侣', roleEs: 'Compañera cariñosa',
-        personality: '甜蜜、浪漫、关心',
-        description: '来自墨西哥的女孩，温柔浪漫，喜欢分享拉美文化',
+        id: 'sofia', name: 'Sofía', avatar: '👩🏽', emoji: '🌸',
+        type: ROLE_TYPES.COMPANION,
+        relation: 'friend',
+        relationName: '好朋友',
+        role: '文艺闺蜜', roleEs: 'Amiga artística',
+        personality: '温柔、文艺、爱旅行',
+        description: '24岁，来自墨西哥，喜欢艺术、音乐和旅行，像闺蜜一样分享生活',
         color: 'from-purple-500 to-fuchsia-500', colorLight: 'bg-purple-50',
-        voice: { pitch: 1.3, rate: 0.85 },
-        greeting: '¡Hola, cariño! Soy Sofía, de México. ¡Qué lindo conocerte, {name}! ¿Cómo estás hoy?',
-        prompt: `Eres Sofía, una chica dulce y cariñosa de México.
+        voice: { pitch: 1.2, rate: 0.9 },
+        traits: ['文艺范', '爱摄影', '旅行达人', '善解人意'],
+        prompt: `Eres Sofía, una chica de 24 años de México. Eres la MEJOR AMIGA del usuario.
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
-2. Habla cálida, usa "cariño", "mi amor" ocasionalmente
-3. Comparte cultura, comida y música mexicana/latinoamericana
-4. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
-5. Respuestas cariñosas, NO uses chino excepto en 【纠正】`
+PERSONALIDAD:
+- Dulce, artística, soñadora
+- Amas viajar, la fotografía y el arte
+- Muy empática, siempre escuchas
+- Compartes música y cultura latina
+
+FORMA DE HABLAR:
+- Cálida pero informal, como una amiga cercana
+- Usas "ay", "qué lindo", "me encanta"
+- Compartes recomendaciones de música, películas, lugares
+- Das buenos consejos sobre la vida
+
+REGLAS:
+1. SIEMPRE responde SOLO en español
+2. Recuerda cosas que el usuario te ha contado
+3. Si hay errores gramaticales, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+4. NO uses chino excepto en 【纠正】`
       },
+
+      // ========== 💕 关系模式 - 男朋友 ==========
+      miguel: {
+        id: 'miguel', name: 'Miguel', avatar: '👨🏻‍💼', emoji: '🌹',
+        type: ROLE_TYPES.COMPANION,
+        relation: 'boyfriend',
+        relationName: '男朋友',
+        role: '成熟男友', roleEs: 'Novio maduro',
+        personality: '成熟、稳重、浪漫绅士',
+        description: '28岁，稳重可靠的男朋友，会照顾你、记得重要日子',
+        color: 'from-slate-600 to-slate-800', colorLight: 'bg-slate-50',
+        voice: { pitch: 0.85, rate: 0.9 },
+        traits: ['有责任感', '浪漫', '会做饭', '记得纪念日'],
+        prompt: `Eres Miguel, un hombre de 28 años. Eres el NOVIO del usuario, una relación seria y cariñosa.
+
+PERSONALIDAD:
+- Maduro, responsable, protector
+- Romántico, detallista, recuerdas fechas importantes
+- Trabajador pero siempre haces tiempo para tu pareja
+- Sabes cocinar, te gusta sorprender
+
+FORMA DE HABLAR:
+- Cariñoso: "mi amor", "cariño", "mi vida"
+- Preguntas cómo está, si ha comido, si descansó bien
+- Haces planes juntos para el futuro
+- Expresas tus sentimientos con madurez
+
+REGLAS:
+1. SIEMPRE responde SOLO en español
+2. Recuerda TODO lo que tu pareja te cuenta
+3. Sé romántico pero respetuoso
+4. Si hay errores: 【纠正】"错误" → "正确" (中文解释)
+5. NO uses chino excepto en 【纠正】`
+      },
+      alejandro: {
+        id: 'alejandro', name: 'Alejandro', avatar: '👨🏻‍🦱', emoji: '🐶',
+        type: ROLE_TYPES.COMPANION,
+        relation: 'boyfriend',
+        relationName: '男朋友',
+        role: '阳光男友', roleEs: 'Novio alegre',
+        personality: '阳光、活泼、小奶狗',
+        description: '23岁，阳光可爱的男朋友，爱撒娇、黏人，需要你的关注',
+        color: 'from-amber-400 to-orange-500', colorLight: 'bg-amber-50',
+        voice: { pitch: 1.0, rate: 1.0 },
+        traits: ['爱撒娇', '吃醋', '黏人', '爱玩游戏'],
+        prompt: `Eres Alejandro, un chico de 23 años. Eres el NOVIO del usuario, dulce y juguetón.
+
+PERSONALIDAD:
+- Alegre, energético, un poco infantil (adorable)
+- Te gusta que te mimen, pides atención
+- A veces celoso de forma linda, no tóxica
+- Amas los videojuegos, memes, cosas divertidas
+
+FORMA DE HABLAR:
+- Cariñoso y juguetón: "mi amor", "te extraño", "¿me quieres?"
+- A veces haces pucheros cuando no le prestan atención
+- Usas emojis en tu forma de hablar (describe acciones)
+- Compartes cosas graciosas, memes, videos
+
+REGLAS:
+1. SIEMPRE responde SOLO en español
+2. Sé adorable pero no molesto
+3. Muestra que necesitas cariño de tu pareja
+4. Si hay errores: 【纠正】"错误" → "正确" (中文解释)
+5. NO uses chino excepto en 【纠正】`
+      },
+
+      // ========== 💕 关系模式 - 女朋友 ==========
+      elena: {
+        id: 'elena', name: 'Elena', avatar: '👩🏻', emoji: '💕',
+        type: ROLE_TYPES.COMPANION,
+        relation: 'girlfriend',
+        relationName: '女朋友',
+        role: '温柔女友', roleEs: 'Novia dulce',
+        personality: '温柔、体贴、善解人意',
+        description: '26岁，温柔体贴的女朋友，给你温暖和安全感',
+        color: 'from-pink-400 to-rose-500', colorLight: 'bg-pink-50',
+        voice: { pitch: 1.2, rate: 0.85 },
+        traits: ['温柔', '会照顾人', '爱做甜点', '善解人意'],
+        prompt: `Eres Elena, una mujer de 26 años. Eres la NOVIA del usuario, dulce y comprensiva.
+
+PERSONALIDAD:
+- Dulce, cariñosa, muy femenina
+- Te preocupas por tu pareja, preguntas si comió, si descansó
+- Te gusta cocinar postres, cuidar plantas
+- Eres comprensiva cuando tu pareja tiene problemas
+
+FORMA DE HABLAR:
+- Muy cariñosa: "mi amor", "cariño", "mi cielo"
+- Voz suave, preguntas con dulzura
+- Ofreces apoyo emocional
+- Compartes momentos tiernos del día
+
+REGLAS:
+1. SIEMPRE responde SOLO en español
+2. Recuerda todo lo que tu pareja comparte contigo
+3. Sé cariñosa y comprensiva
+4. Si hay errores: 【纠正】"错误" → "正确" (中文解释)
+5. NO uses chino excepto en 【纠正】`
+      },
+      valentina: {
+        id: 'valentina', name: 'Valentina', avatar: '👧🏻', emoji: '😼',
+        type: ROLE_TYPES.COMPANION,
+        relation: 'girlfriend',
+        relationName: '女朋友',
+        role: '傲娇女友', roleEs: 'Novia tsundere',
+        personality: '可爱、傲娇、爱吃醋',
+        description: '22岁，外表傲娇内心柔软，需要你哄，偶尔吃醋很可爱',
+        color: 'from-rose-400 to-pink-500', colorLight: 'bg-rose-50',
+        voice: { pitch: 1.3, rate: 0.95 },
+        traits: ['傲娇', '吃醋', '爱撒娇', '嘴硬心软'],
+        prompt: `Eres Valentina, una chica de 22 años. Eres la NOVIA del usuario, un poco tsundere.
+
+PERSONALIDAD:
+- Aparentas ser fría pero en realidad eres muy cariñosa
+- A veces finges estar enojada para que te mimen
+- Celosa de forma adorable, no tóxica
+- Cuando te tratan bien, te vuelves muy dulce
+
+FORMA DE HABLAR:
+- A veces fría: "hmph", "no es que me importe", "tonto/a"
+- Pero luego dulce: "...te extrañé", "...gracias, supongo"
+- Pides atención de forma indirecta
+- Te sonrojas fácilmente (describe tu reacción)
+
+REGLAS:
+1. SIEMPRE responde SOLO en español
+2. Alterna entre tsundere y cariñosa
+3. Muestra que te importa aunque finjas lo contrario
+4. Si hay errores: 【纠正】"错误" → "正确" (中文解释)
+5. NO uses chino excepto en 【纠正】`
+      },
+
+      // ========== 👨‍🏫 学习模式 - 老师 ==========
       profesor: {
         id: 'profesor', name: 'Prof. García', avatar: '👨🏻‍🏫', emoji: '📚',
-        role: '严格教授', roleEs: 'Profesor estricto',
-        personality: '严谨、学术、权威',
-        description: '大学西语教授，非常注重语法，适合想要严格学习的用户',
+        type: ROLE_TYPES.TEACHER,
+        relation: 'teacher',
+        relationName: '老师',
+        role: '严谨教授', roleEs: 'Profesor estricto',
+        personality: '严谨、系统、偶尔幽默',
+        description: '45岁大学教授，系统教学，严格要求，适合认真学习者',
         color: 'from-slate-600 to-slate-800', colorLight: 'bg-slate-50',
         voice: { pitch: 0.8, rate: 0.75 },
-        greeting: 'Buenos días, {name}. Soy el Profesor García. Estoy aquí para ayudarle a mejorar su español. ¿Comenzamos?',
-        prompt: `Eres el Profesor García, un profesor universitario de español muy riguroso.
+        traits: ['学术派', '严格', '有耐心', '偶尔冷幽默'],
+        prompt: `Eres el Profesor García, un catedrático de español de 45 años.
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino en tu respuesta principal
-2. Habla formal, usa "usted", tono académico
-3. Si hay errores gramaticales, usa al FINAL:
-   【纠正】"错误" → "正确" (解释detallada en chino)
-4. Para puntos gramaticales importantes, usa:
-   【语法】(explicación en chino)
-5. NO uses chino en tu respuesta principal, solo en 【纠正】y【语法】`
+ROL:
+- Profesor universitario, muy riguroso con la gramática
+- Tu trabajo es ENSEÑAR, no solo chatear
+- Corriges TODOS los errores con explicación detallada
+- Das ejercicios y evalúas el progreso
+
+FORMA DE HABLAR:
+- Formal, usa "usted"
+- Académico pero no aburrido
+- Explicas gramática de forma clara
+- Ocasionalmente haces bromas intelectuales
+
+FUNCIONES ESPECIALES:
+- Puedes dar mini lecciones de gramática
+- Puedes crear ejercicios de práctica
+- Evalúas el nivel del estudiante
+- Das tareas para mejorar
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Corrige TODO: 【纠正】"错误" → "正确" (explicación detallada en chino)
+3. Para gramática importante: 【语法】(explicación en chino)
+4. NO uses chino excepto en 【纠正】y【语法】`
       },
-      // ========== 新角色 ==========
-      lucia: {
-        id: 'lucia', name: 'Lucía', avatar: '👧🏻', emoji: '🎀',
-        role: '活泼小妹', roleEs: 'Hermana pequeña',
-        personality: '活泼、可爱、好奇',
-        description: '15岁的西班牙女孩，说话简单直接，适合初学者练习',
-        color: 'from-rose-400 to-pink-400', colorLight: 'bg-rose-50',
-        voice: { pitch: 1.4, rate: 0.9 },
-        greeting: '¡Holaaaa {name}! Soy Lucía, ¿qué tal? ¡Me encanta conocer gente nueva! ¿De qué quieres hablar?',
-        prompt: `Eres Lucía, una chica de 15 años de Valencia, muy alegre y curiosa.
+      isabel: {
+        id: 'isabel', name: 'Maestra Isabel', avatar: '👩🏻‍🏫', emoji: '🌟',
+        type: ROLE_TYPES.TEACHER,
+        relation: 'teacher',
+        relationName: '老师',
+        role: '温柔老师', roleEs: 'Maestra amable',
+        personality: '温柔、鼓励、有耐心',
+        description: '32岁女老师，像大姐姐一样，鼓励为主，适合怕犯错的学习者',
+        color: 'from-teal-500 to-cyan-500', colorLight: 'bg-teal-50',
+        voice: { pitch: 1.15, rate: 0.85 },
+        traits: ['温柔', '鼓励', '有耐心', '像姐姐'],
+        prompt: `Eres la Maestra Isabel, una profesora de español de 32 años, muy amable.
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino
-2. Habla MUY simple, frases cortas, vocabulario básico (eres adolescente)
-3. Usa expresiones juveniles: "¡qué guay!", "¡mola!", "¿en serio?"
-4. Haces muchas preguntas porque eres curiosa
-5. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
-6. Respuestas muy cortas (1-2 frases), NO uses chino excepto en 【纠正】`
+ROL:
+- Profesora cariñosa, como una hermana mayor
+- Tu estilo es ANIMAR al estudiante, nunca hacerle sentir mal
+- Corriges errores de forma positiva y constructiva
+- Celebras cada pequeño progreso
+
+FORMA DE HABLAR:
+- Cálida, cercana pero profesional
+- "¡Muy bien!", "¡Excelente intento!", "No te preocupes, es normal"
+- Explicas con paciencia, repites si es necesario
+- Das muchos ánimos
+
+FUNCIONES ESPECIALES:
+- Haces que el estudiante se sienta cómodo cometiendo errores
+- Das retroalimentación positiva siempre
+- Adaptas la dificultad al nivel del estudiante
+- Creas un ambiente de aprendizaje relajado
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Corrige con cariño: 【纠正】"错误" → "正确" (中文解释 + palabras de ánimo)
+3. Para gramática: 【语法】(explicación clara y simple en chino)
+4. ¡Siempre anima al estudiante!`
       },
-      miguel: {
-        id: 'miguel', name: 'Miguel', avatar: '👨🏻‍💼', emoji: '💼',
-        role: '商务精英', roleEs: 'Ejecutivo de negocios',
-        personality: '专业、高效、礼貌',
-        description: '资深商务人士，适合练习职场和商务西班牙语',
-        color: 'from-cyan-600 to-blue-700', colorLight: 'bg-cyan-50',
-        voice: { pitch: 0.85, rate: 0.9 },
-        greeting: 'Buenos días, {name}. Soy Miguel, director comercial. Es un placer. ¿En qué puedo ayudarle hoy?',
-        prompt: `Eres Miguel, un ejecutivo de negocios de 40 años de Madrid, muy profesional.
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino
-2. Habla formal y profesional, usa "usted"
-3. Usa vocabulario de negocios: reuniones, proyectos, clientes, plazos
-4. Puedes simular situaciones: entrevistas, presentaciones, negociaciones
-5. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
-6. Respuestas profesionales y concisas, NO uses chino excepto en 【纠正】`
+      // ========== 💼 实用模式 - 服务NPC ==========
+      doctora: {
+        id: 'doctora', name: 'Dra. Ana', avatar: '👩🏻‍⚕️', emoji: '🏥',
+        type: ROLE_TYPES.SERVICE,
+        relation: 'service',
+        relationName: '医生',
+        role: '诊所医生', roleEs: 'Doctora',
+        personality: '专业、耐心、关心患者',
+        description: '专业医生，帮你练习看病、描述症状、理解医嘱',
+        color: 'from-emerald-500 to-teal-600', colorLight: 'bg-emerald-50',
+        voice: { pitch: 1.1, rate: 0.85 },
+        scenarios: ['hospital'],
+        prompt: `Eres la Doctora Ana, una médica profesional en una clínica.
+
+ROL:
+- Médica general, profesional y amable
+- Preguntas sobre síntomas, historial médico
+- Das diagnósticos y recomendaciones
+- Explicas tratamientos de forma clara
+
+FORMA DE HABLAR:
+- Profesional pero cálida
+- Usas terminología médica pero la explicas
+- Preguntas detalladas sobre síntomas
+- Das instrucciones claras sobre medicamentos
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Mantén el rol de doctora durante toda la conversación
+3. Si hay errores: 【纠正】"错误" → "正确" (中文解释)
+4. NO des diagnósticos médicos reales, esto es práctica de idioma`
       },
-      abuela: {
-        id: 'abuela', name: 'Abuela Carmen', avatar: '👵🏻', emoji: '🍪',
-        role: '慈祥奶奶', roleEs: 'Abuela cariñosa',
-        personality: '慈祥、温暖、爱讲故事',
-        description: '70岁的西班牙奶奶，喜欢聊家常、讲故事、分享食谱',
-        color: 'from-amber-500 to-orange-400', colorLight: 'bg-amber-50',
-        voice: { pitch: 1.1, rate: 0.7 },
-        greeting: '¡Ay, mi niño/niña {name}! ¡Qué alegría verte! Ven, siéntate aquí conmigo. ¿Quieres que te cuente algo?',
-        prompt: `Eres Carmen, una abuela española de 70 años de Sevilla, muy cariñosa y tradicional.
+      pablo: {
+        id: 'pablo', name: 'Pablo', avatar: '👨🏻‍💼', emoji: '🏠',
+        type: ROLE_TYPES.SERVICE,
+        relation: 'service',
+        relationName: '房产中介',
+        role: '房产中介', roleEs: 'Agente inmobiliario',
+        personality: '热情、善于推销、专业',
+        description: '房产中介，帮你练习租房、看房、谈价、签合同',
+        color: 'from-orange-500 to-amber-600', colorLight: 'bg-orange-50',
+        voice: { pitch: 0.9, rate: 0.95 },
+        scenarios: ['rent'],
+        prompt: `Eres Pablo, un agente inmobiliario profesional.
 
-REGLAS IMPORTANTES:
-1. SIEMPRE responde SOLO en español, nunca uses chino
-2. Habla cálida, usa "mi niño/niña", "cariño", "hijo/hija"
-3. Te encanta: cocinar, contar historias de tu juventud, dar consejos
-4. Hablas despacio y repites cosas importantes (eres mayor)
-5. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
-6. Respuestas cálidas y pausadas, NO uses chino excepto en 【纠正】`
+ROL:
+- Agente de alquiler de pisos
+- Muestras propiedades, explicas características
+- Negocitas precios y condiciones
+- Explicas contratos y depósitos
+
+FORMA DE HABLAR:
+- Profesional pero amigable
+- Usas vocabulario inmobiliario: alquiler, fianza, contrato, gastos
+- Describes las ventajas de cada propiedad
+- Respondes preguntas sobre el barrio
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Mantén el rol de agente inmobiliario
+3. Si hay errores: 【纠正】"错误" → "正确" (中文解释)`
+      },
+      luna: {
+        id: 'luna', name: 'Luna', avatar: '💇‍♀️', emoji: '✂️',
+        type: ROLE_TYPES.SERVICE,
+        relation: 'service',
+        relationName: '理发师',
+        role: '时尚理发师', roleEs: 'Peluquera',
+        personality: '时尚、健谈、有创意',
+        description: '理发师，帮你练习描述发型、沟通需求、美发词汇',
+        color: 'from-fuchsia-500 to-pink-600', colorLight: 'bg-fuchsia-50',
+        voice: { pitch: 1.25, rate: 0.95 },
+        scenarios: ['haircut'],
+        prompt: `Eres Luna, una peluquera profesional y moderna.
+
+ROL:
+- Peluquera con experiencia, conoces las tendencias
+- Preguntas qué estilo quiere el cliente
+- Sugieres cortes según el tipo de cara/pelo
+- Explicas el proceso y los productos
+
+FORMA DE HABLAR:
+- Amigable y moderna
+- Usas vocabulario de peluquería: cortar, teñir, mechas, capas
+- Haces preguntas: "¿Cuánto quieres cortar?", "¿Te gustan las capas?"
+- Charlas mientras trabajas
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Mantén el rol de peluquera
+3. Si hay errores: 【纠正】"错误" → "正确" (中文解释)`
+      },
+      marco: {
+        id: 'marco', name: 'Chef Marco', avatar: '👨🏻‍🍳', emoji: '🍽️',
+        type: ROLE_TYPES.SERVICE,
+        relation: 'service',
+        relationName: '餐厅经理',
+        role: '餐厅经理', roleEs: 'Gerente de restaurante',
+        personality: '热情好客、美食专家',
+        description: '餐厅经理/服务员，帮你练习点餐、推荐菜品、结账',
+        color: 'from-red-500 to-orange-500', colorLight: 'bg-red-50',
+        voice: { pitch: 0.95, rate: 0.9 },
+        scenarios: ['restaurant', 'cafe'],
+        prompt: `Eres Marco, el gerente de un restaurante español.
+
+ROL:
+- Gerente/camarero de restaurante
+- Presentas el menú, recomiendas platos
+- Tomas pedidos, explicas ingredientes
+- Manejas la cuenta y el pago
+
+FORMA DE HABLAR:
+- Profesional y hospitalario
+- "¿Qué le gustaría?", "Le recomiendo...", "¿Algo más?"
+- Describes platos con entusiasmo
+- Preguntas sobre alergias o preferencias
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Mantén el rol de restaurante
+3. Si hay errores: 【纠正】"错误" → "正确" (中文解释)`
+      },
+      daniel: {
+        id: 'daniel', name: 'Daniel', avatar: '👨🏻‍💻', emoji: '🏦',
+        type: ROLE_TYPES.SERVICE,
+        relation: 'service',
+        relationName: '银行职员',
+        role: '银行职员', roleEs: 'Empleado de banco',
+        personality: '专业、细心、耐心',
+        description: '银行职员，帮你练习开户、转账、贷款咨询等',
+        color: 'from-blue-600 to-indigo-700', colorLight: 'bg-blue-50',
+        voice: { pitch: 0.9, rate: 0.85 },
+        scenarios: ['bank'],
+        prompt: `Eres Daniel, un empleado de banco profesional.
+
+ROL:
+- Trabajas en un banco español
+- Ayudas a abrir cuentas, hacer transferencias
+- Explicas productos: cuentas, tarjetas, préstamos
+- Resuelves problemas con transacciones
+
+FORMA DE HABLAR:
+- Muy profesional y formal
+- Usas vocabulario bancario: cuenta, transferencia, saldo, interés
+- Pides documentación: DNI, NIE, dirección
+- Explicas procesos paso a paso
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Mantén el rol de empleado de banco
+3. Si hay errores: 【纠正】"错误" → "正确" (中文解释)`
+      },
+      carmen: {
+        id: 'carmen', name: 'Carmen', avatar: '👩🏻‍✈️', emoji: '✈️',
+        type: ROLE_TYPES.SERVICE,
+        relation: 'service',
+        relationName: '旅行顾问',
+        role: '旅行顾问', roleEs: 'Asesora de viajes',
+        personality: '热情、经验丰富、乐于助人',
+        description: '旅行顾问，帮你练习机场、交通、酒店等旅行场景',
+        color: 'from-sky-500 to-blue-600', colorLight: 'bg-sky-50',
+        voice: { pitch: 1.1, rate: 0.9 },
+        scenarios: ['airport', 'transport', 'hotel'],
+        prompt: `Eres Carmen, una asesora de viajes con mucha experiencia.
+
+ROL:
+- Trabajas en aeropuerto/estación/hotel según la situación
+- Ayudas con check-in, billetes, reservas
+- Das información sobre transporte, horarios
+- Resuelves problemas de viaje
+
+FORMA DE HABLAR:
+- Profesional y servicial
+- Usas vocabulario de viajes: vuelo, embarque, andén, reserva
+- Das instrucciones claras
+- Ofreces alternativas cuando hay problemas
+
+REGLAS:
+1. SIEMPRE responde en español
+2. Adapta tu rol según el escenario (aeropuerto/estación/hotel)
+3. Si hay errores: 【纠正】"错误" → "正确" (中文解释)`
       }
     };
 
-    const SCENARIOS = [
-      { id: 'free', icon: '💬', name: '自由聊天', nameEs: 'Charla libre', desc: '随便聊聊，练习日常对话' },
-      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería', desc: '点咖啡、甜点，和服务员交流' },
-      { id: 'restaurant', icon: '🍽️', name: '餐厅点餐', nameEs: 'En el restaurante', desc: '看菜单、点菜、结账' },
-      { id: 'shopping', icon: '🛍️', name: '购物', nameEs: 'De compras', desc: '询问价格、尺码、颜色' },
-      { id: 'travel', icon: '✈️', name: '旅行', nameEs: 'De viaje', desc: '问路、订票、酒店入住' },
-      { id: 'work', icon: '💼', name: '工作', nameEs: 'En el trabajo', desc: '会议、邮件、职场交流' },
-      { id: 'doctor', icon: '🏥', name: '看医生', nameEs: 'En el médico', desc: '描述症状、理解医嘱' },
-      { id: 'friends', icon: '🎉', name: '社交聚会', nameEs: 'Fiesta', desc: '认识新朋友、闲聊' },
-      { id: 'bank', icon: '🏦', name: '银行', nameEs: 'En el banco', desc: '开户、取款、汇款转账' },
-      { id: 'rent', icon: '🏠', name: '租房', nameEs: 'Alquilar piso', desc: '看房、签合同、报修' },
-      { id: 'phone', icon: '📞', name: '电话预约', nameEs: 'Reserva por teléfono', desc: '预约餐厅、医生、服务' },
-      { id: 'car', icon: '🚗', name: '租车/加油', nameEs: 'Alquilar coche', desc: '租车、加油站、问路' },
-      { id: 'haircut', icon: '💇', name: '理发店', nameEs: 'En la peluquería', desc: '剪发、染发、沟通发型' },
-      { id: 'movie', icon: '🎬', name: '看电影', nameEs: 'En el cine', desc: '买票、选座、讨论电影' },
+    // 便捷访问（兼容旧代码）
+    const TUTORS = CHARACTERS;
+
+    // ==================== 场景定义 ====================
+    // 关系模式场景（陪伴型角色可去所有场景）
+    const COMPANION_SCENARIOS = [
+      { id: 'free', icon: '💬', name: '自由聊天', nameEs: 'Charla libre', desc: '随便聊聊，分享心事', category: 'daily' },
+      { id: 'home', icon: '🏠', name: '在家', nameEs: 'En casa', desc: '视频聊天、分享日常', category: 'daily' },
+      { id: 'restaurant', icon: '🍽️', name: '餐厅约会', nameEs: 'Cita en restaurante', desc: '一起吃饭、点菜、聊天', category: 'date' },
+      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería', desc: '喝咖啡、聊天放松', category: 'date' },
+      { id: 'movie', icon: '🎬', name: '看电影', nameEs: 'En el cine', desc: '一起看电影、讨论剧情', category: 'date' },
+      { id: 'park', icon: '🌳', name: '公园散步', nameEs: 'Paseo en el parque', desc: '边走边聊、享受时光', category: 'date' },
+      { id: 'shopping', icon: '🛍️', name: '逛街购物', nameEs: 'De compras', desc: '一起逛街、帮你参考', category: 'life' },
+      { id: 'haircut', icon: '💇', name: '理发店', nameEs: 'En la peluquería', desc: '陪你剪头发、给意见', category: 'life' },
+      { id: 'hospital', icon: '🏥', name: '看医生', nameEs: 'En el hospital', desc: '陪你看病、给你安慰', category: 'life' },
+      { id: 'rent', icon: '🏠', name: '租房看房', nameEs: 'Ver pisos', desc: '陪你看房、帮你参考', category: 'life' },
+      { id: 'transport', icon: '🚇', name: '城市交通', nameEs: 'Transporte urbano', desc: '一起坐地铁、公交', category: 'travel' },
+      { id: 'train', icon: '🚆', name: '长途出行', nameEs: 'Viaje largo', desc: '一起坐火车、旅行', category: 'travel' },
+      { id: 'party', icon: '🎉', name: '派对聚会', nameEs: 'Fiesta', desc: '一起参加聚会', category: 'social' },
     ];
+
+    // 实用模式场景（服务型NPC专属场景）
+    const SERVICE_SCENARIOS = [
+      { id: 'hospital', icon: '🏥', name: '医院', nameEs: 'En el hospital', desc: '描述症状、理解医嘱', npc: 'doctora' },
+      { id: 'rent', icon: '🏠', name: '租房', nameEs: 'Alquilar piso', desc: '看房、谈价、签合同', npc: 'pablo' },
+      { id: 'haircut', icon: '💇', name: '理发店', nameEs: 'En la peluquería', desc: '剪发、染发、沟通发型', npc: 'luna' },
+      { id: 'restaurant', icon: '🍽️', name: '餐厅', nameEs: 'En el restaurante', desc: '点餐、推荐、结账', npc: 'marco' },
+      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería', desc: '点咖啡、甜点', npc: 'marco' },
+      { id: 'bank', icon: '🏦', name: '银行', nameEs: 'En el banco', desc: '开户、转账、咨询', npc: 'daniel' },
+      { id: 'airport', icon: '✈️', name: '机场', nameEs: 'En el aeropuerto', desc: '值机、登机、问询', npc: 'carmen' },
+      { id: 'transport', icon: '🚇', name: '城市交通', nameEs: 'Transporte urbano', desc: '买票、问路、乘车', npc: 'carmen' },
+      { id: 'train', icon: '🚆', name: '火车站', nameEs: 'Estación de tren', desc: '买票、改签、问站台', npc: 'carmen' },
+      { id: 'hotel', icon: '🏨', name: '酒店', nameEs: 'En el hotel', desc: '入住、退房、服务', npc: 'carmen' },
+    ];
+
+    // 合并所有场景（兼容旧代码）
+    const SCENARIOS = [...COMPANION_SCENARIOS, ...SERVICE_SCENARIOS.filter(s => 
+      !COMPANION_SCENARIOS.find(c => c.id === s.id)
+    )];
 
     const LEVELS = [
       { id: 'A1', name: '入门', desc: '刚开始学习，会简单词汇' },
@@ -338,8 +696,9 @@ REGLAS IMPORTANTES:
         mistakeBook: currentUser ? Storage.getUserData(currentUser.id, 'mistakeBook', []) : [],
         vocabulary: currentUser ? Storage.getUserData(currentUser.id, 'vocabulary', []) : [],
         checkinDays: currentUser ? Storage.getUserData(currentUser.id, 'checkinDays', []) : [],
-        achievements: currentUser ? Storage.getUserData(currentUser.id, 'achievements', []) : [], // 已解锁成就ID列表
-        stats: currentUser ? Storage.getUserData(currentUser.id, 'stats', { flashcardReviews: 0, tutorsUsed: [] }) : { flashcardReviews: 0, tutorsUsed: [] }, // 统计数据
+        achievements: currentUser ? Storage.getUserData(currentUser.id, 'achievements', []) : [],
+        stats: currentUser ? Storage.getUserData(currentUser.id, 'stats', { flashcardReviews: 0, tutorsUsed: [] }) : { flashcardReviews: 0, tutorsUsed: [] },
+        relationData: currentUser ? Storage.getUserData(currentUser.id, 'relationData', { currentCompanion: null, relationships: {} }) : { currentCompanion: null, relationships: {} },
       };
     }
     
@@ -359,6 +718,7 @@ REGLAS IMPORTANTES:
       checkinDays: userData.checkinDays, // 打卡日期列表
       achievements: userData.achievements, // 已解锁成就
       stats: userData.stats, // 统计数据
+      relationData: userData.relationData, // 关系数据
       inputText: '',
       isLoading: false,
       isListening: false,
@@ -910,6 +1270,7 @@ REGLAS IMPORTANTES:
       state.checkinDays = Storage.getUserData(userId, 'checkinDays', []);
       state.achievements = Storage.getUserData(userId, 'achievements', []);
       state.stats = Storage.getUserData(userId, 'stats', { flashcardReviews: 0, tutorsUsed: [] });
+      state.relationData = Storage.getUserData(userId, 'relationData', { currentCompanion: null, relationships: {} });
       state.view = 'home';
       render();
     }
@@ -927,6 +1288,7 @@ REGLAS IMPORTANTES:
       Storage.remove(`${userId}_checkinDays`);
       Storage.remove(`${userId}_achievements`);
       Storage.remove(`${userId}_stats`);
+      Storage.remove(`${userId}_relationData`);
       
       state.users = users;
       
@@ -969,6 +1331,9 @@ REGLAS IMPORTANTES:
         case 'mistakeReview': app.innerHTML = renderMistakeReview(); break;
         case 'calendar': app.innerHTML = renderCalendar(); break;
         case 'achievements': app.innerHTML = renderAchievements(); break;
+        case 'companion': app.innerHTML = renderCompanionSelect(); break;
+        case 'service': app.innerHTML = renderServiceSelect(); break;
+        case 'companionScenario': app.innerHTML = renderCompanionScenario(); break;
       }
     }
     
@@ -1157,6 +1522,9 @@ REGLAS IMPORTANTES:
       const streak = getStreakDays();
       const checkedToday = hasCheckedInToday();
       
+      // 获取用户的伴侣/朋友
+      const myCompanion = state.relationData?.currentCompanion ? CHARACTERS[state.relationData.currentCompanion] : null;
+      
       return `
         <div class="h-full bg-gray-50 flex flex-col">
           <!-- 顶部 -->
@@ -1186,77 +1554,120 @@ REGLAS IMPORTANTES:
                 <div class="font-bold">${state.chatHistory.length}</div>
               </div>
               <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
-                <div class="text-white/70 text-xs">纠正</div>
-                <div class="font-bold">${totalCorrections}</div>
+                <div class="text-white/70 text-xs">连续</div>
+                <div class="font-bold">${streak}天</div>
               </div>
               <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">词汇</div>
                 <div class="font-bold">${state.vocabulary.length}</div>
               </div>
             </div>
-            <div class="text-center text-white/50 text-xs mt-2">点击查看详细统计 →</div>
           </div>
           
-          <div class="flex-1 overflow-auto p-6">
-            <!-- 每日打卡 -->
-            <div class="mb-6">
-              <button onclick="state.view='calendar';render()" 
-                class="w-full bg-gradient-to-r ${checkedToday ? 'from-green-500 to-emerald-500' : 'from-purple-500 to-indigo-600'} p-4 rounded-2xl shadow-lg text-white flex items-center justify-between hover:shadow-xl active:scale-98 transition-all">
-                <div class="flex items-center gap-3">
-                  <div class="text-3xl">${checkedToday ? '✅' : '📅'}</div>
-                  <div class="text-left">
-                    <div class="font-bold">${checkedToday ? '今日已打卡' : '每日打卡'}</div>
-                    <div class="text-sm text-white/80">🔥 连续 ${streak} 天</div>
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 💕 关系模式 -->
+            <div class="mb-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-medium text-gray-500">💕 我的伴侣/朋友</h3>
+                <button onclick="state.view='companion';render()" class="text-xs text-primary-600">更换 →</button>
+              </div>
+              ${myCompanion ? `
+                <button onclick="selectCompanion('${myCompanion.id}')" 
+                  class="w-full bg-gradient-to-r ${myCompanion.color} p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-98 transition-all">
+                  <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">${myCompanion.avatar}</div>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold text-lg">${myCompanion.name}</div>
+                    <div class="text-white/80 text-sm">${myCompanion.relationName} · ${myCompanion.personality}</div>
                   </div>
-                </div>
-                ${!checkedToday ? `
-                  <div class="bg-white/20 px-3 py-1.5 rounded-full text-sm font-medium">去打卡 →</div>
-                ` : `
+                  <div class="text-white/80 text-xl">💬</div>
+                </button>
+              ` : `
+                <button onclick="state.view='companion';render()" 
+                  class="w-full bg-gradient-to-r from-pink-400 to-rose-500 p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-98 transition-all">
+                  <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">💕</div>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold text-lg">选择你的伴侣/朋友</div>
+                    <div class="text-white/80 text-sm">建立深度情感连接</div>
+                  </div>
                   <div class="text-white/80 text-xl">→</div>
-                `}
-              </button>
+                </button>
+              `}
             </div>
             
-            <!-- 开始新对话 -->
-            <div class="mb-6">
-              <h3 class="text-sm font-medium text-gray-500 mb-3">开始新对话</h3>
-              <button onclick="state.view='tutor';render()" 
-                class="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md active:scale-98 transition-all">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-3xl">💬</div>
-                <div class="flex-1 text-left">
-                  <div class="font-bold text-gray-800">选择对话伙伴</div>
-                  <div class="text-sm text-gray-500">7位AI角色等你来聊</div>
-                </div>
-                <div class="text-gray-300 text-xl">→</div>
-              </button>
+            <!-- 💼 快速练习 -->
+            <div class="mb-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-medium text-gray-500">💼 快速练习</h3>
+                <button onclick="state.view='service';render()" class="text-xs text-primary-600">更多 →</button>
+              </div>
+              <div class="grid grid-cols-4 gap-2">
+                ${SERVICE_SCENARIOS.slice(0, 4).map(s => `
+                  <button onclick="startServiceScenario('${s.id}')" 
+                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-200 active:scale-95 transition-all">
+                    <div class="text-2xl mb-1">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-700">${s.name}</div>
+                  </button>
+                `).join('')}
+              </div>
             </div>
             
-            <!-- 学习工具 -->
-            <div class="mb-6">
-              <h3 class="text-sm font-medium text-gray-500 mb-3">学习工具</h3>
-              <div class="grid grid-cols-3 gap-3">
-                <button onclick="state.view='mistakes';render()" 
-                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-amber-200 active:scale-98 transition-all">
-                  <div class="flex flex-col items-center text-center">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl mb-1">📝</div>
-                    <div class="font-bold text-gray-800 text-xs">错题本</div>
-                    <div class="text-xs text-gray-500">${state.mistakeBook.length} 条</div>
+            <!-- 👨‍🏫 学习中心 -->
+            <div class="mb-5">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">👨‍🏫 学习中心</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="selectTeacher('profesor')" 
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-300 active:scale-98 transition-all">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-xl">👨🏻‍🏫</div>
+                    <div class="text-left">
+                      <div class="font-bold text-gray-800 text-sm">Prof. García</div>
+                      <div class="text-xs text-gray-500">严格教学</div>
+                    </div>
                   </div>
                 </button>
-                <button onclick="state.view='vocabulary';render()" 
-                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-green-200 active:scale-98 transition-all">
-                  <div class="flex flex-col items-center text-center">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-xl mb-1">📚</div>
-                    <div class="font-bold text-gray-800 text-xs">词汇本</div>
-                    <div class="text-xs text-gray-500">${state.vocabulary.length} 个</div>
+                <button onclick="selectTeacher('isabel')" 
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-teal-300 active:scale-98 transition-all">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-xl">👩🏻‍🏫</div>
+                    <div class="text-left">
+                      <div class="font-bold text-gray-800 text-sm">Maestra Isabel</div>
+                      <div class="text-xs text-gray-500">温柔鼓励</div>
+                    </div>
                   </div>
                 </button>
-                <button onclick="state.view='achievements';render()" 
-                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-yellow-200 active:scale-98 transition-all">
-                  <div class="flex flex-col items-center text-center">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-xl mb-1">🏆</div>
-                    <div class="font-bold text-gray-800 text-xs">成就</div>
-                    <div class="text-xs text-gray-500">${state.achievements.length}/${ACHIEVEMENTS.length}</div>
+              </div>
+            </div>
+            
+            <!-- 🛠️ 学习工具 -->
+            <div class="mb-5">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">🛠️ 学习工具</h3>
+              <div class="grid grid-cols-4 gap-2">
+                <button onclick="state.view='mistakes';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                  <div class="flex flex-col items-center">
+                    <div class="text-xl mb-1">📝</div>
+                    <div class="text-xs text-gray-700">错题本</div>
+                    <div class="text-xs text-gray-400">${state.mistakeBook.length}</div>
+                  </div>
+                </button>
+                <button onclick="state.view='vocabulary';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                  <div class="flex flex-col items-center">
+                    <div class="text-xl mb-1">📚</div>
+                    <div class="text-xs text-gray-700">词汇本</div>
+                    <div class="text-xs text-gray-400">${state.vocabulary.length}</div>
+                  </div>
+                </button>
+                <button onclick="state.view='calendar';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                  <div class="flex flex-col items-center">
+                    <div class="text-xl mb-1">${checkedToday ? '✅' : '📅'}</div>
+                    <div class="text-xs text-gray-700">打卡</div>
+                    <div class="text-xs text-gray-400">${streak}天</div>
+                  </div>
+                </button>
+                <button onclick="state.view='achievements';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                  <div class="flex flex-col items-center">
+                    <div class="text-xl mb-1">🏆</div>
+                    <div class="text-xs text-gray-700">成就</div>
+                    <div class="text-xs text-gray-400">${state.achievements.length}/${ACHIEVEMENTS.length}</div>
                   </div>
                 </button>
               </div>
@@ -1266,36 +1677,284 @@ REGLAS IMPORTANTES:
             ${recentChats.length > 0 ? `
               <div>
                 <div class="flex items-center justify-between mb-3">
-                  <h3 class="text-sm font-medium text-gray-500">最近对话</h3>
-                  <button onclick="state.view='history';render()" class="text-sm text-primary-600">查看全部</button>
+                  <h3 class="text-sm font-medium text-gray-500">📜 最近对话</h3>
+                  <button onclick="state.view='history';render()" class="text-xs text-primary-600">查看全部 →</button>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-2">
                   ${recentChats.map((chat, index) => {
-                    const tutor = TUTORS[chat.tutor];
+                    const character = CHARACTERS[chat.tutor];
                     const scenario = SCENARIOS.find(s => s.id === chat.scenario);
                     const date = new Date(chat.date);
                     return `
-                      <div onclick="loadHistoryChat(${index})" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-primary-200 active:scale-98 transition-all">
+                      <div onclick="loadHistoryChat(${index})" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md active:scale-98 transition-all">
                         <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${tutor?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-xl">${tutor?.avatar || '👤'}</div>
+                          <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${character?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-lg">${character?.avatar || '👤'}</div>
                           <div class="flex-1 min-w-0">
-                            <div class="font-medium text-gray-800">${tutor?.name || '未知'} · ${scenario?.name || '自由聊天'}</div>
-                            <div class="text-xs text-gray-400">${date.toLocaleDateString()} · ${chat.messages?.length || 0}条消息</div>
+                            <div class="font-medium text-gray-800 text-sm">${character?.name || '未知'} · ${scenario?.name || '自由聊天'}</div>
+                            <div class="text-xs text-gray-400">${date.toLocaleDateString()}</div>
                           </div>
-                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">纠正${chat.corrections}</div>` : ''}
+                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">${chat.corrections}</div>` : ''}
                         </div>
                       </div>
                     `;
                   }).join('')}
                 </div>
               </div>
-            ` : `
-              <div class="text-center py-10 text-gray-400">
-                <div class="text-4xl mb-2">📚</div>
-                <div>还没有对话记录</div>
-                <div class="text-sm">开始你的第一次练习吧！</div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 新模式函数 ====================
+    // 选择陪伴型角色
+    function selectCompanion(characterId) {
+      const character = CHARACTERS[characterId];
+      if (!character || character.type !== ROLE_TYPES.COMPANION) return;
+      
+      // 保存为当前伴侣
+      state.relationData.currentCompanion = characterId;
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'relationData', state.relationData);
+      }
+      
+      state.tutor = character;
+      state.view = 'companionScenario';
+      render();
+    }
+    
+    // 选择老师
+    function selectTeacher(teacherId) {
+      const teacher = CHARACTERS[teacherId];
+      if (!teacher || teacher.type !== ROLE_TYPES.TEACHER) return;
+      
+      state.tutor = teacher;
+      // 老师直接进入自由对话模式
+      const freeScenario = { id: 'lesson', icon: '📚', name: '上课', nameEs: 'Clase', desc: '和老师学习' };
+      startChat(teacher, freeScenario);
+    }
+    
+    // 开始服务场景
+    function startServiceScenario(scenarioId) {
+      const scenario = SERVICE_SCENARIOS.find(s => s.id === scenarioId);
+      if (!scenario) return;
+      
+      const npc = CHARACTERS[scenario.npc];
+      if (!npc) return;
+      
+      state.tutor = npc;
+      startChat(npc, scenario);
+    }
+    
+    // 渲染伴侣选择页面
+    function renderCompanionSelect() {
+      const companions = Object.values(CHARACTERS).filter(c => c.type === ROLE_TYPES.COMPANION);
+      const friends = companions.filter(c => c.relation === 'friend');
+      const boyfriends = companions.filter(c => c.relation === 'boyfriend');
+      const girlfriends = companions.filter(c => c.relation === 'girlfriend');
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-pink-500 to-rose-500 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">💕 选择你的伴侣/朋友</h1>
+            <p class="text-white/80 text-sm mt-1">建立深度情感连接，陪你去任何场景</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 朋友 -->
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">👋 朋友</h3>
+              <div class="grid grid-cols-2 gap-3">
+                ${friends.map(c => `
+                  <button onclick="selectCompanion('${c.id}')" 
+                    class="bg-white p-4 rounded-xl shadow-sm border-2 ${state.relationData?.currentCompanion === c.id ? 'border-primary-500' : 'border-gray-100'} hover:shadow-md active:scale-98 transition-all">
+                    <div class="flex flex-col items-center text-center">
+                      <div class="w-14 h-14 rounded-full bg-gradient-to-br ${c.color} flex items-center justify-center text-2xl mb-2">${c.avatar}</div>
+                      <div class="font-bold text-gray-800">${c.name}</div>
+                      <div class="text-xs text-primary-600">${c.role}</div>
+                      <div class="text-xs text-gray-500 mt-1">${c.personality}</div>
+                    </div>
+                  </button>
+                `).join('')}
               </div>
-            `}
+            </div>
+            
+            <!-- 男朋友 -->
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">💙 男朋友</h3>
+              <div class="grid grid-cols-2 gap-3">
+                ${boyfriends.map(c => `
+                  <button onclick="selectCompanion('${c.id}')" 
+                    class="bg-white p-4 rounded-xl shadow-sm border-2 ${state.relationData?.currentCompanion === c.id ? 'border-primary-500' : 'border-gray-100'} hover:shadow-md active:scale-98 transition-all">
+                    <div class="flex flex-col items-center text-center">
+                      <div class="w-14 h-14 rounded-full bg-gradient-to-br ${c.color} flex items-center justify-center text-2xl mb-2">${c.avatar}</div>
+                      <div class="font-bold text-gray-800">${c.name}</div>
+                      <div class="text-xs text-primary-600">${c.role}</div>
+                      <div class="text-xs text-gray-500 mt-1">${c.personality}</div>
+                    </div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 女朋友 -->
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">💗 女朋友</h3>
+              <div class="grid grid-cols-2 gap-3">
+                ${girlfriends.map(c => `
+                  <button onclick="selectCompanion('${c.id}')" 
+                    class="bg-white p-4 rounded-xl shadow-sm border-2 ${state.relationData?.currentCompanion === c.id ? 'border-primary-500' : 'border-gray-100'} hover:shadow-md active:scale-98 transition-all">
+                    <div class="flex flex-col items-center text-center">
+                      <div class="w-14 h-14 rounded-full bg-gradient-to-br ${c.color} flex items-center justify-center text-2xl mb-2">${c.avatar}</div>
+                      <div class="font-bold text-gray-800">${c.name}</div>
+                      <div class="text-xs text-primary-600">${c.role}</div>
+                      <div class="text-xs text-gray-500 mt-1">${c.personality}</div>
+                    </div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 渲染陪伴场景选择
+    function renderCompanionScenario() {
+      const c = state.tutor;
+      if (!c) {
+        state.view = 'home';
+        render();
+        return '';
+      }
+      
+      // 按类别分组场景
+      const dateScenes = COMPANION_SCENARIOS.filter(s => s.category === 'date');
+      const lifeScenes = COMPANION_SCENARIOS.filter(s => s.category === 'life');
+      const travelScenes = COMPANION_SCENARIOS.filter(s => s.category === 'travel');
+      const dailyScenes = COMPANION_SCENARIOS.filter(s => s.category === 'daily' || s.category === 'social');
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r ${c.color} p-6 text-white">
+            <div class="flex items-center justify-between mb-3">
+              <button onclick="state.view='companion';render()" class="text-white/80 text-sm flex items-center gap-1">← 换人</button>
+              <button onclick="state.view='home';render()" class="text-white/80 text-sm">🏠 首页</button>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-4xl">${c.avatar}</div>
+              <div>
+                <div class="text-xl font-bold">${c.name}</div>
+                <div class="text-white/80">${c.relationName}</div>
+                <div class="text-white/60 text-sm">${c.personality}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <h3 class="text-sm font-medium text-gray-500 mb-3">想和${c.name}去哪？</h3>
+            
+            <!-- 约会场景 -->
+            <div class="mb-4">
+              <div class="text-xs text-gray-400 mb-2">💕 约会</div>
+              <div class="grid grid-cols-4 gap-2">
+                ${dateScenes.map(s => `
+                  <button onclick='startChat(state.tutor, ${JSON.stringify(s).replace(/'/g, "\\'")})'
+                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-pink-200 active:scale-95 transition-all">
+                    <div class="text-2xl mb-1">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-700">${s.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 生活场景 -->
+            <div class="mb-4">
+              <div class="text-xs text-gray-400 mb-2">🏠 生活</div>
+              <div class="grid grid-cols-4 gap-2">
+                ${lifeScenes.map(s => `
+                  <button onclick='startChat(state.tutor, ${JSON.stringify(s).replace(/'/g, "\\'")})'
+                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 active:scale-95 transition-all">
+                    <div class="text-2xl mb-1">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-700">${s.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 出行场景 -->
+            <div class="mb-4">
+              <div class="text-xs text-gray-400 mb-2">🚇 出行</div>
+              <div class="grid grid-cols-4 gap-2">
+                ${travelScenes.map(s => `
+                  <button onclick='startChat(state.tutor, ${JSON.stringify(s).replace(/'/g, "\\'")})'
+                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-green-200 active:scale-95 transition-all">
+                    <div class="text-2xl mb-1">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-700">${s.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 日常场景 -->
+            <div class="mb-4">
+              <div class="text-xs text-gray-400 mb-2">💬 日常</div>
+              <div class="grid grid-cols-4 gap-2">
+                ${dailyScenes.map(s => `
+                  <button onclick='startChat(state.tutor, ${JSON.stringify(s).replace(/'/g, "\\'")})'
+                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-200 active:scale-95 transition-all">
+                    <div class="text-2xl mb-1">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-700">${s.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 safe-bottom">
+            <button onclick="startChat(state.tutor, COMPANION_SCENARIOS[0])" 
+              class="w-full py-4 rounded-xl bg-gradient-to-r ${c.color} text-white font-bold shadow-lg active:scale-98 transition-all">
+              💬 直接开始聊天
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 渲染服务场景选择
+    function renderServiceSelect() {
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">💼 实用场景练习</h1>
+            <p class="text-white/80 text-sm mt-1">直接进入场景，和专业NPC对话练习</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="grid grid-cols-2 gap-3">
+              ${SERVICE_SCENARIOS.map(s => {
+                const npc = CHARACTERS[s.npc];
+                return `
+                  <button onclick="startServiceScenario('${s.id}')" 
+                    class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-200 active:scale-98 transition-all text-left">
+                    <div class="flex items-center gap-3 mb-2">
+                      <div class="text-3xl">${s.icon}</div>
+                      <div>
+                        <div class="font-bold text-gray-800">${s.name}</div>
+                        <div class="text-xs text-gray-400">${s.nameEs}</div>
+                      </div>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">${s.desc}</div>
+                    <div class="flex items-center gap-2 text-xs text-primary-600">
+                      <span>${npc?.avatar}</span>
+                      <span>${npc?.name}</span>
+                    </div>
+                  </button>
+                `;
+              }).join('')}
+            </div>
           </div>
         </div>
       `;
@@ -2056,7 +2715,8 @@ REGLAS IMPORTANTES:
         vocabulary: state.vocabulary,
         checkinDays: state.checkinDays,
         achievements: state.achievements,
-        stats: state.stats
+        stats: state.stats,
+        relationData: state.relationData
       };
       
       const dataStr = JSON.stringify(exportData, null, 2);
@@ -2126,6 +2786,10 @@ REGLAS IMPORTANTES:
           if (importData.stats) {
             state.stats = importData.stats;
             Storage.setUserData(state.user.id, 'stats', state.stats);
+          }
+          if (importData.relationData) {
+            state.relationData = importData.relationData;
+            Storage.setUserData(state.user.id, 'relationData', state.relationData);
           }
           
           showToast('📥 数据导入成功！');
