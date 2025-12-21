@@ -504,7 +504,18 @@ REGLAS IMPORTANTES:
       
       let systemPrompt;
       if (forTranslation) {
-        systemPrompt = `你是一个翻译助手。请将以下西班牙语翻译成简洁的中文，只输出翻译结果，不要任何解释。`;
+        // 根据用户设置选择翻译语言
+        const transLang = user?.transLang || 'zh';
+        if (transLang === 'en') {
+          systemPrompt = `You are a translator. Translate the following Spanish text into concise English. Only output the translation, no explanations.`;
+        } else if (transLang === 'both') {
+          systemPrompt = `你是一个翻译助手。请将以下西班牙语同时翻译成中文和英语。格式如下：
+🇨🇳 中文翻译内容
+🇬🇧 English translation
+只输出翻译结果，不要任何解释。`;
+        } else {
+          systemPrompt = `你是一个翻译助手。请将以下西班牙语翻译成简洁的中文，只输出翻译结果，不要任何解释。`;
+        }
       } else {
         systemPrompt = `${state.tutor.prompt}
 
@@ -1426,8 +1437,7 @@ REGLAS IMPORTANTES:
               </div>
               
               ${!isUser && showTrans && translation ? `
-                <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
-                  <div class="text-xs text-blue-500 mb-1">🇨🇳 中文翻译</div>
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 whitespace-pre-line">
                   ${translation}
                 </div>
               ` : ''}
@@ -1464,8 +1474,7 @@ REGLAS IMPORTANTES:
                 </div>
                 <div class="text-sm text-amber-900">${msg.correction}</div>
                 ${state.showCorrectionTrans[msg.id] && state.correctionTransCache[msg.id] ? `
-                  <div class="mt-2 p-2 bg-white/50 rounded-lg text-sm text-amber-800 border border-amber-200">
-                    <div class="text-xs text-amber-600 mb-1">🇨🇳 中文翻译</div>
+                  <div class="mt-2 p-2 bg-white/50 rounded-lg text-sm text-amber-800 border border-amber-200 whitespace-pre-line">
                     ${state.correctionTransCache[msg.id]}
                   </div>
                 ` : ''}
@@ -1486,8 +1495,7 @@ REGLAS IMPORTANTES:
                 </div>
                 <div class="text-sm text-blue-900">${msg.grammar}</div>
                 ${state.showGrammarTrans[msg.id] && state.grammarTransCache[msg.id] ? `
-                  <div class="mt-2 p-2 bg-white/50 rounded-lg text-sm text-blue-800 border border-blue-200">
-                    <div class="text-xs text-blue-600 mb-1">🇨🇳 中文翻译</div>
+                  <div class="mt-2 p-2 bg-white/50 rounded-lg text-sm text-blue-800 border border-blue-200 whitespace-pre-line">
                     ${state.grammarTransCache[msg.id]}
                   </div>
                 ` : ''}
@@ -1755,6 +1763,24 @@ REGLAS IMPORTANTES:
                     <input id="settingStrict" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${user.strictMode ? 'checked' : ''}>
                   </label>
                   <div>
+                    <label class="text-gray-700">翻译语言</label>
+                    <div class="grid grid-cols-3 gap-2 mt-2">
+                      <button type="button" onclick="document.getElementById('settingTransLang').value='zh';document.querySelectorAll('.trans-lang-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50')"
+                        class="trans-lang-btn p-3 rounded-xl border text-center text-sm ${(user.transLang || 'zh') === 'zh' ? 'ring-2 ring-primary-500 bg-primary-50' : 'border-gray-200'}">
+                        🇨🇳 中文
+                      </button>
+                      <button type="button" onclick="document.getElementById('settingTransLang').value='en';document.querySelectorAll('.trans-lang-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50')"
+                        class="trans-lang-btn p-3 rounded-xl border text-center text-sm ${user.transLang === 'en' ? 'ring-2 ring-primary-500 bg-primary-50' : 'border-gray-200'}">
+                        🇬🇧 英语
+                      </button>
+                      <button type="button" onclick="document.getElementById('settingTransLang').value='both';document.querySelectorAll('.trans-lang-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50')"
+                        class="trans-lang-btn p-3 rounded-xl border text-center text-sm ${user.transLang === 'both' ? 'ring-2 ring-primary-500 bg-primary-50' : 'border-gray-200'}">
+                        🌐 双语
+                      </button>
+                    </div>
+                    <input type="hidden" id="settingTransLang" value="${user.transLang || 'zh'}">
+                  </div>
+                  <div>
                     <label class="text-gray-700">语音速度</label>
                     <input id="settingSpeechRate" type="range" min="0.5" max="1.2" step="0.05" value="${user.speechRate || 0.85}"
                       class="w-full mt-2" oninput="document.getElementById('rateValue').textContent=this.value">
@@ -1819,9 +1845,10 @@ REGLAS IMPORTANTES:
       const autoTranslate = document.getElementById('settingAutoTrans').checked;
       const strictMode = document.getElementById('settingStrict').checked;
       const speechRate = parseFloat(document.getElementById('settingSpeechRate').value);
+      const transLang = document.getElementById('settingTransLang').value;
       
       // 更新现有用户，不是创建新用户
-      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate }, false);
+      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate, transLang }, false);
       state.view = 'home';
       render();
     }
