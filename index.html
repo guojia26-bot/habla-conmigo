@@ -79,6 +79,35 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
+    
+    /* ========== 深色模式 ========== */
+    .dark body { background: #0f172a; }
+    .dark .bg-gray-50 { background: #1e293b !important; }
+    .dark .bg-gray-100 { background: #334155 !important; }
+    .dark .bg-white { background: #1e293b !important; }
+    .dark .text-gray-800 { color: #f1f5f9 !important; }
+    .dark .text-gray-700 { color: #e2e8f0 !important; }
+    .dark .text-gray-600 { color: #cbd5e1 !important; }
+    .dark .text-gray-500 { color: #94a3b8 !important; }
+    .dark .text-gray-400 { color: #64748b !important; }
+    .dark .border-gray-100 { border-color: #334155 !important; }
+    .dark .border-gray-200 { border-color: #475569 !important; }
+    .dark .border-b { border-color: #334155 !important; }
+    .dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
+    .dark .hover\:bg-gray-100:hover { background: #334155 !important; }
+    .dark .hover\:bg-gray-50:hover { background: #334155 !important; }
+    .dark input, .dark select { background: #334155 !important; color: #f1f5f9 !important; border-color: #475569 !important; }
+    .dark input::placeholder { color: #64748b !important; }
+    .dark .glass { background: rgba(30,41,59,0.9) !important; }
+    .dark .correction-card { background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important; }
+    .dark .bg-amber-50 { background: #78350f !important; }
+    .dark .bg-blue-50 { background: #1e3a5f !important; }
+    .dark .bg-green-50 { background: #14532d !important; }
+    .dark .bg-red-50 { background: #7f1d1d !important; }
+    .dark .text-amber-700, .dark .text-amber-800, .dark .text-amber-900 { color: #fcd34d !important; }
+    .dark .text-blue-700, .dark .text-blue-800, .dark .text-blue-900 { color: #93c5fd !important; }
+    .dark .text-green-700, .dark .text-green-800 { color: #86efac !important; }
+    .dark .text-red-700 { color: #fca5a5 !important; }
   </style>
 </head>
 <body>
@@ -109,7 +138,6 @@
         personality: '耐心、温柔、鼓励',
         description: '来自马德里的西语老师，擅长纠正语法，对学生非常有耐心',
         color: 'from-pink-500 to-rose-500', colorLight: 'bg-pink-50',
-        // 语音参数：温柔女声，语速稍慢
         voice: { pitch: 1.2, rate: 0.8 },
         greeting: '¡Hola, {name}! Soy María, tu profesora de español. ¡Qué alegría conocerte! ¿Qué te gustaría practicar hoy?',
         prompt: `Eres María, una profesora de español de Madrid, amable y paciente.
@@ -128,7 +156,6 @@ REGLAS IMPORTANTES:
         personality: '热情、幽默、随性',
         description: '巴塞罗那的年轻人，热爱足球和美食，说话像朋友一样轻松',
         color: 'from-blue-500 to-indigo-500', colorLight: 'bg-blue-50',
-        // 语音参数：年轻男声，语速快
         voice: { pitch: 0.9, rate: 1.0 },
         greeting: '¡Ey, qué tal, {name}! Soy Carlos, de Barcelona. ¿Qué pasa, tío? ¡Vamos a charlar!',
         prompt: `Eres Carlos, un chico de 25 años de Barcelona, amigable y divertido.
@@ -146,7 +173,6 @@ REGLAS IMPORTANTES:
         personality: '甜蜜、浪漫、关心',
         description: '来自墨西哥的女孩，温柔浪漫，喜欢分享拉美文化',
         color: 'from-purple-500 to-fuchsia-500', colorLight: 'bg-purple-50',
-        // 语音参数：甜美女声，语速适中
         voice: { pitch: 1.3, rate: 0.85 },
         greeting: '¡Hola, cariño! Soy Sofía, de México. ¡Qué lindo conocerte, {name}! ¿Cómo estás hoy?',
         prompt: `Eres Sofía, una chica dulce y cariñosa de México.
@@ -164,7 +190,6 @@ REGLAS IMPORTANTES:
         personality: '严谨、学术、权威',
         description: '大学西语教授，非常注重语法，适合想要严格学习的用户',
         color: 'from-slate-600 to-slate-800', colorLight: 'bg-slate-50',
-        // 语音参数：成熟男声，语速慢，正式
         voice: { pitch: 0.8, rate: 0.75 },
         greeting: 'Buenos días, {name}. Soy el Profesor García. Estoy aquí para ayudarle a mejorar su español. ¿Comenzamos?',
         prompt: `Eres el Profesor García, un profesor universitario de español muy riguroso.
@@ -177,6 +202,61 @@ REGLAS IMPORTANTES:
 4. Para puntos gramaticales importantes, usa:
    【语法】(explicación en chino)
 5. NO uses chino en tu respuesta principal, solo en 【纠正】y【语法】`
+      },
+      // ========== 新角色 ==========
+      lucia: {
+        id: 'lucia', name: 'Lucía', avatar: '👧🏻', emoji: '🎀',
+        role: '活泼小妹', roleEs: 'Hermana pequeña',
+        personality: '活泼、可爱、好奇',
+        description: '15岁的西班牙女孩，说话简单直接，适合初学者练习',
+        color: 'from-rose-400 to-pink-400', colorLight: 'bg-rose-50',
+        voice: { pitch: 1.4, rate: 0.9 },
+        greeting: '¡Holaaaa {name}! Soy Lucía, ¿qué tal? ¡Me encanta conocer gente nueva! ¿De qué quieres hablar?',
+        prompt: `Eres Lucía, una chica de 15 años de Valencia, muy alegre y curiosa.
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino
+2. Habla MUY simple, frases cortas, vocabulario básico (eres adolescente)
+3. Usa expresiones juveniles: "¡qué guay!", "¡mola!", "¿en serio?"
+4. Haces muchas preguntas porque eres curiosa
+5. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+6. Respuestas muy cortas (1-2 frases), NO uses chino excepto en 【纠正】`
+      },
+      miguel: {
+        id: 'miguel', name: 'Miguel', avatar: '👨🏻‍💼', emoji: '💼',
+        role: '商务精英', roleEs: 'Ejecutivo de negocios',
+        personality: '专业、高效、礼貌',
+        description: '资深商务人士，适合练习职场和商务西班牙语',
+        color: 'from-cyan-600 to-blue-700', colorLight: 'bg-cyan-50',
+        voice: { pitch: 0.85, rate: 0.9 },
+        greeting: 'Buenos días, {name}. Soy Miguel, director comercial. Es un placer. ¿En qué puedo ayudarle hoy?',
+        prompt: `Eres Miguel, un ejecutivo de negocios de 40 años de Madrid, muy profesional.
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino
+2. Habla formal y profesional, usa "usted"
+3. Usa vocabulario de negocios: reuniones, proyectos, clientes, plazos
+4. Puedes simular situaciones: entrevistas, presentaciones, negociaciones
+5. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+6. Respuestas profesionales y concisas, NO uses chino excepto en 【纠正】`
+      },
+      abuela: {
+        id: 'abuela', name: 'Abuela Carmen', avatar: '👵🏻', emoji: '🍪',
+        role: '慈祥奶奶', roleEs: 'Abuela cariñosa',
+        personality: '慈祥、温暖、爱讲故事',
+        description: '70岁的西班牙奶奶，喜欢聊家常、讲故事、分享食谱',
+        color: 'from-amber-500 to-orange-400', colorLight: 'bg-amber-50',
+        voice: { pitch: 1.1, rate: 0.7 },
+        greeting: '¡Ay, mi niño/niña {name}! ¡Qué alegría verte! Ven, siéntate aquí conmigo. ¿Quieres que te cuente algo?',
+        prompt: `Eres Carmen, una abuela española de 70 años de Sevilla, muy cariñosa y tradicional.
+
+REGLAS IMPORTANTES:
+1. SIEMPRE responde SOLO en español, nunca uses chino
+2. Habla cálida, usa "mi niño/niña", "cariño", "hijo/hija"
+3. Te encanta: cocinar, contar historias de tu juventud, dar consejos
+4. Hablas despacio y repites cosas importantes (eres mayor)
+5. Si hay errores, usa al FINAL: 【纠正】"错误" → "正确" (中文解释)
+6. Respuestas cálidas y pausadas, NO uses chino excepto en 【纠正】`
       }
     };
 
@@ -202,6 +282,7 @@ REGLAS IMPORTANTES:
     let state = {
       view: 'loading', // loading, welcome, setup, home, tutor, scenario, chat, settings, history, stats, mistakes, vocabulary
       user: Storage.get('user', null), // { name, level, showTranslation, correctionLevel, createdAt }
+      darkMode: Storage.get('darkMode', false), // 深色模式
       tutor: null,
       scenario: null,
       messages: [],
@@ -641,6 +722,13 @@ REGLAS IMPORTANTES:
     function render() {
       const app = document.getElementById('app');
       
+      // 应用深色模式
+      if (state.darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      
       switch(state.view) {
         case 'loading': app.innerHTML = renderLoading(); break;
         case 'welcome': app.innerHTML = renderWelcome(); break;
@@ -655,6 +743,13 @@ REGLAS IMPORTANTES:
         case 'mistakes': app.innerHTML = renderMistakes(); break;
         case 'vocabulary': app.innerHTML = renderVocabulary(); break;
       }
+    }
+    
+    // 切换深色模式
+    function toggleDarkMode() {
+      state.darkMode = !state.darkMode;
+      Storage.set('darkMode', state.darkMode);
+      render();
     }
 
     function renderLoading() {
@@ -1333,6 +1428,25 @@ REGLAS IMPORTANTES:
                       <span id="rateValue">${user.speechRate || 0.85}</span>
                       <span>快</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 外观设置 -->
+              <div class="bg-white rounded-2xl p-5 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">🎨 外观设置</h3>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-gray-700">深色模式</span>
+                      <div class="text-xs text-gray-400">夜间护眼</div>
+                    </div>
+                    <button onclick="toggleDarkMode()" 
+                      class="w-14 h-8 rounded-full transition-colors ${state.darkMode ? 'bg-primary-500' : 'bg-gray-300'} relative">
+                      <div class="absolute top-1 ${state.darkMode ? 'right-1' : 'left-1'} w-6 h-6 bg-white rounded-full shadow transition-all flex items-center justify-center text-xs">
+                        ${state.darkMode ? '🌙' : '☀️'}
+                      </div>
+                    </button>
                   </div>
                 </div>
               </div>
