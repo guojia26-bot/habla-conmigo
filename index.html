@@ -1871,10 +1871,38 @@ REGLAS IMPORTANTES:
                     <span class="text-gray-600">对话记录</span>
                     <span class="text-gray-800 font-medium">${state.chatHistory.length} 条</span>
                   </div>
-                  <button onclick="if(confirm('确定要清除所有对话记录吗？'))clearHistory()" 
-                    class="w-full py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50">
-                    清除对话记录
-                  </button>
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">错题本</span>
+                    <span class="text-gray-800 font-medium">${state.mistakeBook.length} 条</span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">词汇本</span>
+                    <span class="text-gray-800 font-medium">${state.vocabulary.length} 个</span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">打卡记录</span>
+                    <span class="text-gray-800 font-medium">${state.checkinDays.length} 天</span>
+                  </div>
+                  
+                  <div class="border-t border-gray-100 pt-4 mt-2 space-y-2">
+                    <button onclick="exportUserData()" 
+                      class="w-full py-3 rounded-xl border border-primary-200 text-primary-600 hover:bg-primary-50 flex items-center justify-center gap-2">
+                      <span>📤</span>
+                      <span>导出数据备份</span>
+                    </button>
+                    <label class="w-full py-3 rounded-xl border border-green-200 text-green-600 hover:bg-green-50 flex items-center justify-center gap-2 cursor-pointer">
+                      <span>📥</span>
+                      <span>导入数据</span>
+                      <input type="file" accept=".json" onchange="importUserData(event)" class="hidden">
+                    </label>
+                  </div>
+                  
+                  <div class="border-t border-gray-100 pt-4 mt-2">
+                    <button onclick="if(confirm('确定要清除所有对话记录吗？'))clearHistory()" 
+                      class="w-full py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50">
+                      清除对话记录
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1902,6 +1930,101 @@ REGLAS IMPORTANTES:
       saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate, transLang }, false);
       state.view = 'home';
       render();
+    }
+
+    // 导出用户数据
+    function exportUserData() {
+      if (!state.user) return;
+      
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        version: '2.0',
+        user: {
+          name: state.user.name,
+          level: state.user.level,
+          transLang: state.user.transLang,
+          autoTranslate: state.user.autoTranslate,
+          strictMode: state.user.strictMode,
+          speechRate: state.user.speechRate
+        },
+        chatHistory: state.chatHistory,
+        mistakeBook: state.mistakeBook,
+        vocabulary: state.vocabulary,
+        checkinDays: state.checkinDays
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habla_backup_${state.user.name}_${getTodayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showToast('📤 数据导出成功！');
+    }
+    
+    // 导入用户数据
+    function importUserData(event) {
+      const file = event.target.files[0];
+      if (!file || !state.user) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importData = JSON.parse(e.target.result);
+          
+          // 验证数据格式
+          if (!importData.version || !importData.exportDate) {
+            alert('无效的备份文件格式');
+            return;
+          }
+          
+          // 确认导入
+          const info = `备份日期: ${new Date(importData.exportDate).toLocaleDateString()}
+对话记录: ${importData.chatHistory?.length || 0} 条
+错题本: ${importData.mistakeBook?.length || 0} 条
+词汇本: ${importData.vocabulary?.length || 0} 个
+打卡记录: ${importData.checkinDays?.length || 0} 天
+
+导入将覆盖当前数据，确定继续吗？`;
+          
+          if (!confirm(info)) return;
+          
+          // 导入数据
+          if (importData.chatHistory) {
+            state.chatHistory = importData.chatHistory;
+            Storage.setUserData(state.user.id, 'chatHistory', state.chatHistory);
+          }
+          if (importData.mistakeBook) {
+            state.mistakeBook = importData.mistakeBook;
+            Storage.setUserData(state.user.id, 'mistakeBook', state.mistakeBook);
+          }
+          if (importData.vocabulary) {
+            state.vocabulary = importData.vocabulary;
+            Storage.setUserData(state.user.id, 'vocabulary', state.vocabulary);
+          }
+          if (importData.checkinDays) {
+            state.checkinDays = importData.checkinDays;
+            Storage.setUserData(state.user.id, 'checkinDays', state.checkinDays);
+          }
+          
+          showToast('📥 数据导入成功！');
+          render();
+          
+        } catch (err) {
+          alert('导入失败：文件格式错误');
+          console.error(err);
+        }
+      };
+      
+      reader.readAsText(file);
+      // 清空input以便再次选择同一文件
+      event.target.value = '';
     }
 
     function clearHistory() {
