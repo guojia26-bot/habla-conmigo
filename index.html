@@ -1418,14 +1418,11 @@ REGLAS IMPORTANTES:
             ` : ''}
             
             <div class="relative">
-              <div id="msg-${msg.id}" onclick="${!isUser ? `handleTranslateClick(${msg.id})` : ''}"
-                class="p-4 rounded-2xl text-sm ${isUser 
+              <div id="msg-${msg.id}"
+                class="p-4 rounded-2xl text-sm select-text ${isUser 
                   ? 'bg-primary-500 text-white rounded-br-sm' 
-                  : 'bg-white shadow-sm rounded-bl-sm cursor-pointer hover:bg-gray-50'} transition-colors">
+                  : 'bg-white shadow-sm rounded-bl-sm'}">
                 ${msg.text}
-                ${!isUser ? `<div class="text-xs ${showTrans ? 'text-primary-600' : 'text-gray-400'} mt-2 flex items-center gap-1">
-                  <span>🌐</span> <span>${showTrans ? '隐藏翻译' : '点击翻译'}</span>
-                </div>` : ''}
               </div>
               
               ${!isUser && showTrans && translation ? `
@@ -1441,8 +1438,12 @@ REGLAS IMPORTANTES:
                     class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-gray-50" title="朗读">
                     🔊
                   </button>
+                  <button onclick="handleTranslateClick(${msg.id})" 
+                    class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-blue-50 hover:text-blue-600 ${showTrans ? 'bg-blue-100 text-blue-600' : ''}" title="翻译">
+                    🌐
+                  </button>
                   <button onclick="openVocabModalFromSelection(${msg.id})" 
-                    class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-green-50 hover:text-green-600" title="选中文字后点击收藏">
+                    class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-green-50 hover:text-green-600" title="选中单词后收藏">
                     📚
                   </button>
                 </div>
