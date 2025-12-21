@@ -108,6 +108,12 @@
     .dark .text-blue-700, .dark .text-blue-800, .dark .text-blue-900 { color: #93c5fd !important; }
     .dark .text-green-700, .dark .text-green-800 { color: #86efac !important; }
     .dark .text-red-700 { color: #fca5a5 !important; }
+    
+    /* 卡片翻转动画 */
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
   </style>
 </head>
 <body>
@@ -343,6 +349,14 @@ REGLAS IMPORTANTES:
       grammarTransCache: {}, // msgId_grammar -> translation
       // 快速收藏词汇
       vocabModal: { show: false, word: '', meaning: '', example: '', isLoading: false },
+      // 闪卡复习
+      flashcard: { 
+        cards: [], // 要复习的单词列表
+        currentIndex: 0, // 当前卡片索引
+        showAnswer: false, // 是否显示答案
+        results: [], // 每张卡片的结果 [{word, correct}]
+        finished: false // 是否完成
+      },
     };
 
     let recognition = null;
@@ -860,6 +874,7 @@ REGLAS IMPORTANTES:
         case 'stats': app.innerHTML = renderStats(); break;
         case 'mistakes': app.innerHTML = renderMistakes(); break;
         case 'vocabulary': app.innerHTML = renderVocabulary(); break;
+        case 'flashcard': app.innerHTML = renderFlashcard(); break;
       }
     }
     
@@ -2173,6 +2188,13 @@ REGLAS IMPORTANTES:
                 <span>添加单词</span>
               </button>
             </div>
+            ${vocab.length >= 3 ? `
+              <button onclick="startFlashcardReview(${Math.min(vocab.length, 10)})" 
+                class="mt-4 w-full py-3 rounded-xl bg-white text-emerald-600 font-bold shadow-lg hover:bg-gray-100 active:scale-98 transition-all flex items-center justify-center gap-2">
+                <span>🎴</span>
+                <span>开始闪卡复习 (${Math.min(vocab.length, 10)}词)</span>
+              </button>
+            ` : ''}
           </div>
           
           <!-- 添加单词表单 -->
@@ -2282,6 +2304,202 @@ REGLAS IMPORTANTES:
     
     function speakVocab(word) {
       speak(word);
+    }
+
+    // ==================== 闪卡复习功能 ====================
+    function startFlashcardReview(count = 10) {
+      const vocab = state.vocabulary;
+      if (vocab.length === 0) {
+        alert('词汇本是空的，请先添加一些单词！');
+        return;
+      }
+      
+      // 随机打乱并取指定数量
+      const shuffled = [...vocab].sort(() => Math.random() - 0.5);
+      const cards = shuffled.slice(0, Math.min(count, vocab.length));
+      
+      state.flashcard = {
+        cards: cards,
+        currentIndex: 0,
+        showAnswer: false,
+        results: [],
+        finished: false
+      };
+      state.view = 'flashcard';
+      render();
+    }
+    
+    function flipCard() {
+      state.flashcard.showAnswer = !state.flashcard.showAnswer;
+      render();
+    }
+    
+    function markCard(isCorrect) {
+      const fc = state.flashcard;
+      const currentCard = fc.cards[fc.currentIndex];
+      
+      // 记录结果
+      fc.results.push({
+        word: currentCard.word,
+        meaning: currentCard.meaning,
+        correct: isCorrect
+      });
+      
+      // 下一张卡片
+      if (fc.currentIndex < fc.cards.length - 1) {
+        fc.currentIndex++;
+        fc.showAnswer = false;
+      } else {
+        fc.finished = true;
+      }
+      render();
+    }
+    
+    function restartFlashcard() {
+      const count = state.flashcard.cards.length;
+      startFlashcardReview(count);
+    }
+    
+    function exitFlashcard() {
+      state.view = 'vocabulary';
+      render();
+    }
+    
+    function renderFlashcard() {
+      const fc = state.flashcard;
+      
+      // 完成页面
+      if (fc.finished) {
+        const correct = fc.results.filter(r => r.correct).length;
+        const total = fc.results.length;
+        const percentage = Math.round((correct / total) * 100);
+        const wrongCards = fc.results.filter(r => !r.correct);
+        
+        return `
+          <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700 flex flex-col">
+            <div class="p-4">
+              <button onclick="exitFlashcard()" class="text-white/80 text-sm flex items-center gap-1">← 返回词汇本</button>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+              <div class="text-6xl mb-4">${percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}</div>
+              <h2 class="text-2xl font-bold text-white mb-2">复习完成！</h2>
+              
+              <div class="bg-white/20 backdrop-blur rounded-2xl p-6 mb-6 w-full max-w-xs">
+                <div class="text-5xl font-bold text-white mb-2">${percentage}%</div>
+                <div class="text-white/80">正确率</div>
+                <div class="flex justify-center gap-8 mt-4 text-sm">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-green-300">${correct}</div>
+                    <div class="text-white/60">认识</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-red-300">${total - correct}</div>
+                    <div class="text-white/60">不认识</div>
+                  </div>
+                </div>
+              </div>
+              
+              ${wrongCards.length > 0 ? `
+                <div class="bg-white/10 backdrop-blur rounded-xl p-4 w-full max-w-xs mb-6">
+                  <div class="text-white/80 text-sm mb-2">需要加强的单词：</div>
+                  <div class="space-y-2">
+                    ${wrongCards.map(c => `
+                      <div class="flex items-center justify-between text-white text-sm">
+                        <span class="font-medium">${c.word}</span>
+                        <span class="text-white/60">${c.meaning}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div class="flex gap-3 w-full max-w-xs">
+                <button onclick="restartFlashcard()" 
+                  class="flex-1 py-3 rounded-xl bg-white text-primary-600 font-bold hover:bg-gray-100 transition-colors">
+                  再来一次
+                </button>
+                <button onclick="exitFlashcard()" 
+                  class="flex-1 py-3 rounded-xl bg-white/20 text-white font-bold hover:bg-white/30 transition-colors">
+                  返回
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 复习页面
+      const currentCard = fc.cards[fc.currentIndex];
+      const progress = ((fc.currentIndex) / fc.cards.length) * 100;
+      
+      return `
+        <div class="h-full bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 flex flex-col">
+          <!-- 顶部 -->
+          <div class="p-4">
+            <div class="flex items-center justify-between text-white mb-3">
+              <button onclick="exitFlashcard()" class="text-white/80 text-sm flex items-center gap-1">← 退出</button>
+              <div class="text-sm">${fc.currentIndex + 1} / ${fc.cards.length}</div>
+            </div>
+            <!-- 进度条 -->
+            <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+              <div class="h-full bg-white rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          
+          <!-- 卡片区域 -->
+          <div class="flex-1 flex items-center justify-center p-6">
+            <div onclick="flipCard()" 
+              class="w-full max-w-sm aspect-[3/4] cursor-pointer perspective-1000">
+              <div class="relative w-full h-full transition-transform duration-500 transform-style-3d ${fc.showAnswer ? 'rotate-y-180' : ''}">
+                <!-- 正面：单词 -->
+                <div class="absolute inset-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 backface-hidden">
+                  <div class="text-gray-400 text-sm mb-4">🇪🇸 西班牙语</div>
+                  <div class="text-3xl font-bold text-gray-800 mb-4">${currentCard.word}</div>
+                  <button onclick="event.stopPropagation();speak('${currentCard.word.replace(/'/g, "\\'")}')" 
+                    class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl hover:bg-gray-200 transition-colors">
+                    🔊
+                  </button>
+                  <div class="absolute bottom-6 text-gray-400 text-sm">点击卡片查看答案</div>
+                </div>
+                
+                <!-- 背面：意思 -->
+                <div class="absolute inset-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-6 backface-hidden rotate-y-180">
+                  <div class="text-gray-400 text-sm mb-2">🇪🇸 ${currentCard.word}</div>
+                  <div class="text-2xl font-bold text-gray-800 mb-4">${currentCard.meaning}</div>
+                  ${currentCard.example ? `
+                    <div class="text-sm text-gray-500 italic text-center px-4">"${currentCard.example}"</div>
+                  ` : ''}
+                  <div class="absolute bottom-6 text-gray-400 text-sm">你认识这个单词吗？</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 底部按钮 -->
+          <div class="p-6 safe-bottom">
+            ${fc.showAnswer ? `
+              <div class="flex gap-4 max-w-sm mx-auto">
+                <button onclick="markCard(false)" 
+                  class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-bold text-lg shadow-lg hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2">
+                  <span>❌</span>
+                  <span>不认识</span>
+                </button>
+                <button onclick="markCard(true)" 
+                  class="flex-1 py-4 rounded-2xl bg-green-500 text-white font-bold text-lg shadow-lg hover:bg-green-600 active:scale-95 transition-all flex items-center justify-center gap-2">
+                  <span>✅</span>
+                  <span>认识</span>
+                </button>
+              </div>
+            ` : `
+              <button onclick="flipCard()" 
+                class="w-full max-w-sm mx-auto block py-4 rounded-2xl bg-white text-emerald-600 font-bold text-lg shadow-lg hover:bg-gray-100 active:scale-95 transition-all">
+                👀 显示答案
+              </button>
+            `}
+          </div>
+        </div>
+      `;
     }
 
     // ==================== 初始化 ====================
