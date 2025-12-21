@@ -317,6 +317,7 @@ REGLAS IMPORTANTES:
         chatHistory: currentUser ? Storage.getUserData(currentUser.id, 'chatHistory', []) : [],
         mistakeBook: currentUser ? Storage.getUserData(currentUser.id, 'mistakeBook', []) : [],
         vocabulary: currentUser ? Storage.getUserData(currentUser.id, 'vocabulary', []) : [],
+        checkinDays: currentUser ? Storage.getUserData(currentUser.id, 'checkinDays', []) : [], // 打卡日期列表 ['2025-01-15', '2025-01-16']
       };
     }
     
@@ -333,6 +334,7 @@ REGLAS IMPORTANTES:
       chatHistory: userData.chatHistory, // 历史对话记录
       mistakeBook: userData.mistakeBook, // 错误记录本
       vocabulary: userData.vocabulary, // 词汇本
+      checkinDays: userData.checkinDays, // 打卡日期列表
       inputText: '',
       isLoading: false,
       isListening: false,
@@ -831,6 +833,7 @@ REGLAS IMPORTANTES:
       state.chatHistory = Storage.getUserData(userId, 'chatHistory', []);
       state.mistakeBook = Storage.getUserData(userId, 'mistakeBook', []);
       state.vocabulary = Storage.getUserData(userId, 'vocabulary', []);
+      state.checkinDays = Storage.getUserData(userId, 'checkinDays', []);
       state.view = 'home';
       render();
     }
@@ -845,6 +848,7 @@ REGLAS IMPORTANTES:
       Storage.remove(`${userId}_chatHistory`);
       Storage.remove(`${userId}_mistakeBook`);
       Storage.remove(`${userId}_vocabulary`);
+      Storage.remove(`${userId}_checkinDays`);
       
       state.users = users;
       
@@ -885,6 +889,7 @@ REGLAS IMPORTANTES:
         case 'vocabulary': app.innerHTML = renderVocabulary(); break;
         case 'flashcard': app.innerHTML = renderFlashcard(); break;
         case 'mistakeReview': app.innerHTML = renderMistakeReview(); break;
+        case 'calendar': app.innerHTML = renderCalendar(); break;
       }
     }
     
@@ -1070,6 +1075,8 @@ REGLAS IMPORTANTES:
       const user = state.user;
       const recentChats = state.chatHistory.slice(0, 3);
       const totalCorrections = state.chatHistory.reduce((sum, c) => sum + (c.corrections || 0), 0);
+      const streak = getStreakDays();
+      const checkedToday = hasCheckedInToday();
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
@@ -1112,6 +1119,25 @@ REGLAS IMPORTANTES:
           </div>
           
           <div class="flex-1 overflow-auto p-6">
+            <!-- 每日打卡 -->
+            <div class="mb-6">
+              <button onclick="state.view='calendar';render()" 
+                class="w-full bg-gradient-to-r ${checkedToday ? 'from-green-500 to-emerald-500' : 'from-purple-500 to-indigo-600'} p-4 rounded-2xl shadow-lg text-white flex items-center justify-between hover:shadow-xl active:scale-98 transition-all">
+                <div class="flex items-center gap-3">
+                  <div class="text-3xl">${checkedToday ? '✅' : '📅'}</div>
+                  <div class="text-left">
+                    <div class="font-bold">${checkedToday ? '今日已打卡' : '每日打卡'}</div>
+                    <div class="text-sm text-white/80">🔥 连续 ${streak} 天</div>
+                  </div>
+                </div>
+                ${!checkedToday ? `
+                  <div class="bg-white/20 px-3 py-1.5 rounded-full text-sm font-medium">去打卡 →</div>
+                ` : `
+                  <div class="text-white/80 text-xl">→</div>
+                `}
+              </button>
+            </div>
+            
             <!-- 开始新对话 -->
             <div class="mb-6">
               <h3 class="text-sm font-medium text-gray-500 mb-3">开始新对话</h3>
@@ -2757,6 +2783,257 @@ REGLAS IMPORTANTES:
                 <button onclick="showMistakeAnswer()" 
                   class="w-full py-4 rounded-2xl bg-white text-orange-600 font-bold text-lg shadow-lg hover:bg-gray-100 active:scale-95 transition-all">
                   👀 显示正确答案
+                </button>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 每日打卡功能 ====================
+    // 获取今天的日期字符串 (YYYY-MM-DD)
+    function getTodayStr() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    }
+    
+    // 检查今天是否已打卡
+    function hasCheckedInToday() {
+      const todayStr = getTodayStr();
+      return state.checkinDays.includes(todayStr);
+    }
+    
+    // 今日是否有学习（对话）
+    function hasStudiedToday() {
+      const todayStr = getTodayStr();
+      return state.chatHistory.some(chat => {
+        const chatDate = new Date(chat.date).toISOString().split('T')[0];
+        return chatDate === todayStr;
+      });
+    }
+    
+    // 计算连续打卡天数
+    function getStreakDays() {
+      if (state.checkinDays.length === 0) return 0;
+      
+      const sortedDays = [...state.checkinDays].sort().reverse();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let streak = 0;
+      let checkDate = new Date(today);
+      
+      // 如果今天还没打卡，从昨天开始算
+      if (!hasCheckedInToday()) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+      
+      for (let i = 0; i < sortedDays.length; i++) {
+        const dayStr = checkDate.toISOString().split('T')[0];
+        if (sortedDays.includes(dayStr)) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      
+      return streak;
+    }
+    
+    // 打卡
+    function doCheckin() {
+      if (!state.user) return;
+      
+      const todayStr = getTodayStr();
+      if (state.checkinDays.includes(todayStr)) {
+        showToast('今天已经打卡过了！');
+        return;
+      }
+      
+      // 检查是否有学习
+      if (!hasStudiedToday()) {
+        if (!confirm('今天还没有进行对话练习，确定要打卡吗？')) {
+          return;
+        }
+      }
+      
+      state.checkinDays.push(todayStr);
+      Storage.setUserData(state.user.id, 'checkinDays', state.checkinDays);
+      
+      const streak = getStreakDays();
+      showToast(`🎉 打卡成功！连续 ${streak} 天`);
+      render();
+    }
+    
+    // 渲染日历页面
+    function renderCalendar() {
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+      const todayStr = getTodayStr();
+      
+      // 获取本月第一天和最后一天
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startWeekDay = firstDay.getDay(); // 0=周日
+      
+      // 月份名称
+      const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                          '七月', '八月', '九月', '十月', '十一月', '十二月'];
+      
+      const streak = getStreakDays();
+      const totalCheckins = state.checkinDays.length;
+      const checkedToday = hasCheckedInToday();
+      const studiedToday = hasStudiedToday();
+      
+      // 生成日历格子
+      let calendarDays = [];
+      // 填充月初空白
+      for (let i = 0; i < startWeekDay; i++) {
+        calendarDays.push({ day: '', status: 'empty' });
+      }
+      // 填充日期
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const isChecked = state.checkinDays.includes(dateStr);
+        const isFuture = new Date(dateStr) > today;
+        
+        calendarDays.push({
+          day: d,
+          dateStr,
+          isToday,
+          isChecked,
+          isFuture
+        });
+      }
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h1 class="text-2xl font-bold">📅 学习日历</h1>
+                <p class="text-white/70 text-sm mt-1">${currentYear}年 ${monthNames[currentMonth]}</p>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl font-bold">🔥 ${streak}</div>
+                <div class="text-white/70 text-xs">连续打卡</div>
+              </div>
+            </div>
+            
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-white/20 rounded-xl p-3 text-center">
+                <div class="text-2xl font-bold">${totalCheckins}</div>
+                <div class="text-xs text-white/70">总打卡天数</div>
+              </div>
+              <div class="bg-white/20 rounded-xl p-3 text-center">
+                <div class="text-2xl font-bold">${state.chatHistory.length}</div>
+                <div class="text-xs text-white/70">总对话数</div>
+              </div>
+              <div class="bg-white/20 rounded-xl p-3 text-center">
+                <div class="text-2xl font-bold">${state.vocabulary.length}</div>
+                <div class="text-xs text-white/70">词汇积累</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-md mx-auto">
+              <!-- 日历 -->
+              <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <!-- 星期标题 -->
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                  ${['日', '一', '二', '三', '四', '五', '六'].map(d => `
+                    <div class="text-center text-xs text-gray-400 py-2">${d}</div>
+                  `).join('')}
+                </div>
+                
+                <!-- 日期格子 -->
+                <div class="grid grid-cols-7 gap-1">
+                  ${calendarDays.map(d => {
+                    if (d.status === 'empty') {
+                      return '<div class="aspect-square"></div>';
+                    }
+                    
+                    let bgClass = 'bg-gray-50';
+                    let textClass = 'text-gray-600';
+                    let icon = '';
+                    
+                    if (d.isFuture) {
+                      textClass = 'text-gray-300';
+                    } else if (d.isChecked) {
+                      bgClass = 'bg-green-100';
+                      textClass = 'text-green-700';
+                      icon = '✓';
+                    }
+                    
+                    if (d.isToday) {
+                      bgClass = d.isChecked ? 'bg-green-500' : 'bg-purple-500';
+                      textClass = 'text-white';
+                    }
+                    
+                    return `
+                      <div class="aspect-square ${bgClass} rounded-lg flex flex-col items-center justify-center ${d.isToday ? 'ring-2 ring-purple-300' : ''}">
+                        <span class="text-sm font-medium ${textClass}">${d.day}</span>
+                        ${icon ? `<span class="text-xs ${d.isToday ? 'text-white' : 'text-green-500'}">${icon}</span>` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+              
+              <!-- 今日状态 -->
+              <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <h3 class="font-bold text-gray-800 mb-3">📊 今日学习</h3>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-600">对话练习</span>
+                    <span class="${studiedToday ? 'text-green-500' : 'text-gray-400'}">${studiedToday ? '✅ 已完成' : '⏳ 未完成'}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-600">每日打卡</span>
+                    <span class="${checkedToday ? 'text-green-500' : 'text-gray-400'}">${checkedToday ? '✅ 已打卡' : '⏳ 未打卡'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 图例 -->
+              <div class="flex items-center justify-center gap-4 text-xs text-gray-500">
+                <div class="flex items-center gap-1">
+                  <div class="w-4 h-4 bg-green-100 rounded"></div>
+                  <span>已打卡</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="w-4 h-4 bg-purple-500 rounded"></div>
+                  <span>今天</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="w-4 h-4 bg-gray-50 rounded border"></div>
+                  <span>未打卡</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 打卡按钮 -->
+          <div class="p-4 safe-bottom">
+            <div class="max-w-md mx-auto">
+              ${checkedToday ? `
+                <div class="py-4 rounded-2xl bg-green-100 text-green-700 font-bold text-center">
+                  ✅ 今日已打卡 · 连续 ${streak} 天
+                </div>
+              ` : `
+                <button onclick="doCheckin()" 
+                  class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-lg shadow-lg hover:shadow-xl active:scale-98 transition-all flex items-center justify-center gap-2">
+                  <span>✅</span>
+                  <span>打卡</span>
                 </button>
               `}
             </div>
