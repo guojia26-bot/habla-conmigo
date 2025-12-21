@@ -1301,7 +1301,10 @@ REGLAS IMPORTANTES:
         <div class="h-full bg-gray-50 flex flex-col">
           <!-- 角色信息 -->
           <div class="bg-gradient-to-r ${t.color} p-6 text-white">
-            <button onclick="state.view='tutor';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center justify-between mb-3">
+              <button onclick="state.view='tutor';render()" class="text-white/80 text-sm flex items-center gap-1">← 换角色</button>
+              <button onclick="state.view='home';render()" class="text-white/80 text-sm flex items-center gap-1">🏠 首页</button>
+            </div>
             <div class="flex items-center gap-4">
               <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-4xl">${t.avatar}</div>
               <div>
@@ -1348,7 +1351,7 @@ REGLAS IMPORTANTES:
             <div class="flex items-center justify-between max-w-lg mx-auto">
               <button onclick="endChat()" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
                 <span>←</span>
-                <span class="text-sm">结束</span>
+                <span class="text-sm">返回</span>
               </button>
               <div class="text-center">
                 <div class="flex items-center justify-center gap-2">
@@ -1357,7 +1360,9 @@ REGLAS IMPORTANTES:
                 </div>
                 <div class="text-xs text-gray-500">${state.scenario?.name || '自由聊天'} · ${user.level}</div>
               </div>
-              <div class="w-16"></div>
+              <button onclick="exitToHome()" class="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700" title="返回首页">
+                🏠
+              </button>
             </div>
           </div>
           
@@ -1791,6 +1796,19 @@ REGLAS IMPORTANTES:
       state.isListening = false;
       speechSynthesis.cancel();
       if (recognition) try { recognition.stop(); } catch(e) {}
+      // 回到场景选择页面，方便切换场景
+      state.view = 'scenario';
+      render();
+    }
+    
+    // 完全退出对话回到首页
+    function exitToHome() {
+      saveChatHistory();
+      state.isListening = false;
+      speechSynthesis.cancel();
+      if (recognition) try { recognition.stop(); } catch(e) {}
+      state.tutor = null;
+      state.scenario = null;
       state.view = 'home';
       render();
     }
