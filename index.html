@@ -779,15 +779,56 @@ REGLAS IMPORTANTES:
       state.showTranslation = {};
       state.translationCache = {};
       state.view = 'chat';
+      state.isLoading = true;
+      render();
       
-      const greeting = tutor.greeting.replace('{name}', state.user.name);
-      setTimeout(() => {
+      // 动态生成场景开场白
+      generateScenarioGreeting(tutor, scenario);
+    }
+    
+    // 根据角色和场景生成开场白
+    async function generateScenarioGreeting(tutor, scenario) {
+      const user = state.user;
+      
+      const systemPrompt = `你是${tutor.name}，${tutor.description}。
+性格特点：${tutor.personality}
+
+现在的场景是：${scenario.name}（${scenario.nameEs}）- ${scenario.desc}
+
+请用西班牙语向学生${user.name}打招呼，并自然地引入这个场景。
+要求：
+1. 符合你的角色性格
+2. 自然地带入场景（比如如果是咖啡馆，你可以说欢迎来到咖啡馆，想喝点什么）
+3. 根据学生水平${user.level}调整语言难度
+4. 只说1-2句话，简洁自然
+5. 只输出西班牙语，不要中文`;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            system: systemPrompt, 
+            messages: [{ role: 'user', content: '开始对话' }] 
+          })
+        });
+
+        const data = await res.json();
+        const greeting = data.content?.[0]?.text || tutor.greeting.replace('{name}', user.name);
+        
+        state.isLoading = false;
         state.messages = [{ id: 1, type: 'ai', text: greeting, time: new Date().toISOString() }];
         render();
         speak(greeting);
-      }, 300);
-      
-      render();
+        
+      } catch (err) {
+        // 如果API失败，使用默认greeting
+        const greeting = tutor.greeting.replace('{name}', user.name);
+        state.isLoading = false;
+        state.messages = [{ id: 1, type: 'ai', text: greeting, time: new Date().toISOString() }];
+        render();
+        speak(greeting);
+      }
     }
 
     function scrollToBottom() {
