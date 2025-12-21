@@ -357,6 +357,15 @@ REGLAS IMPORTANTES:
         results: [], // 每张卡片的结果 [{word, correct}]
         finished: false // 是否完成
       },
+      // 错题复习
+      mistakeReview: {
+        items: [], // 要复习的错题列表
+        currentIndex: 0,
+        showAnswer: false,
+        userAnswer: '',
+        results: [], // [{original, correction, mastered}]
+        finished: false
+      },
     };
 
     let recognition = null;
@@ -875,6 +884,7 @@ REGLAS IMPORTANTES:
         case 'mistakes': app.innerHTML = renderMistakes(); break;
         case 'vocabulary': app.innerHTML = renderVocabulary(); break;
         case 'flashcard': app.innerHTML = renderFlashcard(); break;
+        case 'mistakeReview': app.innerHTML = renderMistakeReview(); break;
       }
     }
     
@@ -2087,6 +2097,13 @@ REGLAS IMPORTANTES:
                   class="text-xs px-3 py-1 rounded-full bg-white/20 hover:bg-white/30">清空</button>
               ` : ''}
             </div>
+            ${mistakes.length >= 2 ? `
+              <button onclick="startMistakeReview(${Math.min(mistakes.length, 10)})" 
+                class="mt-4 w-full py-3 rounded-xl bg-white text-orange-600 font-bold shadow-lg hover:bg-gray-100 active:scale-98 transition-all flex items-center justify-center gap-2">
+                <span>🎯</span>
+                <span>开始错题复习 (${Math.min(mistakes.length, 10)}题)</span>
+              </button>
+            ` : ''}
           </div>
           
           <div class="flex-1 overflow-auto p-4">
@@ -2095,7 +2112,7 @@ REGLAS IMPORTANTES:
                 ${mistakes.map((m, index) => {
                   const date = new Date(m.date);
                   return `
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden ${m.reviewed ? 'border-l-4 border-green-400' : ''}">
                       <div class="p-4">
                         <div class="flex items-start justify-between mb-2">
                           <div class="flex items-center gap-2 text-xs text-gray-400">
@@ -2103,6 +2120,7 @@ REGLAS IMPORTANTES:
                             <span>${m.tutorName}</span>
                             <span>·</span>
                             <span>${m.scenario}</span>
+                            ${m.reviewed ? '<span class="text-green-500">✓ 已复习</span>' : ''}
                           </div>
                           <span class="text-xs text-gray-400">${date.toLocaleDateString()}</span>
                         </div>
@@ -2497,6 +2515,251 @@ REGLAS IMPORTANTES:
                 👀 显示答案
               </button>
             `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 错题复习功能 ====================
+    function startMistakeReview(count = 10) {
+      const mistakes = state.mistakeBook;
+      if (mistakes.length === 0) {
+        alert('错题本是空的，继续对话练习吧！');
+        return;
+      }
+      
+      // 随机打乱并取指定数量
+      const shuffled = [...mistakes].sort(() => Math.random() - 0.5);
+      const items = shuffled.slice(0, Math.min(count, mistakes.length));
+      
+      state.mistakeReview = {
+        items: items,
+        currentIndex: 0,
+        showAnswer: false,
+        userAnswer: '',
+        results: [],
+        finished: false
+      };
+      state.view = 'mistakeReview';
+      render();
+    }
+    
+    function showMistakeAnswer() {
+      state.mistakeReview.showAnswer = true;
+      render();
+    }
+    
+    function markMistake(mastered) {
+      const mr = state.mistakeReview;
+      const currentItem = mr.items[mr.currentIndex];
+      
+      // 记录结果
+      mr.results.push({
+        original: currentItem.original,
+        correction: currentItem.correction,
+        mastered: mastered
+      });
+      
+      // 如果掌握了，可以标记错题本中的该项
+      if (mastered && state.user) {
+        const idx = state.mistakeBook.findIndex(m => m.id === currentItem.id);
+        if (idx >= 0) {
+          state.mistakeBook[idx].reviewed = true;
+          Storage.setUserData(state.user.id, 'mistakeBook', state.mistakeBook);
+        }
+      }
+      
+      // 下一题
+      if (mr.currentIndex < mr.items.length - 1) {
+        mr.currentIndex++;
+        mr.showAnswer = false;
+        mr.userAnswer = '';
+      } else {
+        mr.finished = true;
+      }
+      render();
+    }
+    
+    function restartMistakeReview() {
+      const count = state.mistakeReview.items.length;
+      startMistakeReview(count);
+    }
+    
+    function exitMistakeReview() {
+      state.view = 'mistakes';
+      render();
+    }
+    
+    function updateMistakeAnswer(value) {
+      state.mistakeReview.userAnswer = value;
+    }
+    
+    function renderMistakeReview() {
+      const mr = state.mistakeReview;
+      
+      // 完成页面
+      if (mr.finished) {
+        const mastered = mr.results.filter(r => r.mastered).length;
+        const total = mr.results.length;
+        const percentage = Math.round((mastered / total) * 100);
+        const needPractice = mr.results.filter(r => !r.mastered);
+        
+        return `
+          <div class="h-full bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex flex-col">
+            <div class="p-4">
+              <button onclick="exitMistakeReview()" class="text-white/80 text-sm flex items-center gap-1">← 返回错题本</button>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+              <div class="text-6xl mb-4">${percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}</div>
+              <h2 class="text-2xl font-bold text-white mb-2">复习完成！</h2>
+              
+              <div class="bg-white/20 backdrop-blur rounded-2xl p-6 mb-6 w-full max-w-xs">
+                <div class="text-5xl font-bold text-white mb-2">${percentage}%</div>
+                <div class="text-white/80">掌握率</div>
+                <div class="flex justify-center gap-8 mt-4 text-sm">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-green-300">${mastered}</div>
+                    <div class="text-white/60">已掌握</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-red-300">${total - mastered}</div>
+                    <div class="text-white/60">需加强</div>
+                  </div>
+                </div>
+              </div>
+              
+              ${needPractice.length > 0 ? `
+                <div class="bg-white/10 backdrop-blur rounded-xl p-4 w-full max-w-xs mb-6 text-left">
+                  <div class="text-white/80 text-sm mb-2">需要继续练习：</div>
+                  <div class="space-y-2 max-h-32 overflow-auto">
+                    ${needPractice.slice(0, 5).map(c => `
+                      <div class="text-white text-xs">
+                        <div class="text-red-200 line-through">${c.original.substring(0, 30)}...</div>
+                      </div>
+                    `).join('')}
+                    ${needPractice.length > 5 ? `<div class="text-white/50 text-xs">还有 ${needPractice.length - 5} 项...</div>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div class="flex gap-3 w-full max-w-xs">
+                <button onclick="restartMistakeReview()" 
+                  class="flex-1 py-3 rounded-xl bg-white text-orange-600 font-bold hover:bg-gray-100 transition-colors">
+                  再来一次
+                </button>
+                <button onclick="exitMistakeReview()" 
+                  class="flex-1 py-3 rounded-xl bg-white/20 text-white font-bold hover:bg-white/30 transition-colors">
+                  返回
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 复习页面
+      const currentItem = mr.items[mr.currentIndex];
+      const progress = ((mr.currentIndex) / mr.items.length) * 100;
+      
+      // 解析纠正内容，提取正确答案
+      const correctionText = currentItem.correction;
+      // 尝试提取 → 后面的正确内容
+      const correctMatch = correctionText.match(/→\s*[""]?([^""(（]+)/);
+      const correctAnswer = correctMatch ? correctMatch[1].trim() : correctionText;
+      
+      return `
+        <div class="h-full bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex flex-col">
+          <!-- 顶部 -->
+          <div class="p-4">
+            <div class="flex items-center justify-between text-white mb-3">
+              <button onclick="exitMistakeReview()" class="text-white/80 text-sm flex items-center gap-1">← 退出</button>
+              <div class="text-sm">${mr.currentIndex + 1} / ${mr.items.length}</div>
+            </div>
+            <!-- 进度条 -->
+            <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+              <div class="h-full bg-white rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          
+          <!-- 题目区域 -->
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-md mx-auto">
+              <!-- 题目卡片 -->
+              <div class="bg-white rounded-2xl shadow-xl p-6 mb-4">
+                <div class="text-center mb-4">
+                  <span class="text-sm text-gray-500">📝 请找出并改正错误</span>
+                </div>
+                
+                <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
+                  <div class="text-lg text-red-800 font-medium text-center">
+                    "${currentItem.original}"
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
+                  <span class="px-2 py-1 bg-gray-100 rounded-full">${currentItem.tutorName || '未知'}</span>
+                  <span class="px-2 py-1 bg-gray-100 rounded-full">${currentItem.scenario || '自由聊天'}</span>
+                </div>
+              </div>
+              
+              ${!mr.showAnswer ? `
+                <!-- 输入答案 -->
+                <div class="bg-white/90 backdrop-blur rounded-2xl p-4 mb-4">
+                  <input type="text" 
+                    placeholder="输入你认为正确的说法..."
+                    value="${mr.userAnswer}"
+                    oninput="updateMistakeAnswer(this.value)"
+                    class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-orange-400 outline-none text-center">
+                </div>
+              ` : `
+                <!-- 显示答案 -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 slide-up">
+                  <div class="text-center mb-3">
+                    <span class="text-sm text-green-600 font-medium">✅ 正确答案</span>
+                  </div>
+                  <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-4">
+                    <div class="text-lg text-green-800 font-medium text-center">
+                      ${correctAnswer}
+                    </div>
+                    <button onclick="speak('${correctAnswer.replace(/'/g, "\\'")}')" 
+                      class="mx-auto mt-2 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-lg hover:bg-green-200">
+                      🔊
+                    </button>
+                  </div>
+                  
+                  <div class="bg-amber-50 rounded-xl p-4">
+                    <div class="text-xs text-amber-600 mb-1">💡 纠正说明</div>
+                    <div class="text-sm text-amber-900">${correctionText}</div>
+                  </div>
+                </div>
+              `}
+            </div>
+          </div>
+          
+          <!-- 底部按钮 -->
+          <div class="p-4 safe-bottom">
+            <div class="max-w-md mx-auto">
+              ${mr.showAnswer ? `
+                <div class="flex gap-3">
+                  <button onclick="markMistake(false)" 
+                    class="flex-1 py-4 rounded-2xl bg-white/20 text-white font-bold text-lg hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span>❌</span>
+                    <span>还不会</span>
+                  </button>
+                  <button onclick="markMistake(true)" 
+                    class="flex-1 py-4 rounded-2xl bg-white text-orange-600 font-bold text-lg shadow-lg hover:bg-gray-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span>✅</span>
+                    <span>掌握了</span>
+                  </button>
+                </div>
+              ` : `
+                <button onclick="showMistakeAnswer()" 
+                  class="w-full py-4 rounded-2xl bg-white text-orange-600 font-bold text-lg shadow-lg hover:bg-gray-100 active:scale-95 transition-all">
+                  👀 显示正确答案
+                </button>
+              `}
+            </div>
           </div>
         </div>
       `;
