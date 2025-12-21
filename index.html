@@ -200,12 +200,14 @@ REGLAS IMPORTANTES:
 
     // ==================== 应用状态 ====================
     let state = {
-      view: 'loading', // loading, welcome, setup, home, tutor, scenario, chat, settings, history
+      view: 'loading', // loading, welcome, setup, home, tutor, scenario, chat, settings, history, stats, mistakes, vocabulary
       user: Storage.get('user', null), // { name, level, showTranslation, correctionLevel, createdAt }
       tutor: null,
       scenario: null,
       messages: [],
       chatHistory: Storage.get('chatHistory', []), // 历史对话记录
+      mistakeBook: Storage.get('mistakeBook', []), // 错误记录本 [{id, wrong, correct, explanation, date, tutorId}]
+      vocabulary: Storage.get('vocabulary', []), // 词汇本 [{id, word, meaning, example, date, mastered}]
       inputText: '',
       isLoading: false,
       isListening: false,
@@ -455,7 +457,11 @@ REGLAS IMPORTANTES:
       };
       
       state.messages.push(aiMsg);
-      if (correctionMatch) state.corrections++;
+      if (correctionMatch) {
+        state.corrections++;
+        // 保存到错误记录本
+        saveMistake(correctionMatch[1].trim(), text);
+      }
       state.isLoading = false;
       
       // 保存对话历史
@@ -464,6 +470,28 @@ REGLAS IMPORTANTES:
       render();
       scrollToBottom();
       speak(cleanResponse);
+    }
+    
+    // 保存错误到记录本
+    function saveMistake(correctionText, userInput) {
+      // 解析纠正内容，格式通常是："错误" → "正确" (解释)
+      const mistake = {
+        id: Date.now(),
+        original: userInput, // 用户原始输入
+        correction: correctionText, // 完整的纠正内容
+        tutorId: state.tutor?.id || 'unknown',
+        tutorName: state.tutor?.name || '未知',
+        scenario: state.scenario?.name || '自由聊天',
+        date: new Date().toISOString(),
+        reviewed: false // 是否已复习
+      };
+      
+      state.mistakeBook.unshift(mistake);
+      // 最多保存100条错误记录
+      if (state.mistakeBook.length > 100) {
+        state.mistakeBook = state.mistakeBook.slice(0, 100);
+      }
+      Storage.set('mistakeBook', state.mistakeBook);
     }
 
     // 获取对话建议
@@ -623,6 +651,9 @@ REGLAS IMPORTANTES:
         case 'chat': app.innerHTML = renderChat(); break;
         case 'settings': app.innerHTML = renderSettings(); break;
         case 'history': app.innerHTML = renderHistory(); break;
+        case 'stats': app.innerHTML = renderStats(); break;
+        case 'mistakes': app.innerHTML = renderMistakes(); break;
+        case 'vocabulary': app.innerHTML = renderVocabulary(); break;
       }
     }
 
@@ -754,6 +785,7 @@ REGLAS IMPORTANTES:
     function renderHome() {
       const user = state.user;
       const recentChats = state.chatHistory.slice(0, 3);
+      const totalCorrections = state.chatHistory.reduce((sum, c) => sum + (c.corrections || 0), 0);
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
@@ -768,20 +800,26 @@ REGLAS IMPORTANTES:
                 ⚙️
               </button>
             </div>
-            <div class="flex gap-4 text-sm">
-              <div class="bg-white/20 rounded-lg px-3 py-2">
+            <!-- 点击进入统计页面 -->
+            <div onclick="state.view='stats';render()" class="flex gap-4 text-sm cursor-pointer hover:opacity-90 transition-opacity">
+              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">水平</div>
                 <div class="font-bold">${user.level}</div>
               </div>
-              <div class="bg-white/20 rounded-lg px-3 py-2">
+              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">对话</div>
                 <div class="font-bold">${state.chatHistory.length}</div>
               </div>
-              <div class="bg-white/20 rounded-lg px-3 py-2">
+              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">纠正</div>
-                <div class="font-bold">${state.chatHistory.reduce((sum, c) => sum + (c.corrections || 0), 0)}</div>
+                <div class="font-bold">${totalCorrections}</div>
+              </div>
+              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
+                <div class="text-white/70 text-xs">词汇</div>
+                <div class="font-bold">${state.vocabulary.length}</div>
               </div>
             </div>
+            <div class="text-center text-white/50 text-xs mt-2">点击查看详细统计 →</div>
           </div>
           
           <div class="flex-1 overflow-auto p-6">
@@ -797,6 +835,33 @@ REGLAS IMPORTANTES:
                 </div>
                 <div class="text-gray-300 text-xl">→</div>
               </button>
+            </div>
+            
+            <!-- 学习工具 -->
+            <div class="mb-6">
+              <h3 class="text-sm font-medium text-gray-500 mb-3">学习工具</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="state.view='mistakes';render()" 
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-amber-200 active:scale-98 transition-all">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl">📝</div>
+                    <div>
+                      <div class="font-bold text-gray-800 text-sm">错题本</div>
+                      <div class="text-xs text-gray-500">${state.mistakeBook.length} 条记录</div>
+                    </div>
+                  </div>
+                </button>
+                <button onclick="state.view='vocabulary';render()" 
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-green-200 active:scale-98 transition-all">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-xl">📚</div>
+                    <div>
+                      <div class="font-bold text-gray-800 text-sm">词汇本</div>
+                      <div class="text-xs text-gray-500">${state.vocabulary.length} 个单词</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
             
             <!-- 最近对话 -->
@@ -1382,6 +1447,356 @@ REGLAS IMPORTANTES:
           </div>
         </div>
       `;
+    }
+
+    // ==================== 学习统计页面 ====================
+    function renderStats() {
+      const user = state.user;
+      const totalChats = state.chatHistory.length;
+      const totalMessages = state.chatHistory.reduce((sum, c) => sum + (c.messages?.length || 0), 0);
+      const totalCorrections = state.chatHistory.reduce((sum, c) => sum + (c.corrections || 0), 0);
+      const totalMistakes = state.mistakeBook.length;
+      const totalVocab = state.vocabulary.length;
+      
+      // 计算学习天数
+      const chatDates = state.chatHistory.map(c => new Date(c.date).toDateString());
+      const uniqueDays = [...new Set(chatDates)].length;
+      
+      // 计算常用角色
+      const tutorCounts = {};
+      state.chatHistory.forEach(c => {
+        tutorCounts[c.tutor] = (tutorCounts[c.tutor] || 0) + 1;
+      });
+      const favoriteTutor = Object.entries(tutorCounts).sort((a, b) => b[1] - a[1])[0];
+      
+      // 计算常用场景
+      const scenarioCounts = {};
+      state.chatHistory.forEach(c => {
+        scenarioCounts[c.scenario] = (scenarioCounts[c.scenario] || 0) + 1;
+      });
+      const favoriteScenario = Object.entries(scenarioCounts).sort((a, b) => b[1] - a[1])[0];
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-2xl font-bold">📊 学习统计</h1>
+            <p class="text-white/70 text-sm mt-1">你的西语学习数据一览</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-md mx-auto space-y-4">
+              <!-- 核心数据 -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
+                  <div class="text-3xl font-bold text-primary-600">${totalChats}</div>
+                  <div class="text-sm text-gray-500">对话次数</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
+                  <div class="text-3xl font-bold text-blue-600">${totalMessages}</div>
+                  <div class="text-sm text-gray-500">消息总数</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
+                  <div class="text-3xl font-bold text-amber-600">${totalCorrections}</div>
+                  <div class="text-sm text-gray-500">被纠正次数</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
+                  <div class="text-3xl font-bold text-green-600">${uniqueDays}</div>
+                  <div class="text-sm text-gray-500">学习天数</div>
+                </div>
+              </div>
+              
+              <!-- 学习进度 -->
+              <div class="bg-white p-5 rounded-xl shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">📈 学习进度</h3>
+                <div class="space-y-3">
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span class="text-gray-600">当前水平</span>
+                      <span class="font-bold text-primary-600">${user.level}</span>
+                    </div>
+                    <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full" 
+                        style="width: ${user.level === 'A1' ? '25%' : user.level === 'A2' ? '50%' : user.level === 'B1' ? '75%' : '100%'}"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>A1</span><span>A2</span><span>B1</span><span>B2</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 学习偏好 -->
+              <div class="bg-white p-5 rounded-xl shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">❤️ 学习偏好</h3>
+                <div class="space-y-3">
+                  ${favoriteTutor ? `
+                    <div class="flex items-center justify-between">
+                      <span class="text-gray-600">最常练习的角色</span>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xl">${TUTORS[favoriteTutor[0]]?.avatar || '👤'}</span>
+                        <span class="font-medium">${TUTORS[favoriteTutor[0]]?.name || '未知'}</span>
+                        <span class="text-xs text-gray-400">(${favoriteTutor[1]}次)</span>
+                      </div>
+                    </div>
+                  ` : ''}
+                  ${favoriteScenario ? `
+                    <div class="flex items-center justify-between">
+                      <span class="text-gray-600">最常练习的场景</span>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xl">${SCENARIOS.find(s => s.id === favoriteScenario[0])?.icon || '💬'}</span>
+                        <span class="font-medium">${SCENARIOS.find(s => s.id === favoriteScenario[0])?.name || '自由聊天'}</span>
+                        <span class="text-xs text-gray-400">(${favoriteScenario[1]}次)</span>
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+              
+              <!-- 学习资料 -->
+              <div class="bg-white p-5 rounded-xl shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-4">📚 学习资料</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <button onclick="state.view='mistakes';render()" class="p-3 bg-amber-50 rounded-xl text-center hover:bg-amber-100 transition-colors">
+                    <div class="text-2xl mb-1">📝</div>
+                    <div class="font-bold text-amber-700">${totalMistakes}</div>
+                    <div class="text-xs text-amber-600">错题记录</div>
+                  </button>
+                  <button onclick="state.view='vocabulary';render()" class="p-3 bg-green-50 rounded-xl text-center hover:bg-green-100 transition-colors">
+                    <div class="text-2xl mb-1">📚</div>
+                    <div class="font-bold text-green-700">${totalVocab}</div>
+                    <div class="text-xs text-green-600">词汇收藏</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 错题本页面 ====================
+    function renderMistakes() {
+      const mistakes = state.mistakeBook;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-bold">📝 错题本</h1>
+                <p class="text-white/70 text-sm mt-1">共 ${mistakes.length} 条纠正记录</p>
+              </div>
+              ${mistakes.length > 0 ? `
+                <button onclick="if(confirm('确定要清空所有错题记录吗？'))clearMistakes()" 
+                  class="text-xs px-3 py-1 rounded-full bg-white/20 hover:bg-white/30">清空</button>
+              ` : ''}
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            ${mistakes.length > 0 ? `
+              <div class="max-w-md mx-auto space-y-3">
+                ${mistakes.map((m, index) => {
+                  const date = new Date(m.date);
+                  return `
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                      <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                          <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <span>${TUTORS[m.tutorId]?.avatar || '👤'}</span>
+                            <span>${m.tutorName}</span>
+                            <span>·</span>
+                            <span>${m.scenario}</span>
+                          </div>
+                          <span class="text-xs text-gray-400">${date.toLocaleDateString()}</span>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded-lg mb-2">
+                          <div class="text-xs text-red-500 mb-1">❌ 你说的</div>
+                          <div class="text-sm text-red-700">${m.original}</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg">
+                          <div class="text-xs text-green-500 mb-1">✅ 纠正</div>
+                          <div class="text-sm text-green-700">${m.correction}</div>
+                        </div>
+                      </div>
+                      <div class="border-t border-gray-100 px-4 py-2 bg-gray-50 flex justify-between items-center">
+                        <button onclick="speakMistake(${index})" class="text-xs px-3 py-1.5 rounded-lg text-gray-500 hover:bg-gray-100 flex items-center gap-1">
+                          <span>🔊</span>
+                          <span>朗读</span>
+                        </button>
+                        <button onclick="deleteMistake(${index})" class="text-xs px-3 py-1.5 rounded-lg text-red-500 hover:bg-red-100 flex items-center gap-1">
+                          <span>🗑️</span>
+                          <span>删除</span>
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="text-center py-20 text-gray-400">
+                <div class="text-5xl mb-3">🎉</div>
+                <div class="font-medium">暂无错误记录</div>
+                <div class="text-sm mt-1">继续加油！和AI对话时的纠正会自动记录在这里</div>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+    
+    // 错题本相关函数
+    function clearMistakes() {
+      state.mistakeBook = [];
+      Storage.remove('mistakeBook');
+      render();
+    }
+    
+    function deleteMistake(index) {
+      state.mistakeBook.splice(index, 1);
+      Storage.set('mistakeBook', state.mistakeBook);
+      render();
+    }
+    
+    function speakMistake(index) {
+      const m = state.mistakeBook[index];
+      if (m) {
+        // 提取纠正后的正确表达
+        const correctMatch = m.correction.match(/→\s*[""]?([^""(]+)/);
+        if (correctMatch) {
+          speak(correctMatch[1].trim());
+        } else {
+          speak(m.correction);
+        }
+      }
+    }
+
+    // ==================== 词汇本页面 ====================
+    function renderVocabulary() {
+      const vocab = state.vocabulary;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-green-500 to-emerald-500 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-bold">📚 词汇本</h1>
+                <p class="text-white/70 text-sm mt-1">共收藏 ${vocab.length} 个单词</p>
+              </div>
+              <button onclick="showAddVocabForm()" 
+                class="text-xs px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 flex items-center gap-1">
+                <span>+</span>
+                <span>添加单词</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 添加单词表单 -->
+          <div id="addVocabForm" class="hidden bg-white border-b p-4">
+            <div class="max-w-md mx-auto space-y-3">
+              <input id="vocabWord" type="text" placeholder="西班牙语单词" 
+                class="w-full p-3 rounded-lg border border-gray-200 focus:border-green-500 outline-none text-sm">
+              <input id="vocabMeaning" type="text" placeholder="中文意思" 
+                class="w-full p-3 rounded-lg border border-gray-200 focus:border-green-500 outline-none text-sm">
+              <input id="vocabExample" type="text" placeholder="例句（可选）" 
+                class="w-full p-3 rounded-lg border border-gray-200 focus:border-green-500 outline-none text-sm">
+              <div class="flex gap-2">
+                <button onclick="hideAddVocabForm()" class="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm">取消</button>
+                <button onclick="addVocabulary()" class="flex-1 py-2 rounded-lg bg-green-500 text-white text-sm">保存</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            ${vocab.length > 0 ? `
+              <div class="max-w-md mx-auto space-y-3">
+                ${vocab.map((v, index) => {
+                  const date = new Date(v.date);
+                  return `
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                      <div class="p-4">
+                        <div class="flex items-start justify-between">
+                          <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                              <span class="text-lg font-bold text-gray-800">${v.word}</span>
+                              <button onclick="speakVocab('${v.word.replace(/'/g, "\\'")}')" class="text-gray-400 hover:text-primary-500">🔊</button>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">${v.meaning}</div>
+                            ${v.example ? `<div class="text-xs text-gray-400 mt-2 italic">"${v.example}"</div>` : ''}
+                          </div>
+                          <span class="text-xs text-gray-400">${date.toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div class="border-t border-gray-100 px-4 py-2 bg-gray-50 flex justify-end">
+                        <button onclick="deleteVocab(${index})" class="text-xs px-3 py-1.5 rounded-lg text-red-500 hover:bg-red-100 flex items-center gap-1">
+                          <span>🗑️</span>
+                          <span>删除</span>
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="text-center py-20 text-gray-400">
+                <div class="text-5xl mb-3">📖</div>
+                <div class="font-medium">词汇本是空的</div>
+                <div class="text-sm mt-1">点击上方"添加单词"开始收藏</div>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+    
+    // 词汇本相关函数
+    function showAddVocabForm() {
+      document.getElementById('addVocabForm')?.classList.remove('hidden');
+    }
+    
+    function hideAddVocabForm() {
+      document.getElementById('addVocabForm')?.classList.add('hidden');
+      document.getElementById('vocabWord').value = '';
+      document.getElementById('vocabMeaning').value = '';
+      document.getElementById('vocabExample').value = '';
+    }
+    
+    function addVocabulary() {
+      const word = document.getElementById('vocabWord')?.value.trim();
+      const meaning = document.getElementById('vocabMeaning')?.value.trim();
+      const example = document.getElementById('vocabExample')?.value.trim();
+      
+      if (!word || !meaning) {
+        alert('请填写单词和中文意思');
+        return;
+      }
+      
+      const vocab = {
+        id: Date.now(),
+        word,
+        meaning,
+        example: example || '',
+        date: new Date().toISOString(),
+        mastered: false
+      };
+      
+      state.vocabulary.unshift(vocab);
+      Storage.set('vocabulary', state.vocabulary);
+      hideAddVocabForm();
+      render();
+    }
+    
+    function deleteVocab(index) {
+      state.vocabulary.splice(index, 1);
+      Storage.set('vocabulary', state.vocabulary);
+      render();
+    }
+    
+    function speakVocab(word) {
+      speak(word);
     }
 
     // ==================== 初始化 ====================
