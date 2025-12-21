@@ -127,6 +127,26 @@
       },
       remove(key) {
         try { localStorage.removeItem('habla_' + key); } catch {}
+      },
+      // 用户相关存储
+      getUsers() {
+        return this.get('users', []);
+      },
+      saveUsers(users) {
+        this.set('users', users);
+      },
+      getCurrentUserId() {
+        return this.get('currentUserId', null);
+      },
+      setCurrentUserId(id) {
+        this.set('currentUserId', id);
+      },
+      // 获取用户专属数据
+      getUserData(userId, key, defaultVal = null) {
+        return this.get(`${userId}_${key}`, defaultVal);
+      },
+      setUserData(userId, key, val) {
+        this.set(`${userId}_${key}`, val);
       }
     };
 
@@ -279,16 +299,34 @@ REGLAS IMPORTANTES:
     ];
 
     // ==================== 应用状态 ====================
+    // 初始化函数，加载当前用户数据
+    function initUserData() {
+      const users = Storage.getUsers();
+      const currentUserId = Storage.getCurrentUserId();
+      const currentUser = users.find(u => u.id === currentUserId);
+      
+      return {
+        users: users,
+        user: currentUser || null,
+        chatHistory: currentUser ? Storage.getUserData(currentUser.id, 'chatHistory', []) : [],
+        mistakeBook: currentUser ? Storage.getUserData(currentUser.id, 'mistakeBook', []) : [],
+        vocabulary: currentUser ? Storage.getUserData(currentUser.id, 'vocabulary', []) : [],
+      };
+    }
+    
+    const userData = initUserData();
+    
     let state = {
-      view: 'loading', // loading, welcome, setup, home, tutor, scenario, chat, settings, history, stats, mistakes, vocabulary
-      user: Storage.get('user', null), // { name, level, showTranslation, correctionLevel, createdAt }
+      view: 'loading', // loading, welcome, userSelect, setup, home, tutor, scenario, chat, settings, history, stats, mistakes, vocabulary
+      users: userData.users, // 所有用户列表
+      user: userData.user, // 当前用户
       darkMode: Storage.get('darkMode', false), // 深色模式
       tutor: null,
       scenario: null,
       messages: [],
-      chatHistory: Storage.get('chatHistory', []), // 历史对话记录
-      mistakeBook: Storage.get('mistakeBook', []), // 错误记录本 [{id, wrong, correct, explanation, date, tutorId}]
-      vocabulary: Storage.get('vocabulary', []), // 词汇本 [{id, word, meaning, example, date, mastered}]
+      chatHistory: userData.chatHistory, // 历史对话记录
+      mistakeBook: userData.mistakeBook, // 错误记录本
+      vocabulary: userData.vocabulary, // 词汇本
       inputText: '',
       isLoading: false,
       isListening: false,
@@ -555,6 +593,8 @@ REGLAS IMPORTANTES:
     
     // 保存错误到记录本
     function saveMistake(correctionText, userInput) {
+      if (!state.user) return;
+      
       // 解析纠正内容，格式通常是："错误" → "正确" (解释)
       const mistake = {
         id: Date.now(),
@@ -572,7 +612,7 @@ REGLAS IMPORTANTES:
       if (state.mistakeBook.length > 100) {
         state.mistakeBook = state.mistakeBook.slice(0, 100);
       }
-      Storage.set('mistakeBook', state.mistakeBook);
+      Storage.setUserData(state.user.id, 'mistakeBook', state.mistakeBook);
     }
 
     // 获取对话建议
@@ -671,7 +711,7 @@ REGLAS IMPORTANTES:
     }
 
     function saveChatHistory() {
-      if (state.messages.length < 2) return;
+      if (state.messages.length < 2 || !state.user) return;
       
       const chat = {
         id: Date.now(),
@@ -684,7 +724,7 @@ REGLAS IMPORTANTES:
       
       state.chatHistory.unshift(chat);
       if (state.chatHistory.length > 50) state.chatHistory = state.chatHistory.slice(0, 50);
-      Storage.set('chatHistory', state.chatHistory);
+      Storage.setUserData(state.user.id, 'chatHistory', state.chatHistory);
     }
 
     function startChat(tutor, scenario) {
@@ -713,9 +753,73 @@ REGLAS IMPORTANTES:
       }, 100);
     }
 
-    function saveUser(userData) {
-      state.user = { ...userData, createdAt: new Date().toISOString() };
-      Storage.set('user', state.user);
+    // 保存/创建用户
+    function saveUser(userData, isNew = false) {
+      const userId = isNew ? Date.now().toString() : (state.user?.id || Date.now().toString());
+      const user = { 
+        ...userData, 
+        id: userId,
+        createdAt: userData.createdAt || new Date().toISOString() 
+      };
+      
+      // 更新用户列表
+      let users = Storage.getUsers();
+      const existingIndex = users.findIndex(u => u.id === userId);
+      if (existingIndex >= 0) {
+        users[existingIndex] = user;
+      } else {
+        users.push(user);
+      }
+      Storage.saveUsers(users);
+      Storage.setCurrentUserId(userId);
+      
+      // 更新state
+      state.users = users;
+      state.user = user;
+      
+      // 如果是新用户，初始化空数据
+      if (isNew) {
+        state.chatHistory = [];
+        state.mistakeBook = [];
+        state.vocabulary = [];
+      }
+    }
+    
+    // 切换用户
+    function switchUser(userId) {
+      const user = state.users.find(u => u.id === userId);
+      if (!user) return;
+      
+      Storage.setCurrentUserId(userId);
+      state.user = user;
+      state.chatHistory = Storage.getUserData(userId, 'chatHistory', []);
+      state.mistakeBook = Storage.getUserData(userId, 'mistakeBook', []);
+      state.vocabulary = Storage.getUserData(userId, 'vocabulary', []);
+      state.view = 'home';
+      render();
+    }
+    
+    // 删除用户
+    function deleteUser(userId) {
+      let users = Storage.getUsers();
+      users = users.filter(u => u.id !== userId);
+      Storage.saveUsers(users);
+      
+      // 清除该用户的数据
+      Storage.remove(`${userId}_chatHistory`);
+      Storage.remove(`${userId}_mistakeBook`);
+      Storage.remove(`${userId}_vocabulary`);
+      
+      state.users = users;
+      
+      // 如果删除的是当前用户，返回用户选择页面
+      if (state.user?.id === userId) {
+        state.user = null;
+        Storage.setCurrentUserId(null);
+        state.view = users.length > 0 ? 'userSelect' : 'welcome';
+      }
+      
+      render();
     }
 
     // ==================== 渲染函数 ====================
@@ -732,6 +836,7 @@ REGLAS IMPORTANTES:
       switch(state.view) {
         case 'loading': app.innerHTML = renderLoading(); break;
         case 'welcome': app.innerHTML = renderWelcome(); break;
+        case 'userSelect': app.innerHTML = renderUserSelect(); break;
         case 'setup': app.innerHTML = renderSetup(); break;
         case 'home': app.innerHTML = renderHome(); break;
         case 'tutor': app.innerHTML = renderTutor(); break;
@@ -793,6 +898,51 @@ REGLAS IMPORTANTES:
             </div>
             
             <div class="mt-8 text-white/50 text-xs">完全免费 · 无需注册 · 数据存本地</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 用户选择页面
+    function renderUserSelect() {
+      const users = state.users;
+      return `
+        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700 flex flex-col">
+          <div class="p-6 text-white text-center">
+            <div class="text-5xl mb-2">🇪🇸</div>
+            <h1 class="text-2xl font-bold">HablaConmigo</h1>
+            <p class="text-white/70 text-sm mt-1">选择用户或创建新用户</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-sm mx-auto space-y-3">
+              ${users.map(u => `
+                <div class="bg-white/10 backdrop-blur rounded-xl overflow-hidden">
+                  <button onclick="switchUser('${u.id}')" 
+                    class="w-full p-4 text-left hover:bg-white/10 transition-colors flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">
+                      ${u.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-bold text-white">${u.name}</div>
+                      <div class="text-sm text-white/70">水平: ${u.level}</div>
+                    </div>
+                    <div class="text-white/50 text-sm">→</div>
+                  </button>
+                  <div class="border-t border-white/10 px-4 py-2 flex justify-end">
+                    <button onclick="if(confirm('确定要删除用户 ${u.name} 吗？所有数据将被清除！'))deleteUser('${u.id}')" 
+                      class="text-xs text-white/50 hover:text-red-300">删除</button>
+                  </div>
+                </div>
+              `).join('')}
+              
+              <!-- 添加新用户 -->
+              <button onclick="state.view='setup';render()" 
+                class="w-full p-4 bg-white/20 backdrop-blur rounded-xl text-white hover:bg-white/30 transition-colors flex items-center justify-center gap-2">
+                <span class="text-2xl">+</span>
+                <span class="font-medium">添加新用户</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -872,7 +1022,8 @@ REGLAS IMPORTANTES:
       const autoTranslate = document.getElementById('autoTranslate').checked;
       const strictMode = document.getElementById('strictMode').checked;
       
-      saveUser({ name, level, autoTranslate, strictMode, speechRate: 0.85 });
+      // 创建新用户
+      saveUser({ name, level, autoTranslate, strictMode, speechRate: 0.85 }, true);
       state.view = 'home';
       render();
     }
@@ -887,29 +1038,34 @@ REGLAS IMPORTANTES:
           <!-- 顶部 -->
           <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
             <div class="flex items-center justify-between mb-4">
-              <div>
-                <div class="text-sm text-white/70">¡Hola!</div>
-                <div class="text-2xl font-bold">${user.name}</div>
-              </div>
+              <button onclick="state.view='userSelect';render()" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold">
+                  ${user.name.charAt(0).toUpperCase()}
+                </div>
+                <div class="text-left">
+                  <div class="text-sm text-white/70">¡Hola!</div>
+                  <div class="font-bold flex items-center gap-1">${user.name} <span class="text-xs text-white/50">▼</span></div>
+                </div>
+              </button>
               <button onclick="state.view='settings';render()" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 ⚙️
               </button>
             </div>
             <!-- 点击进入统计页面 -->
-            <div onclick="state.view='stats';render()" class="flex gap-4 text-sm cursor-pointer hover:opacity-90 transition-opacity">
-              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
+            <div onclick="state.view='stats';render()" class="flex gap-3 text-sm cursor-pointer hover:opacity-90 transition-opacity">
+              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">水平</div>
                 <div class="font-bold">${user.level}</div>
               </div>
-              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
+              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">对话</div>
                 <div class="font-bold">${state.chatHistory.length}</div>
               </div>
-              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
+              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">纠正</div>
                 <div class="font-bold">${totalCorrections}</div>
               </div>
-              <div class="bg-white/20 rounded-lg px-3 py-2 flex-1 text-center">
+              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
                 <div class="text-white/70 text-xs">词汇</div>
                 <div class="font-bold">${state.vocabulary.length}</div>
               </div>
@@ -1005,28 +1161,20 @@ REGLAS IMPORTANTES:
             <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
             <div>
               <h1 class="font-bold text-gray-800">选择对话伙伴</h1>
-              <p class="text-xs text-gray-500">不同角色有不同的对话风格</p>
+              <p class="text-xs text-gray-500">点击选择角色开始对话</p>
             </div>
           </div>
           
           <div class="flex-1 overflow-auto p-4">
-            <div class="max-w-md mx-auto space-y-4">
+            <div class="max-w-lg mx-auto grid grid-cols-2 gap-3">
               ${Object.values(TUTORS).map(t => `
                 <button onclick="state.tutor=TUTORS['${t.id}'];state.view='scenario';render()" 
-                  class="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-primary-200 active:scale-98 transition-all fade-in">
-                  <div class="flex items-start gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${t.color} flex items-center justify-center text-3xl flex-shrink-0">${t.avatar}</div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2">
-                        <span class="font-bold text-gray-800">${t.name}</span>
-                        <span class="text-sm">${t.emoji}</span>
-                      </div>
-                      <div class="text-sm text-primary-600">${t.role} · ${t.roleEs}</div>
-                      <div class="text-xs text-gray-500 mt-1">${t.description}</div>
-                      <div class="flex gap-1 mt-2">
-                        ${t.personality.split('、').map(p => `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${p}</span>`).join('')}
-                      </div>
-                    </div>
+                  class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-primary-200 active:scale-98 transition-all">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center text-2xl mb-2">${t.avatar}</div>
+                    <div class="font-bold text-gray-800 text-sm">${t.name}</div>
+                    <div class="text-xs text-primary-600">${t.role}</div>
+                    <div class="text-xs text-gray-400 mt-1 line-clamp-2">${t.description.substring(0, 20)}...</div>
                   </div>
                 </button>
               `).join('')}
@@ -1485,23 +1633,26 @@ REGLAS IMPORTANTES:
       const strictMode = document.getElementById('settingStrict').checked;
       const speechRate = parseFloat(document.getElementById('settingSpeechRate').value);
       
-      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate });
+      // 更新现有用户，不是创建新用户
+      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate }, false);
       state.view = 'home';
       render();
     }
 
     function clearHistory() {
+      if (!state.user) return;
       state.chatHistory = [];
-      Storage.remove('chatHistory');
+      Storage.setUserData(state.user.id, 'chatHistory', []);
       render();
     }
     
     // 删除单条历史记录
     function deleteHistoryChat(index, event) {
       event.stopPropagation(); // 阻止触发卡片点击事件
+      if (!state.user) return;
       if (confirm('确定要删除这条对话记录吗？')) {
         state.chatHistory.splice(index, 1);
-        Storage.set('chatHistory', state.chatHistory);
+        Storage.setUserData(state.user.id, 'chatHistory', state.chatHistory);
         render();
       }
     }
@@ -1763,14 +1914,16 @@ REGLAS IMPORTANTES:
     
     // 错题本相关函数
     function clearMistakes() {
+      if (!state.user) return;
       state.mistakeBook = [];
-      Storage.remove('mistakeBook');
+      Storage.setUserData(state.user.id, 'mistakeBook', []);
       render();
     }
     
     function deleteMistake(index) {
+      if (!state.user) return;
       state.mistakeBook.splice(index, 1);
-      Storage.set('mistakeBook', state.mistakeBook);
+      Storage.setUserData(state.user.id, 'mistakeBook', state.mistakeBook);
       render();
     }
     
@@ -1898,14 +2051,18 @@ REGLAS IMPORTANTES:
       };
       
       state.vocabulary.unshift(vocab);
-      Storage.set('vocabulary', state.vocabulary);
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'vocabulary', state.vocabulary);
+      }
       hideAddVocabForm();
       render();
     }
     
     function deleteVocab(index) {
       state.vocabulary.splice(index, 1);
-      Storage.set('vocabulary', state.vocabulary);
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'vocabulary', state.vocabulary);
+      }
       render();
     }
     
@@ -1919,8 +2076,13 @@ REGLAS IMPORTANTES:
       
       setTimeout(() => {
         if (state.user) {
+          // 有当前用户，进入主页
           state.view = 'home';
+        } else if (state.users.length > 0) {
+          // 有用户但未选择，显示用户选择页面
+          state.view = 'userSelect';
         } else {
+          // 没有用户，显示欢迎页面
           state.view = 'welcome';
         }
         render();
