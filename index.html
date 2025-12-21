@@ -310,6 +310,20 @@ REGLAS IMPORTANTES:
       { id: 'B2', name: '中高级', desc: '能流利讨论各种话题' },
     ];
 
+    // 成就定义
+    const ACHIEVEMENTS = [
+      { id: 'first_chat', icon: '🎯', name: '初次启程', desc: '完成第1次对话', condition: (s) => s.chatHistory.length >= 1 },
+      { id: 'chat_10', icon: '💬', name: '话匣子', desc: '完成10次对话', condition: (s) => s.chatHistory.length >= 10 },
+      { id: 'chat_50', icon: '🗣️', name: '健谈者', desc: '完成50次对话', condition: (s) => s.chatHistory.length >= 50 },
+      { id: 'streak_7', icon: '🔥', name: '坚持一周', desc: '连续打卡7天', condition: (s) => getStreakDays() >= 7 },
+      { id: 'streak_30', icon: '⚡', name: '坚持一月', desc: '连续打卡30天', condition: (s) => getStreakDays() >= 30 },
+      { id: 'mistakes_10', icon: '📝', name: '知错能改', desc: '错题本达到10条', condition: (s) => s.mistakeBook.length >= 10 },
+      { id: 'vocab_20', icon: '📚', name: '词汇新手', desc: '收藏20个单词', condition: (s) => s.vocabulary.length >= 20 },
+      { id: 'vocab_100', icon: '📖', name: '词汇达人', desc: '收藏100个单词', condition: (s) => s.vocabulary.length >= 100 },
+      { id: 'flashcard_10', icon: '🎴', name: '复习达人', desc: '完成10次闪卡复习', condition: (s) => s.stats.flashcardReviews >= 10 },
+      { id: 'tutors_5', icon: '👥', name: '社交达人', desc: '和5个不同角色对话', condition: (s) => s.stats.tutorsUsed.length >= 5 },
+    ];
+
     // ==================== 应用状态 ====================
     // 初始化函数，加载当前用户数据
     function initUserData() {
@@ -323,7 +337,9 @@ REGLAS IMPORTANTES:
         chatHistory: currentUser ? Storage.getUserData(currentUser.id, 'chatHistory', []) : [],
         mistakeBook: currentUser ? Storage.getUserData(currentUser.id, 'mistakeBook', []) : [],
         vocabulary: currentUser ? Storage.getUserData(currentUser.id, 'vocabulary', []) : [],
-        checkinDays: currentUser ? Storage.getUserData(currentUser.id, 'checkinDays', []) : [], // 打卡日期列表 ['2025-01-15', '2025-01-16']
+        checkinDays: currentUser ? Storage.getUserData(currentUser.id, 'checkinDays', []) : [],
+        achievements: currentUser ? Storage.getUserData(currentUser.id, 'achievements', []) : [], // 已解锁成就ID列表
+        stats: currentUser ? Storage.getUserData(currentUser.id, 'stats', { flashcardReviews: 0, tutorsUsed: [] }) : { flashcardReviews: 0, tutorsUsed: [] }, // 统计数据
       };
     }
     
@@ -341,6 +357,8 @@ REGLAS IMPORTANTES:
       mistakeBook: userData.mistakeBook, // 错误记录本
       vocabulary: userData.vocabulary, // 词汇本
       checkinDays: userData.checkinDays, // 打卡日期列表
+      achievements: userData.achievements, // 已解锁成就
+      stats: userData.stats, // 统计数据
       inputText: '',
       isLoading: false,
       isListening: false,
@@ -657,6 +675,9 @@ REGLAS IMPORTANTES:
         state.mistakeBook = state.mistakeBook.slice(0, 100);
       }
       Storage.setUserData(state.user.id, 'mistakeBook', state.mistakeBook);
+      
+      // 检查成就
+      checkAchievements();
     }
 
     // 获取对话建议
@@ -769,6 +790,9 @@ REGLAS IMPORTANTES:
       state.chatHistory.unshift(chat);
       if (state.chatHistory.length > 50) state.chatHistory = state.chatHistory.slice(0, 50);
       Storage.setUserData(state.user.id, 'chatHistory', state.chatHistory);
+      
+      // 检查成就
+      checkAchievements();
     }
 
     function startChat(tutor, scenario) {
@@ -781,6 +805,9 @@ REGLAS IMPORTANTES:
       state.view = 'chat';
       state.isLoading = true;
       render();
+      
+      // 记录使用的导师
+      recordTutorUsed(tutor.id);
       
       // 动态生成场景开场白
       generateScenarioGreeting(tutor, scenario);
@@ -881,6 +908,8 @@ REGLAS IMPORTANTES:
       state.mistakeBook = Storage.getUserData(userId, 'mistakeBook', []);
       state.vocabulary = Storage.getUserData(userId, 'vocabulary', []);
       state.checkinDays = Storage.getUserData(userId, 'checkinDays', []);
+      state.achievements = Storage.getUserData(userId, 'achievements', []);
+      state.stats = Storage.getUserData(userId, 'stats', { flashcardReviews: 0, tutorsUsed: [] });
       state.view = 'home';
       render();
     }
@@ -896,6 +925,8 @@ REGLAS IMPORTANTES:
       Storage.remove(`${userId}_mistakeBook`);
       Storage.remove(`${userId}_vocabulary`);
       Storage.remove(`${userId}_checkinDays`);
+      Storage.remove(`${userId}_achievements`);
+      Storage.remove(`${userId}_stats`);
       
       state.users = users;
       
@@ -937,6 +968,7 @@ REGLAS IMPORTANTES:
         case 'flashcard': app.innerHTML = renderFlashcard(); break;
         case 'mistakeReview': app.innerHTML = renderMistakeReview(); break;
         case 'calendar': app.innerHTML = renderCalendar(); break;
+        case 'achievements': app.innerHTML = renderAchievements(); break;
       }
     }
     
@@ -1202,25 +1234,29 @@ REGLAS IMPORTANTES:
             <!-- 学习工具 -->
             <div class="mb-6">
               <h3 class="text-sm font-medium text-gray-500 mb-3">学习工具</h3>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-3 gap-3">
                 <button onclick="state.view='mistakes';render()" 
                   class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-amber-200 active:scale-98 transition-all">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl">📝</div>
-                    <div>
-                      <div class="font-bold text-gray-800 text-sm">错题本</div>
-                      <div class="text-xs text-gray-500">${state.mistakeBook.length} 条记录</div>
-                    </div>
+                  <div class="flex flex-col items-center text-center">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl mb-1">📝</div>
+                    <div class="font-bold text-gray-800 text-xs">错题本</div>
+                    <div class="text-xs text-gray-500">${state.mistakeBook.length} 条</div>
                   </div>
                 </button>
                 <button onclick="state.view='vocabulary';render()" 
                   class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-green-200 active:scale-98 transition-all">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-xl">📚</div>
-                    <div>
-                      <div class="font-bold text-gray-800 text-sm">词汇本</div>
-                      <div class="text-xs text-gray-500">${state.vocabulary.length} 个单词</div>
-                    </div>
+                  <div class="flex flex-col items-center text-center">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-xl mb-1">📚</div>
+                    <div class="font-bold text-gray-800 text-xs">词汇本</div>
+                    <div class="text-xs text-gray-500">${state.vocabulary.length} 个</div>
+                  </div>
+                </button>
+                <button onclick="state.view='achievements';render()" 
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-left hover:shadow-md hover:border-yellow-200 active:scale-98 transition-all">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-xl mb-1">🏆</div>
+                    <div class="font-bold text-gray-800 text-xs">成就</div>
+                    <div class="text-xs text-gray-500">${state.achievements.length}/${ACHIEVEMENTS.length}</div>
                   </div>
                 </button>
               </div>
@@ -1731,6 +1767,9 @@ REGLAS IMPORTANTES:
       // 关闭模态框并显示成功提示
       closeVocabModal();
       
+      // 检查成就
+      checkAchievements();
+      
       // 显示成功提示（使用临时提示）
       showToast(`✅ 已收藏: ${word}`);
     }
@@ -2015,7 +2054,9 @@ REGLAS IMPORTANTES:
         chatHistory: state.chatHistory,
         mistakeBook: state.mistakeBook,
         vocabulary: state.vocabulary,
-        checkinDays: state.checkinDays
+        checkinDays: state.checkinDays,
+        achievements: state.achievements,
+        stats: state.stats
       };
       
       const dataStr = JSON.stringify(exportData, null, 2);
@@ -2055,6 +2096,7 @@ REGLAS IMPORTANTES:
 错题本: ${importData.mistakeBook?.length || 0} 条
 词汇本: ${importData.vocabulary?.length || 0} 个
 打卡记录: ${importData.checkinDays?.length || 0} 天
+成就: ${importData.achievements?.length || 0} 个
 
 导入将覆盖当前数据，确定继续吗？`;
           
@@ -2076,6 +2118,14 @@ REGLAS IMPORTANTES:
           if (importData.checkinDays) {
             state.checkinDays = importData.checkinDays;
             Storage.setUserData(state.user.id, 'checkinDays', state.checkinDays);
+          }
+          if (importData.achievements) {
+            state.achievements = importData.achievements;
+            Storage.setUserData(state.user.id, 'achievements', state.achievements);
+          }
+          if (importData.stats) {
+            state.stats = importData.stats;
+            Storage.setUserData(state.user.id, 'stats', state.stats);
           }
           
           showToast('📥 数据导入成功！');
@@ -2523,6 +2573,10 @@ REGLAS IMPORTANTES:
         Storage.setUserData(state.user.id, 'vocabulary', state.vocabulary);
       }
       hideAddVocabForm();
+      
+      // 检查成就
+      checkAchievements();
+      
       render();
     }
     
@@ -2583,6 +2637,9 @@ REGLAS IMPORTANTES:
         fc.showAnswer = false;
       } else {
         fc.finished = true;
+        // 记录闪卡复习完成
+        recordFlashcardReview();
+        checkAchievements();
       }
       render();
     }
@@ -3052,6 +3109,10 @@ REGLAS IMPORTANTES:
       
       const streak = getStreakDays();
       showToast(`🎉 打卡成功！连续 ${streak} 天`);
+      
+      // 检查成就
+      checkAchievements();
+      
       render();
     }
     
@@ -3224,6 +3285,140 @@ REGLAS IMPORTANTES:
                   <span>打卡</span>
                 </button>
               `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== 成就系统 ====================
+    // 检查并解锁成就
+    function checkAchievements() {
+      if (!state.user) return;
+      
+      let newUnlocked = [];
+      
+      ACHIEVEMENTS.forEach(achievement => {
+        // 如果已解锁，跳过
+        if (state.achievements.includes(achievement.id)) return;
+        
+        // 检查条件
+        try {
+          if (achievement.condition(state)) {
+            state.achievements.push(achievement.id);
+            newUnlocked.push(achievement);
+          }
+        } catch (e) {
+          // 条件检查出错，跳过
+        }
+      });
+      
+      // 保存成就
+      if (newUnlocked.length > 0) {
+        Storage.setUserData(state.user.id, 'achievements', state.achievements);
+        
+        // 显示解锁提示
+        newUnlocked.forEach(a => {
+          setTimeout(() => {
+            showAchievementToast(a);
+          }, 500);
+        });
+      }
+    }
+    
+    // 显示成就解锁提示
+    function showAchievementToast(achievement) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 flex items-center gap-3 animate-bounce';
+      toast.innerHTML = `
+        <span class="text-3xl">${achievement.icon}</span>
+        <div>
+          <div class="text-xs opacity-80">🎉 成就解锁！</div>
+          <div class="font-bold">${achievement.name}</div>
+        </div>
+      `;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
+    }
+    
+    // 记录使用的导师
+    function recordTutorUsed(tutorId) {
+      if (!state.user || !tutorId) return;
+      
+      if (!state.stats.tutorsUsed.includes(tutorId)) {
+        state.stats.tutorsUsed.push(tutorId);
+        Storage.setUserData(state.user.id, 'stats', state.stats);
+      }
+    }
+    
+    // 记录闪卡复习次数
+    function recordFlashcardReview() {
+      if (!state.user) return;
+      
+      state.stats.flashcardReviews = (state.stats.flashcardReviews || 0) + 1;
+      Storage.setUserData(state.user.id, 'stats', state.stats);
+    }
+    
+    // 渲染成就页面
+    function renderAchievements() {
+      const unlockedCount = state.achievements.length;
+      const totalCount = ACHIEVEMENTS.length;
+      const percentage = Math.round((unlockedCount / totalCount) * 100);
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-yellow-500 to-amber-500 p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-bold">🏆 我的成就</h1>
+                <p class="text-white/80 text-sm mt-1">已解锁 ${unlockedCount}/${totalCount} 个成就</p>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl font-bold">${percentage}%</div>
+                <div class="text-white/70 text-xs">完成度</div>
+              </div>
+            </div>
+            
+            <!-- 进度条 -->
+            <div class="mt-4 h-3 bg-white/20 rounded-full overflow-hidden">
+              <div class="h-full bg-white rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <div class="max-w-md mx-auto">
+              <!-- 成就网格 -->
+              <div class="grid grid-cols-2 gap-3">
+                ${ACHIEVEMENTS.map(a => {
+                  const unlocked = state.achievements.includes(a.id);
+                  return `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm ${unlocked ? 'border-2 border-amber-400' : 'opacity-60'}">
+                      <div class="text-center">
+                        <div class="text-4xl mb-2 ${unlocked ? '' : 'grayscale'}">${a.icon}</div>
+                        <div class="font-bold text-gray-800 text-sm">${a.name}</div>
+                        <div class="text-xs text-gray-500 mt-1">${a.desc}</div>
+                        ${unlocked ? `
+                          <div class="mt-2 text-xs text-amber-600 font-medium">✅ 已解锁</div>
+                        ` : `
+                          <div class="mt-2 text-xs text-gray-400">🔒 未解锁</div>
+                        `}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              
+              <!-- 提示 -->
+              <div class="mt-6 text-center text-sm text-gray-400">
+                继续学习，解锁更多成就！
+              </div>
             </div>
           </div>
         </div>
