@@ -680,7 +680,172 @@ REGLAS:
       { id: 'vocab_100', icon: '📖', name: '词汇达人', desc: '收藏100个单词', condition: (s) => s.vocabulary.length >= 100 },
       { id: 'flashcard_10', icon: '🎴', name: '复习达人', desc: '完成10次闪卡复习', condition: (s) => s.stats.flashcardReviews >= 10 },
       { id: 'tutors_5', icon: '👥', name: '社交达人', desc: '和5个不同角色对话', condition: (s) => s.stats.tutorsUsed.length >= 5 },
+      // 斩单词成就
+      { id: 'word_first', icon: '⚔️', name: '初斩', desc: '斩掉第1个单词', condition: (s) => getMasteredCount() >= 1 },
+      { id: 'word_50', icon: '🗡️', name: '词汇战士', desc: '斩掉50个单词', condition: (s) => getMasteredCount() >= 50 },
+      { id: 'word_100', icon: '🏆', name: '词汇王者', desc: '斩掉100个单词', condition: (s) => getMasteredCount() >= 100 },
     ];
+
+    // ==================== 📚 斩单词词库 ====================
+    const WORD_BOOKS = {
+      A1: {
+        id: 'A1',
+        name: 'A1 基础词汇',
+        desc: '最常用的基础词汇，适合初学者',
+        icon: '🌱',
+        color: 'from-green-400 to-emerald-500'
+      },
+      A2: {
+        id: 'A2', 
+        name: 'A2 进阶词汇',
+        desc: '日常交流必备词汇',
+        icon: '🌿',
+        color: 'from-blue-400 to-cyan-500'
+      },
+      B1: {
+        id: 'B1',
+        name: 'B1 中级词汇',
+        desc: '流利表达所需词汇',
+        icon: '🌳',
+        color: 'from-purple-400 to-indigo-500'
+      },
+      citizenship: {
+        id: 'citizenship',
+        name: '入籍考试词汇',
+        desc: '西班牙入籍考试常用词',
+        icon: '🇪🇸',
+        color: 'from-red-400 to-yellow-500'
+      }
+    };
+
+    // A1基础词库 - 100个常用词
+    const A1_WORDS = [
+      // 问候与基础
+      { id: 'hola', word: 'hola', meaning: '你好', image: '👋', example: '¡Hola! ¿Cómo estás?', exampleZh: '你好！你好吗？', tags: ['问候'] },
+      { id: 'adios', word: 'adiós', meaning: '再见', image: '👋', example: '¡Adiós, hasta mañana!', exampleZh: '再见，明天见！', tags: ['问候'] },
+      { id: 'gracias', word: 'gracias', meaning: '谢谢', image: '🙏', example: 'Muchas gracias por tu ayuda.', exampleZh: '非常感谢你的帮助。', tags: ['礼貌'] },
+      { id: 'por_favor', word: 'por favor', meaning: '请', image: '🙏', example: 'Un café, por favor.', exampleZh: '请给我一杯咖啡。', tags: ['礼貌'] },
+      { id: 'si', word: 'sí', meaning: '是', image: '✅', example: 'Sí, me gusta.', exampleZh: '是的，我喜欢。', tags: ['基础'] },
+      { id: 'no', word: 'no', meaning: '不', image: '❌', example: 'No, gracias.', exampleZh: '不，谢谢。', tags: ['基础'] },
+      { id: 'buenos_dias', word: 'buenos días', meaning: '早上好', image: '🌅', example: '¡Buenos días! ¿Qué tal?', exampleZh: '早上好！怎么样？', tags: ['问候'] },
+      { id: 'buenas_noches', word: 'buenas noches', meaning: '晚安', image: '🌙', example: 'Buenas noches, que descanses.', exampleZh: '晚安，休息好。', tags: ['问候'] },
+      { id: 'perdon', word: 'perdón', meaning: '对不起', image: '😔', example: 'Perdón, no te vi.', exampleZh: '对不起，我没看到你。', tags: ['礼貌'] },
+      { id: 'de_nada', word: 'de nada', meaning: '不客气', image: '😊', example: '—Gracias. —De nada.', exampleZh: '—谢谢。—不客气。', tags: ['礼貌'] },
+      
+      // 数字
+      { id: 'uno', word: 'uno', meaning: '一', image: '1️⃣', example: 'Quiero uno.', exampleZh: '我要一个。', tags: ['数字'] },
+      { id: 'dos', word: 'dos', meaning: '二', image: '2️⃣', example: 'Somos dos personas.', exampleZh: '我们是两个人。', tags: ['数字'] },
+      { id: 'tres', word: 'tres', meaning: '三', image: '3️⃣', example: 'Tengo tres hermanos.', exampleZh: '我有三个兄弟姐妹。', tags: ['数字'] },
+      { id: 'cuatro', word: 'cuatro', meaning: '四', image: '4️⃣', example: 'Son las cuatro.', exampleZh: '现在四点。', tags: ['数字'] },
+      { id: 'cinco', word: 'cinco', meaning: '五', image: '5️⃣', example: 'Cinco minutos más.', exampleZh: '再等五分钟。', tags: ['数字'] },
+      { id: 'diez', word: 'diez', meaning: '十', image: '🔟', example: 'Cuesta diez euros.', exampleZh: '花费十欧元。', tags: ['数字'] },
+      
+      // 时间
+      { id: 'hoy', word: 'hoy', meaning: '今天', image: '📅', example: 'Hoy es lunes.', exampleZh: '今天是星期一。', tags: ['时间'] },
+      { id: 'manana', word: 'mañana', meaning: '明天/早上', image: '🌄', example: 'Nos vemos mañana.', exampleZh: '明天见。', tags: ['时间'] },
+      { id: 'ayer', word: 'ayer', meaning: '昨天', image: '⏪', example: 'Ayer fui al cine.', exampleZh: '昨天我去了电影院。', tags: ['时间'] },
+      { id: 'ahora', word: 'ahora', meaning: '现在', image: '⏰', example: '¿Qué haces ahora?', exampleZh: '你现在在做什么？', tags: ['时间'] },
+      { id: 'siempre', word: 'siempre', meaning: '总是', image: '♾️', example: 'Siempre llego tarde.', exampleZh: '我总是迟到。', tags: ['时间'] },
+      { id: 'nunca', word: 'nunca', meaning: '从不', image: '🚫', example: 'Nunca como carne.', exampleZh: '我从不吃肉。', tags: ['时间'] },
+      
+      // 人物
+      { id: 'yo', word: 'yo', meaning: '我', image: '🙋', example: 'Yo soy estudiante.', exampleZh: '我是学生。', tags: ['代词'] },
+      { id: 'tu', word: 'tú', meaning: '你', image: '👉', example: '¿Tú eres español?', exampleZh: '你是西班牙人吗？', tags: ['代词'] },
+      { id: 'el', word: 'él', meaning: '他', image: '👨', example: 'Él es mi amigo.', exampleZh: '他是我的朋友。', tags: ['代词'] },
+      { id: 'ella', word: 'ella', meaning: '她', image: '👩', example: 'Ella vive en Madrid.', exampleZh: '她住在马德里。', tags: ['代词'] },
+      { id: 'nosotros', word: 'nosotros', meaning: '我们', image: '👥', example: 'Nosotros estudiamos español.', exampleZh: '我们学习西班牙语。', tags: ['代词'] },
+      { id: 'amigo', word: 'amigo', meaning: '朋友', image: '🤝', example: 'Es mi mejor amigo.', exampleZh: '他是我最好的朋友。', tags: ['人物'] },
+      { id: 'familia', word: 'familia', meaning: '家庭', image: '👨‍👩‍👧', example: 'Mi familia es grande.', exampleZh: '我的家庭很大。', tags: ['人物'] },
+      { id: 'madre', word: 'madre', meaning: '母亲', image: '👩', example: 'Mi madre cocina muy bien.', exampleZh: '我妈妈做饭很好吃。', tags: ['家庭'] },
+      { id: 'padre', word: 'padre', meaning: '父亲', image: '👨', example: 'Mi padre trabaja mucho.', exampleZh: '我爸爸工作很忙。', tags: ['家庭'] },
+      
+      // 地点
+      { id: 'casa', word: 'casa', meaning: '房子/家', image: '🏠', example: 'Voy a casa.', exampleZh: '我回家。', tags: ['地点'] },
+      { id: 'escuela', word: 'escuela', meaning: '学校', image: '🏫', example: 'La escuela está cerca.', exampleZh: '学校很近。', tags: ['地点'] },
+      { id: 'tienda', word: 'tienda', meaning: '商店', image: '🏪', example: 'Voy a la tienda.', exampleZh: '我去商店。', tags: ['地点'] },
+      { id: 'restaurante', word: 'restaurante', meaning: '餐厅', image: '🍽️', example: 'El restaurante es bueno.', exampleZh: '这家餐厅很好。', tags: ['地点'] },
+      { id: 'hospital', word: 'hospital', meaning: '医院', image: '🏥', example: '¿Dónde está el hospital?', exampleZh: '医院在哪里？', tags: ['地点'] },
+      { id: 'calle', word: 'calle', meaning: '街道', image: '🛣️', example: 'Vivo en esta calle.', exampleZh: '我住在这条街。', tags: ['地点'] },
+      { id: 'ciudad', word: 'ciudad', meaning: '城市', image: '🌆', example: 'Madrid es una gran ciudad.', exampleZh: '马德里是一个大城市。', tags: ['地点'] },
+      { id: 'pais', word: 'país', meaning: '国家', image: '🌍', example: 'España es un país bonito.', exampleZh: '西班牙是一个美丽的国家。', tags: ['地点'] },
+      
+      // 食物
+      { id: 'agua', word: 'agua', meaning: '水', image: '💧', example: 'Un vaso de agua, por favor.', exampleZh: '请给我一杯水。', tags: ['食物'] },
+      { id: 'cafe', word: 'café', meaning: '咖啡', image: '☕', example: 'Me gusta el café.', exampleZh: '我喜欢咖啡。', tags: ['食物'] },
+      { id: 'pan', word: 'pan', meaning: '面包', image: '🍞', example: 'Como pan cada día.', exampleZh: '我每天吃面包。', tags: ['食物'] },
+      { id: 'carne', word: 'carne', meaning: '肉', image: '🥩', example: 'No como carne.', exampleZh: '我不吃肉。', tags: ['食物'] },
+      { id: 'pescado', word: 'pescado', meaning: '鱼', image: '🐟', example: 'El pescado está fresco.', exampleZh: '这鱼很新鲜。', tags: ['食物'] },
+      { id: 'fruta', word: 'fruta', meaning: '水果', image: '🍎', example: 'Como mucha fruta.', exampleZh: '我吃很多水果。', tags: ['食物'] },
+      { id: 'cerveza', word: 'cerveza', meaning: '啤酒', image: '🍺', example: 'Una cerveza, por favor.', exampleZh: '请给我一杯啤酒。', tags: ['食物'] },
+      { id: 'vino', word: 'vino', meaning: '葡萄酒', image: '🍷', example: 'El vino español es famoso.', exampleZh: '西班牙葡萄酒很有名。', tags: ['食物'] },
+      
+      // 动词
+      { id: 'ser', word: 'ser', meaning: '是(本质)', image: '🔵', example: 'Soy español.', exampleZh: '我是西班牙人。', tags: ['动词'] },
+      { id: 'estar', word: 'estar', meaning: '是(状态)', image: '📍', example: 'Estoy cansado.', exampleZh: '我累了。', tags: ['动词'] },
+      { id: 'tener', word: 'tener', meaning: '有', image: '✋', example: 'Tengo dos gatos.', exampleZh: '我有两只猫。', tags: ['动词'] },
+      { id: 'hacer', word: 'hacer', meaning: '做', image: '⚙️', example: '¿Qué haces?', exampleZh: '你在做什么？', tags: ['动词'] },
+      { id: 'ir', word: 'ir', meaning: '去', image: '🚶', example: 'Voy al trabajo.', exampleZh: '我去上班。', tags: ['动词'] },
+      { id: 'venir', word: 'venir', meaning: '来', image: '🚶‍♂️', example: '¿Vienes a la fiesta?', exampleZh: '你来派对吗？', tags: ['动词'] },
+      { id: 'comer', word: 'comer', meaning: '吃', image: '🍴', example: 'Vamos a comer.', exampleZh: '我们去吃饭。', tags: ['动词'] },
+      { id: 'beber', word: 'beber', meaning: '喝', image: '🥤', example: '¿Qué quieres beber?', exampleZh: '你想喝什么？', tags: ['动词'] },
+      { id: 'hablar', word: 'hablar', meaning: '说', image: '🗣️', example: 'Hablo español.', exampleZh: '我说西班牙语。', tags: ['动词'] },
+      { id: 'trabajar', word: 'trabajar', meaning: '工作', image: '💼', example: 'Trabajo en una oficina.', exampleZh: '我在办公室工作。', tags: ['动词'] },
+      { id: 'vivir', word: 'vivir', meaning: '住/生活', image: '🏡', example: 'Vivo en Barcelona.', exampleZh: '我住在巴塞罗那。', tags: ['动词'] },
+      { id: 'querer', word: 'querer', meaning: '想要/爱', image: '❤️', example: 'Te quiero mucho.', exampleZh: '我很爱你。', tags: ['动词'] },
+      { id: 'poder', word: 'poder', meaning: '能够', image: '💪', example: '¿Puedes ayudarme?', exampleZh: '你能帮我吗？', tags: ['动词'] },
+      { id: 'saber', word: 'saber', meaning: '知道', image: '🧠', example: 'No sé.', exampleZh: '我不知道。', tags: ['动词'] },
+      { id: 'gustar', word: 'gustar', meaning: '喜欢', image: '👍', example: 'Me gusta la música.', exampleZh: '我喜欢音乐。', tags: ['动词'] },
+      
+      // 形容词
+      { id: 'bueno', word: 'bueno', meaning: '好的', image: '👍', example: 'Es un libro bueno.', exampleZh: '这是一本好书。', tags: ['形容词'] },
+      { id: 'malo', word: 'malo', meaning: '坏的', image: '👎', example: 'El tiempo está malo.', exampleZh: '天气不好。', tags: ['形容词'] },
+      { id: 'grande', word: 'grande', meaning: '大的', image: '🐘', example: 'La casa es grande.', exampleZh: '这房子很大。', tags: ['形容词'] },
+      { id: 'pequeno', word: 'pequeño', meaning: '小的', image: '🐜', example: 'Tengo un perro pequeño.', exampleZh: '我有一只小狗。', tags: ['形容词'] },
+      { id: 'nuevo', word: 'nuevo', meaning: '新的', image: '✨', example: 'Tengo un coche nuevo.', exampleZh: '我有一辆新车。', tags: ['形容词'] },
+      { id: 'viejo', word: 'viejo', meaning: '老的/旧的', image: '👴', example: 'Es un edificio viejo.', exampleZh: '这是一座旧建筑。', tags: ['形容词'] },
+      { id: 'bonito', word: 'bonito', meaning: '漂亮的', image: '🌸', example: '¡Qué vestido tan bonito!', exampleZh: '多漂亮的裙子！', tags: ['形容词'] },
+      { id: 'feo', word: 'feo', meaning: '丑的', image: '👹', example: 'No es feo.', exampleZh: '不丑。', tags: ['形容词'] },
+      { id: 'facil', word: 'fácil', meaning: '容易的', image: '😌', example: 'Es muy fácil.', exampleZh: '这很容易。', tags: ['形容词'] },
+      { id: 'dificil', word: 'difícil', meaning: '困难的', image: '😓', example: 'El examen es difícil.', exampleZh: '考试很难。', tags: ['形容词'] },
+      { id: 'feliz', word: 'feliz', meaning: '开心的', image: '😊', example: 'Estoy muy feliz.', exampleZh: '我很开心。', tags: ['形容词'] },
+      { id: 'triste', word: 'triste', meaning: '难过的', image: '😢', example: 'Estoy triste.', exampleZh: '我很难过。', tags: ['形容词'] },
+      { id: 'cansado', word: 'cansado', meaning: '累的', image: '😴', example: 'Estoy muy cansado.', exampleZh: '我很累。', tags: ['形容词'] },
+      
+      // 疑问词
+      { id: 'que', word: 'qué', meaning: '什么', image: '❓', example: '¿Qué es esto?', exampleZh: '这是什么？', tags: ['疑问词'] },
+      { id: 'quien', word: 'quién', meaning: '谁', image: '🤷', example: '¿Quién eres?', exampleZh: '你是谁？', tags: ['疑问词'] },
+      { id: 'donde', word: 'dónde', meaning: '哪里', image: '📍', example: '¿Dónde vives?', exampleZh: '你住在哪里？', tags: ['疑问词'] },
+      { id: 'cuando', word: 'cuándo', meaning: '什么时候', image: '🕐', example: '¿Cuándo llegas?', exampleZh: '你什么时候到？', tags: ['疑问词'] },
+      { id: 'como', word: 'cómo', meaning: '怎么/如何', image: '🤔', example: '¿Cómo estás?', exampleZh: '你好吗？', tags: ['疑问词'] },
+      { id: 'por_que', word: 'por qué', meaning: '为什么', image: '🧐', example: '¿Por qué estudias español?', exampleZh: '你为什么学西班牙语？', tags: ['疑问词'] },
+      { id: 'cuanto', word: 'cuánto', meaning: '多少', image: '🔢', example: '¿Cuánto cuesta?', exampleZh: '多少钱？', tags: ['疑问词'] },
+      
+      // 其他常用
+      { id: 'muy', word: 'muy', meaning: '很/非常', image: '💯', example: 'Es muy interesante.', exampleZh: '非常有趣。', tags: ['副词'] },
+      { id: 'mucho', word: 'mucho', meaning: '很多', image: '📦', example: 'Tengo mucho trabajo.', exampleZh: '我有很多工作。', tags: ['副词'] },
+      { id: 'poco', word: 'poco', meaning: '少/一点', image: '🤏', example: 'Hablo poco español.', exampleZh: '我西班牙语说得少。', tags: ['副词'] },
+      { id: 'bien', word: 'bien', meaning: '好', image: '👌', example: 'Todo está bien.', exampleZh: '一切都好。', tags: ['副词'] },
+      { id: 'mal', word: 'mal', meaning: '坏/不好', image: '😞', example: 'Me siento mal.', exampleZh: '我感觉不好。', tags: ['副词'] },
+      { id: 'aqui', word: 'aquí', meaning: '这里', image: '📍', example: 'Estoy aquí.', exampleZh: '我在这里。', tags: ['副词'] },
+      { id: 'alli', word: 'allí', meaning: '那里', image: '👉', example: 'El banco está allí.', exampleZh: '银行在那里。', tags: ['副词'] },
+      { id: 'tambien', word: 'también', meaning: '也', image: '➕', example: 'Yo también.', exampleZh: '我也是。', tags: ['副词'] },
+      { id: 'pero', word: 'pero', meaning: '但是', image: '↩️', example: 'Quiero ir, pero no puedo.', exampleZh: '我想去，但我不能。', tags: ['连词'] },
+      { id: 'porque', word: 'porque', meaning: '因为', image: '💡', example: 'No voy porque estoy enfermo.', exampleZh: '我不去因为我生病了。', tags: ['连词'] },
+      { id: 'con', word: 'con', meaning: '和/与', image: '🤝', example: 'Voy con mi amigo.', exampleZh: '我和朋友一起去。', tags: ['介词'] },
+      { id: 'sin', word: 'sin', meaning: '没有/无', image: '🚫', example: 'Café sin azúcar.', exampleZh: '不加糖的咖啡。', tags: ['介词'] },
+      { id: 'para', word: 'para', meaning: '为了/给', image: '🎯', example: 'Es para ti.', exampleZh: '这是给你的。', tags: ['介词'] },
+    ];
+
+    // 获取词库单词
+    function getWordBook(bookId) {
+      switch(bookId) {
+        case 'A1': return A1_WORDS;
+        case 'A2': return A1_WORDS; // 暂时使用A1，后续扩展
+        case 'B1': return A1_WORDS;
+        case 'citizenship': return A1_WORDS;
+        default: return A1_WORDS;
+      }
+    }
 
     // ==================== 应用状态 ====================
     // 初始化函数，加载当前用户数据
@@ -699,13 +864,20 @@ REGLAS:
         achievements: currentUser ? Storage.getUserData(currentUser.id, 'achievements', []) : [],
         stats: currentUser ? Storage.getUserData(currentUser.id, 'stats', { flashcardReviews: 0, tutorsUsed: [] }) : { flashcardReviews: 0, tutorsUsed: [] },
         relationData: currentUser ? Storage.getUserData(currentUser.id, 'relationData', { currentCompanion: null, relationships: {} }) : { currentCompanion: null, relationships: {} },
+        // 斩单词数据
+        wordProgress: currentUser ? Storage.getUserData(currentUser.id, 'wordProgress', {}) : {},
+        wordSettings: currentUser ? Storage.getUserData(currentUser.id, 'wordSettings', { 
+          currentBook: 'A1', 
+          dailyNew: 20, 
+          dailyReview: 30 
+        }) : { currentBook: 'A1', dailyNew: 20, dailyReview: 30 },
       };
     }
     
     const userData = initUserData();
     
     let state = {
-      view: 'loading', // loading, welcome, userSelect, setup, home, tutor, scenario, chat, settings, history, stats, mistakes, vocabulary
+      view: 'loading', // loading, welcome, userSelect, setup, home, tutor, scenario, chat, settings, history, stats, mistakes, vocabulary, wordSlash
       users: userData.users, // 所有用户列表
       user: userData.user, // 当前用户
       darkMode: Storage.get('darkMode', false), // 深色模式
@@ -719,6 +891,20 @@ REGLAS:
       achievements: userData.achievements, // 已解锁成就
       stats: userData.stats, // 统计数据
       relationData: userData.relationData, // 关系数据
+      // 斩单词数据
+      wordProgress: userData.wordProgress, // 单词学习进度
+      wordSettings: userData.wordSettings, // 斩单词设置
+      wordSlash: {
+        mode: 'home', // home, learning, result
+        queue: [], // 当前学习队列
+        currentIndex: 0,
+        options: [], // 当前选项
+        answered: false,
+        correct: null,
+        results: [], // 本次学习结果 [{word, correct}]
+        todayNew: 0, // 今日新学数量
+        todayReview: 0, // 今日复习数量
+      },
       inputText: '',
       isLoading: false,
       isListening: false,
@@ -1449,6 +1635,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       state.achievements = Storage.getUserData(userId, 'achievements', []);
       state.stats = Storage.getUserData(userId, 'stats', { flashcardReviews: 0, tutorsUsed: [] });
       state.relationData = Storage.getUserData(userId, 'relationData', { currentCompanion: null, relationships: {} });
+      state.wordProgress = Storage.getUserData(userId, 'wordProgress', {});
+      state.wordSettings = Storage.getUserData(userId, 'wordSettings', { currentBook: 'A1', dailyNew: 20, dailyReview: 30 });
       state.view = 'home';
       render();
     }
@@ -1467,6 +1655,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       Storage.remove(`${userId}_achievements`);
       Storage.remove(`${userId}_stats`);
       Storage.remove(`${userId}_relationData`);
+      Storage.remove(`${userId}_wordProgress`);
+      Storage.remove(`${userId}_wordSettings`);
       
       state.users = users;
       
@@ -1515,6 +1705,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         case 'studyCenter': app.innerHTML = renderStudyCenter(); break;
         case 'askTeacher': app.innerHTML = renderAskTeacher(); break;
         case 'grammarLesson': app.innerHTML = renderGrammarLesson(); break;
+        case 'wordSlash': app.innerHTML = renderWordSlash(); break;
       }
     }
     
@@ -1820,6 +2011,19 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   </div>
                 </button>
               </div>
+            </div>
+            
+            <!-- ⚔️ 斩单词入口 -->
+            <div class="mb-5">
+              <button onclick="state.view='wordSlash';render()" 
+                class="w-full bg-gradient-to-r from-amber-400 to-orange-500 p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-98 transition-all">
+                <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">⚔️</div>
+                <div class="flex-1 text-left">
+                  <div class="font-bold text-lg">斩单词</div>
+                  <div class="text-white/80 text-sm">已掌握 ${getMasteredCount()} 个 · ${getWordsToReview().length > 0 ? `${getWordsToReview().length}个待复习` : '今日已完成'}</div>
+                </div>
+                <div class="text-white/80 text-xl">→</div>
+              </button>
             </div>
             
             <!-- 🛠️ 学习工具 -->
@@ -2422,6 +2626,506 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     // 渲染语法课页面（简化版，直接用对话）
     function renderGrammarLesson() {
       return renderStudyCenter();
+    }
+
+    // ==================== ⚔️ 斩单词系统 ====================
+    
+    // 获取已掌握单词数量
+    function getMasteredCount() {
+      return Object.values(state.wordProgress).filter(p => p.status === 'mastered').length;
+    }
+    
+    // 获取学习中单词数量
+    function getLearningCount() {
+      return Object.values(state.wordProgress).filter(p => p.status === 'learning' || p.status === 'reviewing').length;
+    }
+    
+    // 获取待学单词数量
+    function getNewCount(bookId) {
+      const words = getWordBook(bookId || state.wordSettings.currentBook);
+      return words.filter(w => !state.wordProgress[w.id]).length;
+    }
+    
+    // 艾宾浩斯复习间隔（分钟）
+    const REVIEW_INTERVALS = [
+      1 * 24 * 60,      // 1天
+      2 * 24 * 60,      // 2天  
+      4 * 24 * 60,      // 4天
+      7 * 24 * 60,      // 7天
+      15 * 24 * 60,     // 15天 -> 掌握
+    ];
+    
+    // 计算下次复习时间
+    function getNextReviewTime(correctCount) {
+      const interval = REVIEW_INTERVALS[Math.min(correctCount, REVIEW_INTERVALS.length - 1)];
+      return new Date(Date.now() + interval * 60 * 1000).toISOString();
+    }
+    
+    // 获取需要复习的单词
+    function getWordsToReview() {
+      const now = new Date();
+      return Object.entries(state.wordProgress)
+        .filter(([id, p]) => {
+          if (p.status === 'mastered') return false;
+          if (!p.nextReview) return true;
+          return new Date(p.nextReview) <= now;
+        })
+        .map(([id, p]) => {
+          const word = getWordBook(state.wordSettings.currentBook).find(w => w.id === id);
+          return word ? { ...word, progress: p } : null;
+        })
+        .filter(Boolean);
+    }
+    
+    // 获取新单词
+    function getNewWords(count) {
+      const words = getWordBook(state.wordSettings.currentBook);
+      return words
+        .filter(w => !state.wordProgress[w.id])
+        .slice(0, count);
+    }
+    
+    // 生成选项（1个正确 + 3个错误）
+    function generateOptions(correctWord) {
+      const words = getWordBook(state.wordSettings.currentBook);
+      const wrongOptions = words
+        .filter(w => w.id !== correctWord.id)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map(w => ({ meaning: w.meaning, correct: false }));
+      
+      const options = [
+        { meaning: correctWord.meaning, correct: true },
+        ...wrongOptions
+      ].sort(() => Math.random() - 0.5);
+      
+      return options;
+    }
+    
+    // 开始学习
+    function startWordLearning(mode = 'mixed') {
+      const reviewWords = getWordsToReview();
+      const newWords = getNewWords(state.wordSettings.dailyNew);
+      
+      let queue = [];
+      if (mode === 'new') {
+        queue = newWords;
+      } else if (mode === 'review') {
+        queue = reviewWords;
+      } else {
+        // 混合模式：先复习，再新学
+        queue = [...reviewWords.slice(0, state.wordSettings.dailyReview), ...newWords];
+      }
+      
+      if (queue.length === 0) {
+        alert('没有需要学习的单词了！');
+        return;
+      }
+      
+      state.wordSlash = {
+        mode: 'learning',
+        queue: queue.sort(() => Math.random() - 0.5),
+        currentIndex: 0,
+        options: generateOptions(queue[0]),
+        answered: false,
+        correct: null,
+        selectedIndex: null,
+        results: [],
+        todayNew: 0,
+        todayReview: 0,
+      };
+      render();
+    }
+    
+    // 选择答案
+    function selectWordAnswer(optionIndex) {
+      if (state.wordSlash.answered) return;
+      
+      const ws = state.wordSlash;
+      const currentWord = ws.queue[ws.currentIndex];
+      const selected = ws.options[optionIndex];
+      const isCorrect = selected.correct;
+      
+      ws.answered = true;
+      ws.correct = isCorrect;
+      ws.selectedIndex = optionIndex; // 记录用户选择的选项索引
+      ws.results.push({ 
+        word: currentWord, 
+        correct: isCorrect 
+      });
+      
+      // 更新进度
+      const progress = state.wordProgress[currentWord.id] || {
+        status: 'new',
+        correctCount: 0,
+        wrongCount: 0,
+        lastSeen: null,
+        nextReview: null
+      };
+      
+      progress.lastSeen = new Date().toISOString();
+      
+      if (isCorrect) {
+        progress.correctCount = (progress.correctCount || 0) + 1;
+        progress.wrongCount = progress.wrongCount || 0;
+        
+        // 检查是否掌握
+        if (progress.correctCount >= 5) {
+          progress.status = 'mastered';
+          progress.nextReview = null;
+        } else {
+          progress.status = progress.status === 'new' ? 'learning' : 'reviewing';
+          progress.nextReview = getNextReviewTime(progress.correctCount);
+        }
+      } else {
+        progress.wrongCount = (progress.wrongCount || 0) + 1;
+        progress.correctCount = Math.max(0, (progress.correctCount || 0) - 1);
+        progress.status = 'learning';
+        progress.nextReview = getNextReviewTime(0); // 重置复习间隔
+      }
+      
+      state.wordProgress[currentWord.id] = progress;
+      
+      // 保存进度
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'wordProgress', state.wordProgress);
+      }
+      
+      // 播放单词发音
+      speak(currentWord.word);
+      
+      render();
+      
+      // 检查成就
+      checkAchievements();
+    }
+    
+    // 下一个单词
+    function nextWord() {
+      const ws = state.wordSlash;
+      
+      if (ws.currentIndex >= ws.queue.length - 1) {
+        // 学习完成
+        ws.mode = 'result';
+        render();
+        return;
+      }
+      
+      ws.currentIndex++;
+      ws.options = generateOptions(ws.queue[ws.currentIndex]);
+      ws.answered = false;
+      ws.correct = null;
+      ws.selectedIndex = null;
+      render();
+    }
+    
+    // 渲染斩单词页面
+    function renderWordSlash() {
+      const ws = state.wordSlash;
+      
+      if (ws.mode === 'learning') {
+        return renderWordLearning();
+      } else if (ws.mode === 'result') {
+        return renderWordResult();
+      } else {
+        return renderWordHome();
+      }
+    }
+    
+    // 斩单词首页
+    function renderWordHome() {
+      const book = WORD_BOOKS[state.wordSettings.currentBook];
+      const words = getWordBook(state.wordSettings.currentBook);
+      const totalWords = words.length;
+      const mastered = Object.values(state.wordProgress).filter(p => p.status === 'mastered').length;
+      const learning = Object.values(state.wordProgress).filter(p => p.status === 'learning' || p.status === 'reviewing').length;
+      const newCount = totalWords - mastered - learning;
+      const progress = totalWords > 0 ? Math.round((mastered / totalWords) * 100) : 0;
+      
+      const reviewCount = getWordsToReview().length;
+      const canLearnNew = newCount > 0;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r ${book.color} p-6 text-white">
+            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center gap-4">
+              <div class="text-5xl">${book.icon}</div>
+              <div>
+                <h1 class="text-xl font-bold">⚔️ 斩单词</h1>
+                <p class="text-white/80 text-sm">${book.name}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 学习进度 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📊 学习进度</h3>
+              <div class="mb-3">
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-600">已掌握 ${mastered}/${totalWords}</span>
+                  <span class="text-primary-600 font-bold">${progress}%</span>
+                </div>
+                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="h-full bg-gradient-to-r ${book.color} rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-green-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-green-600">${mastered}</div>
+                  <div class="text-xs text-gray-500">已掌握 ✅</div>
+                </div>
+                <div class="bg-amber-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-amber-600">${learning}</div>
+                  <div class="text-xs text-gray-500">学习中 📖</div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-gray-600">${newCount}</div>
+                  <div class="text-xs text-gray-500">待学习 🆕</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 今日任务 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">🎯 今日任务</h3>
+              <div class="space-y-3">
+                ${reviewCount > 0 ? `
+                  <button onclick="startWordLearning('review')" 
+                    class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                    <span class="text-3xl">🔄</span>
+                    <div class="flex-1 text-left">
+                      <div class="font-bold">复习单词</div>
+                      <div class="text-white/80 text-sm">${reviewCount} 个单词待复习</div>
+                    </div>
+                    <span class="text-2xl">→</span>
+                  </button>
+                ` : `
+                  <div class="p-4 rounded-xl bg-gray-100 text-gray-500 text-center">
+                    ✅ 今日复习已完成
+                  </div>
+                `}
+                
+                ${canLearnNew ? `
+                  <button onclick="startWordLearning('new')" 
+                    class="w-full p-4 rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                    <span class="text-3xl">🆕</span>
+                    <div class="flex-1 text-left">
+                      <div class="font-bold">学习新词</div>
+                      <div class="text-white/80 text-sm">今日目标 ${state.wordSettings.dailyNew} 个</div>
+                    </div>
+                    <span class="text-2xl">→</span>
+                  </button>
+                ` : `
+                  <div class="p-4 rounded-xl bg-gray-100 text-gray-500 text-center">
+                    🎉 所有单词已学完！
+                  </div>
+                `}
+                
+                <button onclick="startWordLearning('mixed')" 
+                  class="w-full p-4 rounded-xl bg-gradient-to-r ${book.color} text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                  <span class="text-3xl">⚔️</span>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold">开始斩词</div>
+                    <div class="text-white/80 text-sm">复习 + 新词混合模式</div>
+                  </div>
+                  <span class="text-2xl">→</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- 选择词库 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📚 选择词库</h3>
+              <div class="grid grid-cols-2 gap-2">
+                ${Object.values(WORD_BOOKS).map(b => `
+                  <button onclick="state.wordSettings.currentBook='${b.id}';Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" 
+                    class="p-3 rounded-xl border-2 ${state.wordSettings.currentBook === b.id ? 'border-primary-500 bg-primary-50' : 'border-gray-100'} hover:border-primary-300 transition-all text-left">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-xl">${b.icon}</span>
+                      <span class="font-bold text-gray-800 text-sm">${b.name}</span>
+                    </div>
+                    <div class="text-xs text-gray-500">${b.desc}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 学习设置 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4">
+              <h3 class="font-bold text-gray-800 mb-3">⚙️ 学习设置</h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-600">每日新词</span>
+                  <div class="flex items-center gap-2">
+                    <button onclick="state.wordSettings.dailyNew=Math.max(5,state.wordSettings.dailyNew-5);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">-</button>
+                    <span class="w-12 text-center font-bold">${state.wordSettings.dailyNew}</span>
+                    <button onclick="state.wordSettings.dailyNew=Math.min(50,state.wordSettings.dailyNew+5);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-600">每日复习</span>
+                  <div class="flex items-center gap-2">
+                    <button onclick="state.wordSettings.dailyReview=Math.max(10,state.wordSettings.dailyReview-10);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">-</button>
+                    <span class="w-12 text-center font-bold">${state.wordSettings.dailyReview}</span>
+                    <button onclick="state.wordSettings.dailyReview=Math.min(100,state.wordSettings.dailyReview+10);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 学习界面
+    function renderWordLearning() {
+      const ws = state.wordSlash;
+      const currentWord = ws.queue[ws.currentIndex];
+      const progress = state.wordProgress[currentWord.id];
+      const isNew = !progress || progress.status === 'new';
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部进度 -->
+          <div class="bg-white border-b p-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="state.wordSlash.mode='home';render()" class="text-gray-500">✕ 退出</button>
+              <span class="text-sm text-gray-500">${ws.currentIndex + 1} / ${ws.queue.length}</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full bg-primary-500 rounded-full transition-all duration-300" 
+                style="width: ${((ws.currentIndex + 1) / ws.queue.length) * 100}%"></div>
+            </div>
+          </div>
+          
+          <!-- 单词卡片 -->
+          <div class="flex-1 flex flex-col items-center justify-center p-6">
+            <div class="text-center mb-8">
+              ${isNew ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full mb-2 inline-block">🆕 新词</span>' : 
+                '<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full mb-2 inline-block">🔄 复习</span>'}
+              <div class="text-6xl mb-4">${currentWord.image}</div>
+              <div class="text-3xl font-bold text-gray-800 mb-2">${currentWord.word}</div>
+              <button onclick="speak('${currentWord.word}')" class="text-primary-500 text-sm">🔊 播放发音</button>
+            </div>
+            
+            <!-- 选项 -->
+            <div class="w-full max-w-sm grid grid-cols-2 gap-3">
+              ${ws.options.map((opt, i) => {
+                let btnClass = 'bg-white border-2 border-gray-200 hover:border-primary-400';
+                if (ws.answered) {
+                  if (opt.correct) {
+                    btnClass = 'bg-green-100 border-2 border-green-500 text-green-700';
+                  } else if (i === ws.selectedIndex && !opt.correct) {
+                    btnClass = 'bg-red-100 border-2 border-red-500 text-red-700';
+                  } else {
+                    btnClass = 'bg-gray-100 border-2 border-gray-200 text-gray-400';
+                  }
+                }
+                return `
+                  <button onclick="selectWordAnswer(${i})" 
+                    class="p-4 rounded-xl ${btnClass} font-medium transition-all ${ws.answered ? 'cursor-default' : 'active:scale-95'}">
+                    ${opt.meaning}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- 答案反馈 -->
+            ${ws.answered ? `
+              <div class="mt-6 w-full max-w-sm">
+                <div class="p-4 rounded-xl ${ws.correct ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">${ws.correct ? '✅' : '❌'}</span>
+                    <span class="font-bold ${ws.correct ? 'text-green-700' : 'text-red-700'}">
+                      ${ws.correct ? '回答正确！' : '回答错误'}
+                    </span>
+                  </div>
+                  <div class="text-gray-700 mb-2">
+                    <span class="font-bold">${currentWord.word}</span> = ${currentWord.meaning}
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <div class="italic">"${currentWord.example}"</div>
+                    <div class="text-gray-500">${currentWord.exampleZh}</div>
+                  </div>
+                </div>
+                
+                <button onclick="nextWord()" 
+                  class="w-full mt-4 p-4 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 active:scale-98 transition-all">
+                  ${ws.currentIndex >= ws.queue.length - 1 ? '查看结果' : '下一个 →'}
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+    
+    // 结果页面
+    function renderWordResult() {
+      const ws = state.wordSlash;
+      const correct = ws.results.filter(r => r.correct).length;
+      const total = ws.results.length;
+      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-primary-500 to-indigo-600 p-6 text-white text-center">
+            <div class="text-5xl mb-2">🎉</div>
+            <h1 class="text-xl font-bold">学习完成！</h1>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 统计 -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-4 text-center">
+              <div class="text-6xl font-bold text-primary-600 mb-2">${accuracy}%</div>
+              <div class="text-gray-500">正确率</div>
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-green-50 rounded-xl p-3">
+                  <div class="text-2xl font-bold text-green-600">${correct}</div>
+                  <div class="text-xs text-gray-500">答对 ✅</div>
+                </div>
+                <div class="bg-red-50 rounded-xl p-3">
+                  <div class="text-2xl font-bold text-red-600">${total - correct}</div>
+                  <div class="text-xs text-gray-500">答错 ❌</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 单词列表 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📝 本次学习</h3>
+              <div class="space-y-2 max-h-60 overflow-auto">
+                ${ws.results.map(r => `
+                  <div class="flex items-center gap-3 p-2 rounded-lg ${r.correct ? 'bg-green-50' : 'bg-red-50'}">
+                    <span class="text-xl">${r.word.image}</span>
+                    <div class="flex-1">
+                      <span class="font-bold">${r.word.word}</span>
+                      <span class="text-gray-500 text-sm ml-2">${r.word.meaning}</span>
+                    </div>
+                    <span>${r.correct ? '✅' : '❌'}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="space-y-3">
+              <button onclick="startWordLearning('mixed')" 
+                class="w-full p-4 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 active:scale-98 transition-all">
+                ⚔️ 继续斩词
+              </button>
+              <button onclick="state.wordSlash.mode='home';render()" 
+                class="w-full p-4 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 active:scale-98 transition-all">
+                返回首页
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function renderTutor() {
@@ -3180,7 +3884,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         checkinDays: state.checkinDays,
         achievements: state.achievements,
         stats: state.stats,
-        relationData: state.relationData
+        relationData: state.relationData,
+        wordProgress: state.wordProgress,
+        wordSettings: state.wordSettings
       };
       
       const dataStr = JSON.stringify(exportData, null, 2);
@@ -3221,6 +3927,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
 词汇本: ${importData.vocabulary?.length || 0} 个
 打卡记录: ${importData.checkinDays?.length || 0} 天
 成就: ${importData.achievements?.length || 0} 个
+斩单词进度: ${Object.keys(importData.wordProgress || {}).length} 个
 
 导入将覆盖当前数据，确定继续吗？`;
           
@@ -3254,6 +3961,14 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           if (importData.relationData) {
             state.relationData = importData.relationData;
             Storage.setUserData(state.user.id, 'relationData', state.relationData);
+          }
+          if (importData.wordProgress) {
+            state.wordProgress = importData.wordProgress;
+            Storage.setUserData(state.user.id, 'wordProgress', state.wordProgress);
+          }
+          if (importData.wordSettings) {
+            state.wordSettings = importData.wordSettings;
+            Storage.setUserData(state.user.id, 'wordSettings', state.wordSettings);
           }
           
           showToast('📥 数据导入成功！');
