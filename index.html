@@ -1341,8 +1341,13 @@ REGLAS:
         wordSettings: currentUser ? Storage.getUserData(currentUser.id, 'wordSettings', { 
           currentBook: 'A1', 
           dailyNew: 20, 
-          dailyReview: 30 
-        }) : { currentBook: 'A1', dailyNew: 20, dailyReview: 30 },
+          dailyReview: 30,
+          hideEmoji: false // 无图片模式
+        }) : { currentBook: 'A1', dailyNew: 20, dailyReview: 30, hideEmoji: false },
+        // 错题集 - 存储答错的单词ID
+        wrongWordBook: currentUser ? Storage.getUserData(currentUser.id, 'wrongWordBook', []) : [],
+        // 重点词汇 - 存储用户标记的单词ID
+        starredWords: currentUser ? Storage.getUserData(currentUser.id, 'starredWords', []) : [],
       };
     }
     
@@ -1366,8 +1371,10 @@ REGLAS:
       // 斩单词数据
       wordProgress: userData.wordProgress, // 单词学习进度
       wordSettings: userData.wordSettings, // 斩单词设置
+      wrongWordBook: userData.wrongWordBook, // 错题集
+      starredWords: userData.starredWords, // 重点词汇
       wordSlash: {
-        mode: 'home', // home, learning, result
+        mode: 'home', // home, learning, result, wordlist, wrongbook, starred
         queue: [], // 当前学习队列
         currentIndex: 0,
         options: [], // 当前选项
@@ -1376,6 +1383,7 @@ REGLAS:
         results: [], // 本次学习结果 [{word, correct}]
         todayNew: 0, // 今日新学数量
         todayReview: 0, // 今日复习数量
+        listFilter: null, // 单词列表筛选
       },
       inputText: '',
       isLoading: false,
@@ -3229,10 +3237,15 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       ws.answered = true;
       ws.correct = isCorrect;
       ws.selectedIndex = optionIndex; // 记录用户选择的选项索引
-      ws.results.push({ 
-        word: currentWord, 
-        correct: isCorrect 
-      });
+      
+      // 只有第一次答题才记录结果（避免循环时重复记录）
+      if (!ws.results.find(r => r.word.id === currentWord.id && r.attemptIndex === ws.currentIndex)) {
+        ws.results.push({ 
+          word: currentWord, 
+          correct: isCorrect,
+          attemptIndex: ws.currentIndex
+        });
+      }
       
       // 更新进度
       const progress = state.wordProgress[currentWord.id] || {
@@ -3253,6 +3266,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         if (progress.correctCount >= 5) {
           progress.status = 'mastered';
           progress.nextReview = null;
+          // 答对5次后从错题集移除
+          removeFromWrongBook(currentWord.id);
         } else {
           progress.status = progress.status === 'new' ? 'learning' : 'reviewing';
           progress.nextReview = getNextReviewTime(progress.correctCount);
@@ -3262,6 +3277,21 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         progress.correctCount = Math.max(0, (progress.correctCount || 0) - 1);
         progress.status = 'learning';
         progress.nextReview = getNextReviewTime(0); // 重置复习间隔
+        
+        // 添加到错题集
+        addToWrongBook(currentWord.id);
+        
+        // 将错题放回队列后面的随机位置（实现错题循环）
+        const remainingCount = ws.queue.length - ws.currentIndex - 1;
+        if (remainingCount > 0) {
+          // 在当前位置之后的随机位置插入
+          const insertPosition = ws.currentIndex + 1 + Math.floor(Math.random() * Math.min(remainingCount, 5)) + 1;
+          const insertIndex = Math.min(insertPosition, ws.queue.length);
+          ws.queue.splice(insertIndex, 0, { ...currentWord, isRetry: true });
+        } else {
+          // 如果已经是最后一题，直接加到末尾
+          ws.queue.push({ ...currentWord, isRetry: true });
+        }
       }
       
       state.wordProgress[currentWord.id] = progress;
@@ -3278,6 +3308,50 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       
       // 检查成就
       checkAchievements();
+    }
+    
+    // 添加到错题集
+    function addToWrongBook(wordId) {
+      if (!state.wrongWordBook.includes(wordId)) {
+        state.wrongWordBook.push(wordId);
+        if (state.user) {
+          Storage.setUserData(state.user.id, 'wrongWordBook', state.wrongWordBook);
+        }
+      }
+    }
+    
+    // 从错题集移除
+    function removeFromWrongBook(wordId) {
+      const index = state.wrongWordBook.indexOf(wordId);
+      if (index > -1) {
+        state.wrongWordBook.splice(index, 1);
+        if (state.user) {
+          Storage.setUserData(state.user.id, 'wrongWordBook', state.wrongWordBook);
+        }
+      }
+    }
+    
+    // 切换重点词汇
+    function toggleStarWord(wordId) {
+      const index = state.starredWords.indexOf(wordId);
+      if (index > -1) {
+        state.starredWords.splice(index, 1);
+      } else {
+        state.starredWords.push(wordId);
+      }
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'starredWords', state.starredWords);
+      }
+      render();
+    }
+    
+    // 切换无图片模式
+    function toggleHideEmoji() {
+      state.wordSettings.hideEmoji = !state.wordSettings.hideEmoji;
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'wordSettings', state.wordSettings);
+      }
+      render();
     }
     
     // 下一个单词
@@ -3311,6 +3385,12 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         return renderWordResult();
       } else if (ws.mode === 'wordlist') {
         return renderWordList();
+      } else if (ws.mode === 'wrongbook') {
+        return renderWrongBook();
+      } else if (ws.mode === 'starred') {
+        return renderStarredWords();
+      } else if (ws.mode === 'settings') {
+        return renderWordSettings();
       } else {
         return renderWordHome();
       }
@@ -3366,6 +3446,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 <div class="h-3 bg-gray-200 rounded-full overflow-hidden cursor-pointer" onclick="showWordList('all')">
                   <div class="h-full bg-gradient-to-r ${book.color} rounded-full transition-all duration-500" style="width: ${progress}%"></div>
                 </div>
+                <!-- 掌握规则提示 -->
+                <div class="text-xs text-gray-400 mt-2 text-center">
+                  💡 答对5次即可掌握单词
+                </div>
               </div>
               <div class="grid grid-cols-3 gap-2 text-center">
                 <button onclick="showWordList('mastered')" class="bg-green-50 rounded-xl p-2 hover:bg-green-100 active:scale-95 transition-all">
@@ -3381,6 +3465,28 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   <div class="text-xs text-gray-500">待学习 🆕</div>
                 </button>
               </div>
+            </div>
+            
+            <!-- 错题集 & 重点词汇 -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <button onclick="state.wordSlash.mode='wrongbook';render()" 
+                class="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-98 transition-all text-left">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">❌</span>
+                  <span class="font-bold text-gray-800">错题集</span>
+                </div>
+                <div class="text-2xl font-bold text-red-500">${state.wrongWordBook.length}</div>
+                <div class="text-xs text-gray-500">需要强化的单词</div>
+              </button>
+              <button onclick="state.wordSlash.mode='starred';render()" 
+                class="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-98 transition-all text-left">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">⭐</span>
+                  <span class="font-bold text-gray-800">重点词汇</span>
+                </div>
+                <div class="text-2xl font-bold text-amber-500">${state.starredWords.length}</div>
+                <div class="text-xs text-gray-500">你标记的重点词</div>
+              </button>
             </div>
             
             <!-- 今日任务 -->
@@ -3479,6 +3585,16 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                     <button onclick="state.wordSettings.dailyReview=Math.min(100,state.wordSettings.dailyReview+10);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
                   </div>
                 </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-gray-600">困难模式</span>
+                    <div class="text-xs text-gray-400">隐藏图片提示</div>
+                  </div>
+                  <button onclick="toggleHideEmoji()" 
+                    class="w-14 h-8 rounded-full ${state.wordSettings.hideEmoji ? 'bg-primary-500' : 'bg-gray-200'} relative transition-all">
+                    <div class="w-6 h-6 rounded-full bg-white shadow absolute top-1 transition-all ${state.wordSettings.hideEmoji ? 'right-1' : 'left-1'}"></div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -3492,6 +3608,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const currentWord = ws.queue[ws.currentIndex];
       const progress = state.wordProgress[currentWord.id];
       const isNew = !progress || progress.status === 'new';
+      const isStarred = state.starredWords.includes(currentWord.id);
+      const correctCount = progress?.correctCount || 0;
+      const isRetry = currentWord.isRetry;
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
@@ -3499,7 +3618,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           <div class="bg-white border-b p-4">
             <div class="flex items-center justify-between mb-2">
               <button onclick="state.wordSlash.mode='home';render()" class="text-gray-500">✕ 退出</button>
-              <span class="text-sm text-gray-500">${ws.currentIndex + 1} / ${ws.queue.length}</span>
+              <div class="flex items-center gap-2">
+                ${isRetry ? '<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">重做</span>' : ''}
+                <span class="text-sm text-gray-500">${ws.currentIndex + 1} / ${ws.queue.length}</span>
+              </div>
             </div>
             <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div class="h-full bg-primary-500 rounded-full transition-all duration-300" 
@@ -3510,11 +3632,19 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           <!-- 单词卡片 -->
           <div class="flex-1 flex flex-col items-center justify-center p-6">
             <div class="text-center mb-8">
-              ${isNew ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full mb-2 inline-block">🆕 新词</span>' : 
-                '<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full mb-2 inline-block">🔄 复习</span>'}
-              <div class="text-6xl mb-4">${currentWord.image}</div>
+              <div class="flex items-center justify-center gap-2 mb-3">
+                ${isNew ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">🆕 新词</span>' : 
+                  '<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">🔄 复习</span>'}
+                <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">${correctCount}/5 ✓</span>
+              </div>
+              ${state.wordSettings.hideEmoji ? '' : `<div class="text-6xl mb-4">${currentWord.image}</div>`}
               <div class="text-3xl font-bold text-gray-800 mb-2">${currentWord.word}</div>
-              <button onclick="speak('${currentWord.word}')" class="text-primary-500 text-sm">🔊 播放发音</button>
+              <div class="flex items-center justify-center gap-3">
+                <button onclick="speak('${currentWord.word}')" class="text-primary-500 text-sm">🔊 播放发音</button>
+                <button onclick="toggleStarWord('${currentWord.id}')" class="text-sm ${isStarred ? 'text-amber-500' : 'text-gray-400'}">
+                  ${isStarred ? '⭐ 已标记' : '☆ 标记重点'}
+                </button>
+              </div>
             </div>
             
             <!-- 选项 -->
@@ -3546,10 +3676,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   <div class="flex items-center gap-2 mb-2">
                     <span class="text-2xl">${ws.correct ? '✅' : '❌'}</span>
                     <span class="font-bold ${ws.correct ? 'text-green-700' : 'text-red-700'}">
-                      ${ws.correct ? '回答正确！' : '回答错误'}
+                      ${ws.correct ? '回答正确！' : '回答错误，稍后重做'}
                     </span>
                   </div>
                   <div class="text-gray-700 mb-2">
+                    <span class="text-2xl mr-2">${currentWord.image}</span>
                     <span class="font-bold">${currentWord.word}</span> = ${currentWord.meaning}
                   </div>
                   <div class="text-sm text-gray-600">
@@ -3792,8 +3923,197 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         </div>
       `;
     }
-
-    // ==================== ✍️ 听写模式 ====================
+    
+    // 错题集页面
+    function renderWrongBook() {
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const wrongWords = state.wrongWordBook
+        .map(id => allWords.find(w => w.id === id))
+        .filter(w => w);
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-red-500 to-rose-600 p-6 text-white">
+            <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">❌ 错题集</h1>
+            <p class="text-white/80 text-sm">这些单词需要加强练习 · 共 ${wrongWords.length} 个</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            ${wrongWords.length > 0 ? `
+              <div class="space-y-2">
+                ${wrongWords.map(w => {
+                  const progress = state.wordProgress[w.id];
+                  const wrongCount = progress?.wrongCount || 0;
+                  const isStarred = state.starredWords.includes(w.id);
+                  return `
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">${state.wordSettings.hideEmoji ? '❓' : w.image}</span>
+                        <div class="flex-1 min-w-0">
+                          <div class="font-bold text-gray-800">${w.word}</div>
+                          <div class="text-sm text-gray-500">${w.meaning}</div>
+                        </div>
+                        <button onclick="speak('${w.word}')" class="p-2 text-gray-400 hover:text-primary-500">🔊</button>
+                        <button onclick="toggleStarWord('${w.id}')" class="p-2 ${isStarred ? 'text-amber-400' : 'text-gray-300'} hover:text-amber-500">
+                          ${isStarred ? '⭐' : '☆'}
+                        </button>
+                        <button onclick="removeFromWrongBook('${w.id}');render()" class="p-2 text-gray-400 hover:text-green-500" title="标记为已掌握">
+                          ✓
+                        </button>
+                      </div>
+                      <div class="mt-2 flex items-center gap-2 text-xs">
+                        <span class="px-2 py-1 bg-red-100 text-red-600 rounded-full">答错 ${wrongCount} 次</span>
+                        <span class="text-gray-400">${w.example}</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">🎉</div>
+                <div class="text-xl font-bold text-gray-800 mb-2">太棒了！</div>
+                <div class="text-gray-500">没有错题，继续保持！</div>
+              </div>
+            `}
+          </div>
+          
+          ${wrongWords.length > 0 ? `
+            <div class="p-4 bg-white border-t space-y-2">
+              <button onclick="startWrongBookLearning()" 
+                class="w-full p-4 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 active:scale-98 transition-all">
+                🔄 开始强化练习 (${wrongWords.length}词)
+              </button>
+              <button onclick="if(confirm('确定清空所有错题吗？')){state.wrongWordBook=[];Storage.setUserData(state.user.id,'wrongWordBook',[]);render()}" 
+                class="w-full p-3 rounded-xl bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 active:scale-98 transition-all text-sm">
+                清空错题集
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+    
+    // 开始错题练习
+    function startWrongBookLearning() {
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const wrongWords = state.wrongWordBook
+        .map(id => allWords.find(w => w.id === id))
+        .filter(w => w);
+      
+      if (wrongWords.length === 0) {
+        alert('错题集为空！');
+        return;
+      }
+      
+      const queue = wrongWords.sort(() => Math.random() - 0.5).slice(0, 20);
+      
+      state.wordSlash = {
+        ...state.wordSlash,
+        mode: 'learning',
+        queue: queue,
+        currentIndex: 0,
+        options: generateOptions(queue[0]),
+        answered: false,
+        correct: null,
+        selectedIndex: null,
+        results: [],
+      };
+      
+      render();
+    }
+    
+    // 重点词汇页面
+    function renderStarredWords() {
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const starredWords = state.starredWords
+        .map(id => allWords.find(w => w.id === id))
+        .filter(w => w);
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <div class="bg-gradient-to-r from-amber-500 to-yellow-500 p-6 text-white">
+            <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">⭐ 重点词汇</h1>
+            <p class="text-white/80 text-sm">你标记的重要单词 · 共 ${starredWords.length} 个</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            ${starredWords.length > 0 ? `
+              <div class="space-y-2">
+                ${starredWords.map(w => {
+                  const progress = state.wordProgress[w.id];
+                  const correctCount = progress?.correctCount || 0;
+                  const status = progress?.status === 'mastered' ? '✅' : progress ? '📖' : '🆕';
+                  return `
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">${state.wordSettings.hideEmoji ? '❓' : w.image}</span>
+                        <div class="flex-1 min-w-0">
+                          <div class="font-bold text-gray-800">${w.word}</div>
+                          <div class="text-sm text-gray-500">${w.meaning}</div>
+                        </div>
+                        <button onclick="speak('${w.word}')" class="p-2 text-gray-400 hover:text-primary-500">🔊</button>
+                        <span class="text-lg">${status}</span>
+                        <button onclick="toggleStarWord('${w.id}')" class="p-2 text-amber-400 hover:text-amber-500">
+                          ⭐
+                        </button>
+                      </div>
+                      <div class="mt-2 text-xs text-gray-400">${w.example}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="text-center py-12">
+                <div class="text-6xl mb-4">⭐</div>
+                <div class="text-xl font-bold text-gray-800 mb-2">暂无重点词汇</div>
+                <div class="text-gray-500">在学习时点击 ☆ 标记重点单词</div>
+              </div>
+            `}
+          </div>
+          
+          ${starredWords.length > 0 ? `
+            <div class="p-4 bg-white border-t space-y-2">
+              <button onclick="startStarredLearning()" 
+                class="w-full p-4 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 active:scale-98 transition-all">
+                ⚔️ 开始重点学习 (${starredWords.length}词)
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+    
+    // 开始重点词汇练习
+    function startStarredLearning() {
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const starredWords = state.starredWords
+        .map(id => allWords.find(w => w.id === id))
+        .filter(w => w);
+      
+      if (starredWords.length === 0) {
+        alert('请先标记一些重点词汇！');
+        return;
+      }
+      
+      const queue = starredWords.sort(() => Math.random() - 0.5).slice(0, 20);
+      
+      state.wordSlash = {
+        ...state.wordSlash,
+        mode: 'learning',
+        queue: queue,
+        currentIndex: 0,
+        options: generateOptions(queue[0]),
+        answered: false,
+        correct: null,
+        selectedIndex: null,
+        results: [],
+      };
+      
+      render();
+    }
     
     // 开始听写
     function startDictation() {
