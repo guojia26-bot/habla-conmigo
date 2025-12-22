@@ -1348,6 +1348,21 @@ REGLAS:
         wrongWordBook: currentUser ? Storage.getUserData(currentUser.id, 'wrongWordBook', []) : [],
         // 重点词汇 - 存储用户标记的单词ID
         starredWords: currentUser ? Storage.getUserData(currentUser.id, 'starredWords', []) : [],
+        // 每日学习统计
+        dailyWordStats: currentUser ? Storage.getUserData(currentUser.id, 'dailyWordStats', {
+          date: null,
+          newLearned: 0,
+          reviewed: 0,
+          totalCorrect: 0,
+          totalWrong: 0
+        }) : { date: null, newLearned: 0, reviewed: 0, totalCorrect: 0, totalWrong: 0 },
+        // 学习打卡记录
+        wordStreak: currentUser ? Storage.getUserData(currentUser.id, 'wordStreak', {
+          currentStreak: 0,
+          longestStreak: 0,
+          lastStudyDate: null,
+          totalDays: 0
+        }) : { currentStreak: 0, longestStreak: 0, lastStudyDate: null, totalDays: 0 },
       };
     }
     
@@ -1373,6 +1388,8 @@ REGLAS:
       wordSettings: userData.wordSettings, // 斩单词设置
       wrongWordBook: userData.wrongWordBook, // 错题集
       starredWords: userData.starredWords, // 重点词汇
+      dailyWordStats: userData.dailyWordStats, // 每日学习统计
+      wordStreak: userData.wordStreak, // 学习打卡记录
       wordSlash: {
         mode: 'home', // home, learning, result, wordlist, wrongbook, starred
         queue: [], // 当前学习队列
@@ -3225,6 +3242,150 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       render();
     }
     
+    // ==================== 每日学习统计 ====================
+    
+    // 获取今日日期字符串
+    function getTodayStr() {
+      return new Date().toDateString();
+    }
+    
+    // 初始化/重置今日数据
+    function initDailyStats() {
+      const today = getTodayStr();
+      if (state.dailyWordStats.date !== today) {
+        state.dailyWordStats = {
+          date: today,
+          newLearned: 0,
+          reviewed: 0,
+          totalCorrect: 0,
+          totalWrong: 0
+        };
+        if (state.user) {
+          Storage.setUserData(state.user.id, 'dailyWordStats', state.dailyWordStats);
+        }
+      }
+    }
+    
+    // 更新今日统计
+    function updateDailyStats(isNew, isCorrect) {
+      initDailyStats();
+      
+      if (isNew) {
+        state.dailyWordStats.newLearned++;
+      } else {
+        state.dailyWordStats.reviewed++;
+      }
+      
+      if (isCorrect) {
+        state.dailyWordStats.totalCorrect++;
+      } else {
+        state.dailyWordStats.totalWrong++;
+      }
+      
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'dailyWordStats', state.dailyWordStats);
+      }
+      
+      // 更新打卡记录
+      updateWordStreak();
+      
+      // 检查是否完成今日目标
+      checkDailyGoal();
+    }
+    
+    // 更新打卡记录
+    function updateWordStreak() {
+      const today = getTodayStr();
+      const streak = state.wordStreak;
+      
+      if (streak.lastStudyDate === today) {
+        // 今天已经打卡过了
+        return;
+      }
+      
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+      
+      if (streak.lastStudyDate === yesterdayStr) {
+        // 连续打卡
+        streak.currentStreak++;
+      } else if (streak.lastStudyDate !== today) {
+        // 断了，重新开始
+        streak.currentStreak = 1;
+      }
+      
+      streak.lastStudyDate = today;
+      streak.totalDays++;
+      
+      if (streak.currentStreak > streak.longestStreak) {
+        streak.longestStreak = streak.currentStreak;
+      }
+      
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'wordStreak', streak);
+      }
+    }
+    
+    // 检查是否完成今日目标
+    function checkDailyGoal() {
+      const stats = state.dailyWordStats;
+      const settings = state.wordSettings;
+      
+      const newGoalMet = stats.newLearned >= settings.dailyNew;
+      const reviewGoalMet = stats.reviewed >= settings.dailyReview;
+      
+      // 刚好完成目标时显示庆祝
+      if (newGoalMet && stats.newLearned === settings.dailyNew) {
+        showCelebration('🎉 新词目标完成！', `今日已学 ${settings.dailyNew} 个新词`);
+      }
+      if (reviewGoalMet && stats.reviewed === settings.dailyReview) {
+        showCelebration('🔄 复习目标完成！', `今日已复习 ${settings.dailyReview} 个单词`);
+      }
+      if (newGoalMet && reviewGoalMet && 
+          stats.newLearned === settings.dailyNew && 
+          stats.reviewed === settings.dailyReview) {
+        setTimeout(() => {
+          showCelebration('🏆 今日目标全部完成！', '太棒了，继续保持！');
+        }, 1500);
+      }
+    }
+    
+    // 显示庆祝动画
+    function showCelebration(title, subtitle) {
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      overlay.innerHTML = `
+        <div class="bg-white rounded-3xl p-8 text-center transform scale-0 animate-bounce-in max-w-sm mx-4">
+          <div class="text-6xl mb-4 animate-bounce">🎊</div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">${title}</h2>
+          <p class="text-gray-500 mb-6">${subtitle}</p>
+          <button onclick="this.closest('.fixed').remove()" 
+            class="px-8 py-3 bg-primary-500 text-white rounded-full font-bold hover:bg-primary-600 transition-all">
+            太棒了！
+          </button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      
+      // 添加动画样式
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes bounce-in {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+        .animate-bounce-in { animation: bounce-in 0.5s forwards; }
+      `;
+      document.head.appendChild(style);
+      
+      // 3秒后自动关闭
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.remove();
+      }, 5000);
+    }
+
     // 选择答案
     function selectWordAnswer(optionIndex) {
       if (state.wordSlash.answered) return;
@@ -3233,13 +3394,15 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const currentWord = ws.queue[ws.currentIndex];
       const selected = ws.options[optionIndex];
       const isCorrect = selected.correct;
+      const isRetry = currentWord.isRetry; // 是否是重做的题
       
       ws.answered = true;
       ws.correct = isCorrect;
       ws.selectedIndex = optionIndex; // 记录用户选择的选项索引
       
       // 只有第一次答题才记录结果（避免循环时重复记录）
-      if (!ws.results.find(r => r.word.id === currentWord.id && r.attemptIndex === ws.currentIndex)) {
+      const alreadyRecorded = ws.results.find(r => r.word.id === currentWord.id);
+      if (!alreadyRecorded) {
         ws.results.push({ 
           word: currentWord, 
           correct: isCorrect,
@@ -3255,6 +3418,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         lastSeen: null,
         nextReview: null
       };
+      
+      // 判断是新词还是复习词
+      const isNewWord = !state.wordProgress[currentWord.id] || state.wordProgress[currentWord.id].status === 'new';
       
       progress.lastSeen = new Date().toISOString();
       
@@ -3299,6 +3465,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       // 保存进度
       if (state.user) {
         Storage.setUserData(state.user.id, 'wordProgress', state.wordProgress);
+      }
+      
+      // 更新今日学习统计（只有第一次答题且非重做才计入）
+      if (!alreadyRecorded && !isRetry) {
+        updateDailyStats(isNewWord, isCorrect);
       }
       
       // 播放单词发音
@@ -3391,9 +3562,181 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         return renderStarredWords();
       } else if (ws.mode === 'settings') {
         return renderWordSettings();
+      } else if (ws.mode === 'detail') {
+        return renderWordDetail();
       } else {
         return renderWordHome();
       }
+    }
+    
+    // 查看单词详情
+    function showWordDetail(wordId) {
+      state.wordSlash.mode = 'detail';
+      state.wordSlash.detailWordId = wordId;
+      render();
+    }
+    
+    // 单词详情页
+    function renderWordDetail() {
+      const wordId = state.wordSlash.detailWordId;
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const word = allWords.find(w => w.id === wordId);
+      
+      if (!word) {
+        state.wordSlash.mode = 'home';
+        render();
+        return '';
+      }
+      
+      const progress = state.wordProgress[wordId];
+      const isStarred = state.starredWords.includes(wordId);
+      const isInWrongBook = state.wrongWordBook.includes(wordId);
+      const correctCount = progress?.correctCount || 0;
+      const wrongCount = progress?.wrongCount || 0;
+      const status = progress?.status === 'mastered' ? '已掌握' : progress?.status === 'learning' ? '学习中' : '待学习';
+      const statusColor = progress?.status === 'mastered' ? 'green' : progress?.status === 'learning' ? 'amber' : 'gray';
+      const lastSeen = progress?.lastSeen ? new Date(progress.lastSeen).toLocaleDateString('zh-CN') : '从未学习';
+      
+      // 判断词库来源
+      let wordSource = 'A1';
+      if (A2_WORDS.find(w => w.id === wordId)) wordSource = 'A2';
+      else if (B1_WORDS.find(w => w.id === wordId)) wordSource = 'B1';
+      else if (CITIZENSHIP_WORDS.find(w => w.id === wordId)) wordSource = '入籍';
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-primary-500 to-indigo-600 p-6 text-white">
+            <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-4 flex items-center gap-1">← 返回</button>
+            <div class="text-center">
+              <div class="text-6xl mb-3">${word.image}</div>
+              <h1 class="text-3xl font-bold mb-1">${word.word}</h1>
+              <p class="text-white/80 text-lg">${word.meaning}</p>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 操作按钮 -->
+            <div class="flex gap-3 mb-4">
+              <button onclick="speak('${word.word}')" 
+                class="flex-1 p-3 rounded-xl bg-white shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-95 transition-all">
+                <span class="text-2xl">🔊</span>
+                <span class="text-gray-700">播放发音</span>
+              </button>
+              <button onclick="toggleStarWord('${wordId}')" 
+                class="flex-1 p-3 rounded-xl bg-white shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-95 transition-all">
+                <span class="text-2xl">${isStarred ? '⭐' : '☆'}</span>
+                <span class="text-gray-700">${isStarred ? '取消标记' : '标记重点'}</span>
+              </button>
+            </div>
+            
+            <!-- 学习状态 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📊 学习状态</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">状态</span>
+                  <span class="px-3 py-1 bg-${statusColor}-100 text-${statusColor}-700 rounded-full text-sm font-medium">${status}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">掌握进度</span>
+                  <div class="flex items-center gap-2">
+                    <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-green-500 rounded-full" style="width: ${Math.min(100, correctCount * 20)}%"></div>
+                    </div>
+                    <span class="text-sm font-bold text-gray-700">${correctCount}/5</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">答对次数</span>
+                  <span class="font-medium text-green-600">${correctCount} 次 ✓</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">答错次数</span>
+                  <span class="font-medium text-red-600">${wrongCount} 次 ✗</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">上次学习</span>
+                  <span class="text-gray-700">${lastSeen}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">词库来源</span>
+                  <span class="px-2 py-1 bg-primary-100 text-primary-700 rounded text-sm">${wordSource}</span>
+                </div>
+                ${isInWrongBook ? `
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600">错题集</span>
+                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-sm">在错题集中 ❌</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            
+            <!-- 例句 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📝 例句</h3>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-gray-800 text-lg mb-2 italic">"${word.example}"</p>
+                <p class="text-gray-500">${word.exampleZh}</p>
+                <button onclick="speak('${word.example.replace(/'/g, "\\'")}')" 
+                  class="mt-3 text-primary-500 text-sm flex items-center gap-1">
+                  🔊 播放例句
+                </button>
+              </div>
+            </div>
+            
+            <!-- 词汇标签 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">🏷️ 标签</h3>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">${word.tag || '名词'}</span>
+                <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">${wordSource} 级别</span>
+                ${isStarred ? '<span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">⭐ 重点词</span>' : ''}
+                ${progress?.status === 'mastered' ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">✅ 已掌握</span>' : ''}
+              </div>
+            </div>
+            
+            <!-- 学习按钮 -->
+            <div class="space-y-2">
+              <button onclick="startSingleWordLearning('${wordId}')" 
+                class="w-full p-4 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 active:scale-98 transition-all">
+                ⚔️ 开始练习这个单词
+              </button>
+              ${isInWrongBook ? `
+                <button onclick="removeFromWrongBook('${wordId}');render()" 
+                  class="w-full p-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 active:scale-98 transition-all">
+                  从错题集移除
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 单独练习某个单词
+    function startSingleWordLearning(wordId) {
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const word = allWords.find(w => w.id === wordId);
+      
+      if (!word) return;
+      
+      // 创建包含这个单词的学习队列（重复5次以强化记忆）
+      const queue = [word, word, word, word, word];
+      
+      state.wordSlash = {
+        ...state.wordSlash,
+        mode: 'learning',
+        queue: queue,
+        currentIndex: 0,
+        options: generateOptions(queue[0]),
+        answered: false,
+        correct: null,
+        selectedIndex: null,
+        results: [],
+      };
+      
+      render();
     }
     
     // 斩单词首页
@@ -3417,21 +3760,81 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const reviewCount = getWordsToReview().length;
       const canLearnNew = newCount > 0;
       
+      // 初始化今日数据
+      initDailyStats();
+      const dailyStats = state.dailyWordStats;
+      const streak = state.wordStreak;
+      const settings = state.wordSettings;
+      
+      // 计算今日进度百分比
+      const newProgress = Math.min(100, Math.round((dailyStats.newLearned / settings.dailyNew) * 100));
+      const reviewProgress = Math.min(100, Math.round((dailyStats.reviewed / settings.dailyReview) * 100));
+      const todayComplete = dailyStats.newLearned >= settings.dailyNew && dailyStats.reviewed >= settings.dailyReview;
+      
       return `
         <div class="h-full bg-gray-50 flex flex-col">
           <!-- 顶部 -->
           <div class="bg-gradient-to-r ${book.color} p-6 text-white">
             <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
-            <div class="flex items-center gap-4">
-              <div class="text-5xl">${book.icon}</div>
-              <div>
-                <h1 class="text-xl font-bold">⚔️ 斩单词</h1>
-                <p class="text-white/80 text-sm">${book.name}</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="text-5xl">${book.icon}</div>
+                <div>
+                  <h1 class="text-xl font-bold">⚔️ 斩单词</h1>
+                  <p class="text-white/80 text-sm">${book.name}</p>
+                </div>
+              </div>
+              <!-- 连续打卡 -->
+              <div class="text-center bg-white/20 rounded-xl px-4 py-2">
+                <div class="text-2xl font-bold">🔥 ${streak.currentStreak}</div>
+                <div class="text-xs text-white/80">连续打卡</div>
               </div>
             </div>
           </div>
           
           <div class="flex-1 overflow-auto p-4">
+            <!-- 今日目标 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 ${todayComplete ? 'ring-2 ring-green-400' : ''}">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-gray-800">📅 今日目标</h3>
+                ${todayComplete ? '<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">✅ 已完成</span>' : ''}
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <!-- 新词进度 -->
+                <div class="relative">
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">新词</span>
+                    <span class="font-bold ${dailyStats.newLearned >= settings.dailyNew ? 'text-green-600' : 'text-primary-600'}">${dailyStats.newLearned}/${settings.dailyNew}</span>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full ${dailyStats.newLearned >= settings.dailyNew ? 'bg-green-500' : 'bg-primary-500'} rounded-full transition-all" style="width: ${newProgress}%"></div>
+                  </div>
+                  ${dailyStats.newLearned >= settings.dailyNew ? '<div class="absolute -top-1 -right-1 text-lg">✅</div>' : ''}
+                </div>
+                <!-- 复习进度 -->
+                <div class="relative">
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">复习</span>
+                    <span class="font-bold ${dailyStats.reviewed >= settings.dailyReview ? 'text-green-600' : 'text-amber-600'}">${dailyStats.reviewed}/${settings.dailyReview}</span>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full ${dailyStats.reviewed >= settings.dailyReview ? 'bg-green-500' : 'bg-amber-500'} rounded-full transition-all" style="width: ${reviewProgress}%"></div>
+                  </div>
+                  ${dailyStats.reviewed >= settings.dailyReview ? '<div class="absolute -top-1 -right-1 text-lg">✅</div>' : ''}
+                </div>
+              </div>
+              <!-- 今日正确率 -->
+              ${(dailyStats.totalCorrect + dailyStats.totalWrong) > 0 ? `
+                <div class="mt-3 pt-3 border-t flex items-center justify-between text-sm">
+                  <span class="text-gray-500">今日正确率</span>
+                  <span class="font-bold ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100) >= 80 ? 'text-green-600' : 'text-amber-600'}">
+                    ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100)}% 
+                    <span class="text-gray-400 font-normal">(${dailyStats.totalCorrect}✓ ${dailyStats.totalWrong}✗)</span>
+                  </span>
+                </div>
+              ` : ''}
+            </div>
+            
             <!-- 学习进度 -->
             <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
               <div class="flex items-center justify-between mb-3">
@@ -3715,6 +4118,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const wrongResults = ws.results.filter(r => !r.correct);
       const total = ws.results.length;
       const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const streak = state.wordStreak;
+      const dailyStats = state.dailyWordStats;
       
       // 根据正确率显示不同提示
       let emoji, title, subtitle;
@@ -3752,6 +4157,22 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   <div class="text-xs text-gray-500">答错 ❌</div>
                 </div>
               </div>
+              
+              <!-- 打卡信息 -->
+              <div class="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div class="text-xl font-bold text-orange-500">🔥 ${streak.currentStreak}</div>
+                  <div class="text-xs text-gray-500">连续打卡</div>
+                </div>
+                <div>
+                  <div class="text-xl font-bold text-primary-500">${dailyStats.newLearned + dailyStats.reviewed}</div>
+                  <div class="text-xs text-gray-500">今日已学</div>
+                </div>
+                <div>
+                  <div class="text-xl font-bold text-purple-500">${streak.totalDays}</div>
+                  <div class="text-xs text-gray-500">累计天数</div>
+                </div>
+              </div>
             </div>
             
             ${wrongResults.length > 0 ? `
@@ -3784,13 +4205,13 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               <h3 class="font-bold text-gray-800 mb-3">📝 本次学习</h3>
               <div class="space-y-2 max-h-48 overflow-auto">
                 ${ws.results.map(r => `
-                  <div class="flex items-center gap-3 p-2 rounded-lg ${r.correct ? 'bg-green-50' : 'bg-red-50'}">
+                  <div onclick="showWordDetail('${r.word.id}')" class="flex items-center gap-3 p-2 rounded-lg ${r.correct ? 'bg-green-50' : 'bg-red-50'} cursor-pointer hover:opacity-80">
                     <span class="text-xl">${r.word.image}</span>
                     <div class="flex-1 min-w-0">
                       <span class="font-bold">${r.word.word}</span>
                       <span class="text-gray-500 text-sm ml-2">${r.word.meaning}</span>
                     </div>
-                    <button onclick="speak('${r.word.word}')" class="text-gray-400 hover:text-primary-500">🔊</button>
+                    <button onclick="event.stopPropagation();speak('${r.word.word}')" class="text-gray-400 hover:text-primary-500">🔊</button>
                     <span>${r.correct ? '✅' : '❌'}</span>
                   </div>
                 `).join('')}
@@ -3799,6 +4220,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
             
             <!-- 操作按钮 -->
             <div class="space-y-3">
+              <button onclick="generateStudyReport()" 
+                class="w-full p-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold hover:shadow-lg active:scale-98 transition-all flex items-center justify-center gap-2">
+                📊 生成学习报告
+              </button>
               <button onclick="startWordLearning('mixed')" 
                 class="w-full p-4 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 active:scale-98 transition-all">
                 ⚔️ 继续斩词
@@ -3811,6 +4236,138 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           </div>
         </div>
       `;
+    }
+    
+    // 生成学习报告
+    function generateStudyReport() {
+      const ws = state.wordSlash;
+      const correct = ws.results.filter(r => r.correct).length;
+      const total = ws.results.length;
+      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const streak = state.wordStreak;
+      const dailyStats = state.dailyWordStats;
+      const book = WORD_BOOKS[state.wordSettings.currentBook];
+      
+      // 获取总体进度
+      const words = getWordBook(state.wordSettings.currentBook);
+      const wordIds = new Set(words.map(w => w.id));
+      let mastered = 0;
+      Object.entries(state.wordProgress).forEach(([id, p]) => {
+        if (wordIds.has(id) && p.status === 'mastered') mastered++;
+      });
+      const overallProgress = Math.round((mastered / words.length) * 100);
+      
+      const today = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+      
+      // 创建报告弹窗
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+      
+      overlay.innerHTML = `
+        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl">
+          <!-- 报告卡片 -->
+          <div id="reportCard" class="bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 p-6 text-white">
+            <div class="text-center mb-4">
+              <div class="text-sm opacity-80">📅 ${today}</div>
+              <h2 class="text-2xl font-bold mt-1">HablaConmigo</h2>
+              <div class="text-sm opacity-80">西班牙语学习报告</div>
+            </div>
+            
+            <div class="bg-white/20 rounded-2xl p-4 backdrop-blur mb-4">
+              <div class="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div class="text-3xl font-bold">${accuracy}%</div>
+                  <div class="text-xs opacity-80">正确率</div>
+                </div>
+                <div>
+                  <div class="text-3xl font-bold">🔥${streak.currentStreak}</div>
+                  <div class="text-xs opacity-80">连续打卡</div>
+                </div>
+                <div>
+                  <div class="text-3xl font-bold">${dailyStats.newLearned + dailyStats.reviewed}</div>
+                  <div class="text-xs opacity-80">今日学习</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-white/20 rounded-2xl p-4 backdrop-blur">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm">${book.icon} ${book.name}</span>
+                <span class="text-sm font-bold">${overallProgress}%</span>
+              </div>
+              <div class="h-2 bg-white/30 rounded-full overflow-hidden">
+                <div class="h-full bg-white rounded-full" style="width: ${overallProgress}%"></div>
+              </div>
+              <div class="text-xs opacity-80 mt-1">已掌握 ${mastered}/${words.length} 词</div>
+            </div>
+            
+            <div class="text-center mt-4 text-xs opacity-60">
+              累计学习 ${streak.totalDays} 天 · 最长连续 ${streak.longestStreak} 天
+            </div>
+          </div>
+          
+          <!-- 操作按钮 -->
+          <div class="p-4 space-y-2">
+            <button onclick="copyReportText()" 
+              class="w-full p-3 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 active:scale-98 transition-all">
+              📋 复制文字报告
+            </button>
+            <button onclick="this.closest('.fixed').remove()" 
+              class="w-full p-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 active:scale-98 transition-all">
+              关闭
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(overlay);
+    }
+    
+    // 复制文字报告
+    function copyReportText() {
+      const ws = state.wordSlash;
+      const correct = ws.results.filter(r => r.correct).length;
+      const total = ws.results.length;
+      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const streak = state.wordStreak;
+      const dailyStats = state.dailyWordStats;
+      const book = WORD_BOOKS[state.wordSettings.currentBook];
+      
+      const words = getWordBook(state.wordSettings.currentBook);
+      const wordIds = new Set(words.map(w => w.id));
+      let mastered = 0;
+      Object.entries(state.wordProgress).forEach(([id, p]) => {
+        if (wordIds.has(id) && p.status === 'mastered') mastered++;
+      });
+      
+      const today = new Date().toLocaleDateString('zh-CN');
+      
+      const text = `📊 HablaConmigo 学习报告
+📅 ${today}
+
+✅ 正确率: ${accuracy}%
+🔥 连续打卡: ${streak.currentStreak} 天
+📚 今日学习: ${dailyStats.newLearned + dailyStats.reviewed} 词
+📖 ${book.name}: 已掌握 ${mastered}/${words.length} 词
+
+累计学习 ${streak.totalDays} 天
+最长连续 ${streak.longestStreak} 天
+
+#西班牙语学习 #HablaConmigo`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ 报告已复制到剪贴板！');
+      }).catch(() => {
+        // 降级方案
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✅ 报告已复制到剪贴板！');
+      });
     }
     
     // 重做错题
@@ -3895,19 +4452,20 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   const statusIcon = progress?.status === 'mastered' ? '✅' : progress ? '📖' : '🆕';
                   const correctCount = progress?.correctCount || 0;
                   return `
-                    <div class="bg-white rounded-xl p-3 shadow-sm flex items-center gap-3">
+                    <div onclick="showWordDetail('${w.id}')" class="bg-white rounded-xl p-3 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:scale-98 transition-all">
                       <span class="text-2xl">${w.image}</span>
                       <div class="flex-1 min-w-0">
                         <div class="font-bold text-gray-800">${w.word}</div>
                         <div class="text-sm text-gray-500">${w.meaning}</div>
                       </div>
-                      <button onclick="speak('${w.word}')" class="p-2 text-gray-400 hover:text-primary-500 active:scale-90 transition-all">
+                      <button onclick="event.stopPropagation();speak('${w.word}')" class="p-2 text-gray-400 hover:text-primary-500 active:scale-90 transition-all">
                         🔊
                       </button>
                       <div class="text-center">
                         <div class="text-lg">${statusIcon}</div>
                         ${progress ? `<div class="text-xs text-gray-400">${correctCount}次</div>` : ''}
                       </div>
+                      <span class="text-gray-300">›</span>
                     </div>
                   `;
                 }).join('')}
