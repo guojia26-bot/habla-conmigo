@@ -692,29 +692,33 @@ REGLAS:
         id: 'A1',
         name: 'A1 基础词汇',
         desc: '最常用的基础词汇，适合初学者',
+        count: 100,
         icon: '🌱',
         color: 'from-green-400 to-emerald-500'
       },
       A2: {
         id: 'A2', 
         name: 'A2 进阶词汇',
-        desc: '日常交流必备词汇',
+        desc: '包含A1全部 + 日常交流词汇',
+        count: 200,
         icon: '🌿',
         color: 'from-blue-400 to-cyan-500'
       },
       B1: {
         id: 'B1',
         name: 'B1 中级词汇',
-        desc: '流利表达所需词汇',
+        desc: '流利表达所需词汇（开发中）',
+        count: 200,
         icon: '🌳',
         color: 'from-purple-400 to-indigo-500'
       },
       citizenship: {
         id: 'citizenship',
-        name: '入籍考试词汇',
-        desc: '西班牙入籍考试常用词',
+        name: '🇪🇸 入籍考试',
+        desc: 'CCSE考试必备词汇',
+        count: 120,
         icon: '🇪🇸',
-        color: 'from-red-400 to-yellow-500'
+        color: 'from-red-500 to-yellow-500'
       }
     };
 
@@ -836,13 +840,249 @@ REGLAS:
       { id: 'para', word: 'para', meaning: '为了/给', image: '🎯', example: 'Es para ti.', exampleZh: '这是给你的。', tags: ['介词'] },
     ];
 
+    // A2进阶词库 - 100个日常交流词汇
+    const A2_WORDS = [
+      // 日常活动
+      { id: 'desayunar', word: 'desayunar', meaning: '吃早餐', image: '🥐', example: 'Desayuno a las ocho.', exampleZh: '我八点吃早餐。', tags: ['动词'] },
+      { id: 'almorzar', word: 'almorzar', meaning: '吃午餐', image: '🍝', example: 'Almuerzo con mis colegas.', exampleZh: '我和同事一起吃午餐。', tags: ['动词'] },
+      { id: 'cenar', word: 'cenar', meaning: '吃晚餐', image: '🍽️', example: 'Cenamos a las nueve.', exampleZh: '我们九点吃晚餐。', tags: ['动词'] },
+      { id: 'ducharse', word: 'ducharse', meaning: '洗澡', image: '🚿', example: 'Me ducho por la mañana.', exampleZh: '我早上洗澡。', tags: ['动词'] },
+      { id: 'vestirse', word: 'vestirse', meaning: '穿衣服', image: '👔', example: 'Me visto rápido.', exampleZh: '我穿衣服很快。', tags: ['动词'] },
+      { id: 'acostarse', word: 'acostarse', meaning: '睡觉', image: '🛏️', example: 'Me acuesto a las once.', exampleZh: '我十一点睡觉。', tags: ['动词'] },
+      { id: 'levantarse', word: 'levantarse', meaning: '起床', image: '⏰', example: 'Me levanto temprano.', exampleZh: '我早起。', tags: ['动词'] },
+      { id: 'pasear', word: 'pasear', meaning: '散步', image: '🚶', example: 'Paseo por el parque.', exampleZh: '我在公园散步。', tags: ['动词'] },
+      { id: 'cocinar', word: 'cocinar', meaning: '做饭', image: '👨‍🍳', example: 'Me gusta cocinar.', exampleZh: '我喜欢做饭。', tags: ['动词'] },
+      { id: 'limpiar', word: 'limpiar', meaning: '打扫', image: '🧹', example: 'Limpio la casa los sábados.', exampleZh: '我周六打扫房子。', tags: ['动词'] },
+      
+      // 购物与消费
+      { id: 'comprar', word: 'comprar', meaning: '买', image: '🛒', example: 'Voy a comprar pan.', exampleZh: '我去买面包。', tags: ['动词'] },
+      { id: 'vender', word: 'vender', meaning: '卖', image: '💰', example: 'Venden frutas frescas.', exampleZh: '他们卖新鲜水果。', tags: ['动词'] },
+      { id: 'pagar', word: 'pagar', meaning: '付款', image: '💳', example: '¿Puedo pagar con tarjeta?', exampleZh: '我可以刷卡吗？', tags: ['动词'] },
+      { id: 'costar', word: 'costar', meaning: '花费', image: '💶', example: '¿Cuánto cuesta?', exampleZh: '多少钱？', tags: ['动词'] },
+      { id: 'barato', word: 'barato', meaning: '便宜的', image: '🏷️', example: 'Es muy barato.', exampleZh: '这很便宜。', tags: ['形容词'] },
+      { id: 'caro', word: 'caro', meaning: '贵的', image: '💎', example: 'Es demasiado caro.', exampleZh: '这太贵了。', tags: ['形容词'] },
+      { id: 'precio', word: 'precio', meaning: '价格', image: '🏷️', example: '¿Cuál es el precio?', exampleZh: '价格是多少？', tags: ['名词'] },
+      { id: 'descuento', word: 'descuento', meaning: '折扣', image: '🔖', example: 'Hay un 20% de descuento.', exampleZh: '有八折优惠。', tags: ['名词'] },
+      { id: 'oferta', word: 'oferta', meaning: '特价/优惠', image: '🎁', example: 'Está en oferta.', exampleZh: '这在打折。', tags: ['名词'] },
+      { id: 'efectivo', word: 'efectivo', meaning: '现金', image: '💵', example: 'Pago en efectivo.', exampleZh: '我付现金。', tags: ['名词'] },
+      
+      // 交通出行
+      { id: 'coche', word: 'coche', meaning: '汽车', image: '🚗', example: 'Voy en coche al trabajo.', exampleZh: '我开车上班。', tags: ['交通'] },
+      { id: 'autobus', word: 'autobús', meaning: '公交车', image: '🚌', example: 'El autobús llega pronto.', exampleZh: '公交车快到了。', tags: ['交通'] },
+      { id: 'metro', word: 'metro', meaning: '地铁', image: '🚇', example: 'Voy en metro.', exampleZh: '我坐地铁。', tags: ['交通'] },
+      { id: 'tren', word: 'tren', meaning: '火车', image: '🚆', example: 'El tren sale a las diez.', exampleZh: '火车十点出发。', tags: ['交通'] },
+      { id: 'avion', word: 'avión', meaning: '飞机', image: '✈️', example: 'Viajo en avión.', exampleZh: '我坐飞机旅行。', tags: ['交通'] },
+      { id: 'bicicleta', word: 'bicicleta', meaning: '自行车', image: '🚲', example: 'Monto en bicicleta.', exampleZh: '我骑自行车。', tags: ['交通'] },
+      { id: 'parada', word: 'parada', meaning: '车站', image: '🚏', example: '¿Dónde está la parada?', exampleZh: '车站在哪里？', tags: ['交通'] },
+      { id: 'billete', word: 'billete', meaning: '票', image: '🎫', example: 'Necesito un billete.', exampleZh: '我需要一张票。', tags: ['交通'] },
+      { id: 'llegar', word: 'llegar', meaning: '到达', image: '📍', example: '¿A qué hora llegas?', exampleZh: '你几点到？', tags: ['动词'] },
+      { id: 'salir', word: 'salir', meaning: '出发/离开', image: '🚪', example: 'Salgo a las ocho.', exampleZh: '我八点出发。', tags: ['动词'] },
+      
+      // 天气与自然
+      { id: 'tiempo', word: 'tiempo', meaning: '天气/时间', image: '⛅', example: '¿Qué tiempo hace?', exampleZh: '天气怎么样？', tags: ['名词'] },
+      { id: 'sol', word: 'sol', meaning: '太阳', image: '☀️', example: 'Hace sol hoy.', exampleZh: '今天晴天。', tags: ['名词'] },
+      { id: 'lluvia', word: 'lluvia', meaning: '雨', image: '🌧️', example: 'Hay lluvia mañana.', exampleZh: '明天有雨。', tags: ['名词'] },
+      { id: 'nieve', word: 'nieve', meaning: '雪', image: '❄️', example: 'Cae nieve en invierno.', exampleZh: '冬天下雪。', tags: ['名词'] },
+      { id: 'viento', word: 'viento', meaning: '风', image: '💨', example: 'Hace mucho viento.', exampleZh: '风很大。', tags: ['名词'] },
+      { id: 'calor', word: 'calor', meaning: '热', image: '🥵', example: 'Hace calor en verano.', exampleZh: '夏天很热。', tags: ['名词'] },
+      { id: 'frio', word: 'frío', meaning: '冷', image: '🥶', example: 'Hace frío hoy.', exampleZh: '今天很冷。', tags: ['名词'] },
+      { id: 'primavera', word: 'primavera', meaning: '春天', image: '🌸', example: 'Me gusta la primavera.', exampleZh: '我喜欢春天。', tags: ['季节'] },
+      { id: 'verano', word: 'verano', meaning: '夏天', image: '🏖️', example: 'En verano voy a la playa.', exampleZh: '夏天我去海滩。', tags: ['季节'] },
+      { id: 'otono', word: 'otoño', meaning: '秋天', image: '🍂', example: 'El otoño es bonito.', exampleZh: '秋天很美。', tags: ['季节'] },
+      { id: 'invierno', word: 'invierno', meaning: '冬天', image: '⛄', example: 'El invierno es frío.', exampleZh: '冬天很冷。', tags: ['季节'] },
+      
+      // 身体与健康
+      { id: 'cabeza', word: 'cabeza', meaning: '头', image: '🗣️', example: 'Me duele la cabeza.', exampleZh: '我头疼。', tags: ['身体'] },
+      { id: 'mano', word: 'mano', meaning: '手', image: '✋', example: 'Dame la mano.', exampleZh: '把手给我。', tags: ['身体'] },
+      { id: 'pie', word: 'pie', meaning: '脚', image: '🦶', example: 'Me duele el pie.', exampleZh: '我脚疼。', tags: ['身体'] },
+      { id: 'ojo', word: 'ojo', meaning: '眼睛', image: '👁️', example: 'Tiene los ojos azules.', exampleZh: '他有蓝眼睛。', tags: ['身体'] },
+      { id: 'boca', word: 'boca', meaning: '嘴', image: '👄', example: 'Abre la boca.', exampleZh: '张开嘴。', tags: ['身体'] },
+      { id: 'enfermo', word: 'enfermo', meaning: '生病的', image: '🤒', example: 'Estoy enfermo.', exampleZh: '我生病了。', tags: ['形容词'] },
+      { id: 'sano', word: 'sano', meaning: '健康的', image: '💪', example: 'Estoy sano.', exampleZh: '我很健康。', tags: ['形容词'] },
+      { id: 'medico', word: 'médico', meaning: '医生', image: '👨‍⚕️', example: 'Voy al médico.', exampleZh: '我去看医生。', tags: ['职业'] },
+      { id: 'medicina', word: 'medicina', meaning: '药', image: '💊', example: 'Tomo la medicina.', exampleZh: '我吃药。', tags: ['名词'] },
+      { id: 'dolor', word: 'dolor', meaning: '疼痛', image: '😣', example: 'Tengo dolor de espalda.', exampleZh: '我背疼。', tags: ['名词'] },
+      
+      // 情感与状态
+      { id: 'contento', word: 'contento', meaning: '满意的/开心的', image: '😄', example: 'Estoy muy contento.', exampleZh: '我很开心。', tags: ['形容词'] },
+      { id: 'preocupado', word: 'preocupado', meaning: '担心的', image: '😟', example: 'Estoy preocupado.', exampleZh: '我很担心。', tags: ['形容词'] },
+      { id: 'nervioso', word: 'nervioso', meaning: '紧张的', image: '😰', example: 'Estoy nervioso.', exampleZh: '我很紧张。', tags: ['形容词'] },
+      { id: 'tranquilo', word: 'tranquilo', meaning: '平静的', image: '😌', example: 'Estoy tranquilo.', exampleZh: '我很平静。', tags: ['形容词'] },
+      { id: 'aburrido', word: 'aburrido', meaning: '无聊的', image: '😐', example: 'Estoy aburrido.', exampleZh: '我很无聊。', tags: ['形容词'] },
+      { id: 'ocupado', word: 'ocupado', meaning: '忙碌的', image: '💼', example: 'Estoy muy ocupado.', exampleZh: '我很忙。', tags: ['形容词'] },
+      { id: 'libre', word: 'libre', meaning: '自由的/有空的', image: '🕊️', example: '¿Estás libre mañana?', exampleZh: '你明天有空吗？', tags: ['形容词'] },
+      { id: 'seguro', word: 'seguro', meaning: '确定的/安全的', image: '🔒', example: 'Estoy seguro.', exampleZh: '我确定。', tags: ['形容词'] },
+      { id: 'sorprendido', word: 'sorprendido', meaning: '惊讶的', image: '😲', example: 'Estoy sorprendido.', exampleZh: '我很惊讶。', tags: ['形容词'] },
+      { id: 'enamorado', word: 'enamorado', meaning: '恋爱中的', image: '😍', example: 'Estoy enamorado.', exampleZh: '我恋爱了。', tags: ['形容词'] },
+      
+      // 描述与比较
+      { id: 'mejor', word: 'mejor', meaning: '更好的', image: '👍', example: 'Este es mejor.', exampleZh: '这个更好。', tags: ['形容词'] },
+      { id: 'peor', word: 'peor', meaning: '更差的', image: '👎', example: 'Esto es peor.', exampleZh: '这个更差。', tags: ['形容词'] },
+      { id: 'mayor', word: 'mayor', meaning: '更大的/年长的', image: '📈', example: 'Soy el mayor.', exampleZh: '我是最大的。', tags: ['形容词'] },
+      { id: 'menor', word: 'menor', meaning: '更小的/年幼的', image: '📉', example: 'Es mi hermano menor.', exampleZh: '他是我弟弟。', tags: ['形容词'] },
+      { id: 'mismo', word: 'mismo', meaning: '同样的', image: '🟰', example: 'Es lo mismo.', exampleZh: '是一样的。', tags: ['形容词'] },
+      { id: 'diferente', word: 'diferente', meaning: '不同的', image: '🔀', example: 'Es diferente.', exampleZh: '这不一样。', tags: ['形容词'] },
+      { id: 'importante', word: 'importante', meaning: '重要的', image: '⭐', example: 'Es muy importante.', exampleZh: '这很重要。', tags: ['形容词'] },
+      { id: 'necesario', word: 'necesario', meaning: '必要的', image: '❗', example: 'Es necesario.', exampleZh: '这是必要的。', tags: ['形容词'] },
+      { id: 'posible', word: 'posible', meaning: '可能的', image: '🤔', example: '¿Es posible?', exampleZh: '这可能吗？', tags: ['形容词'] },
+      { id: 'imposible', word: 'imposible', meaning: '不可能的', image: '🚫', example: 'Es imposible.', exampleZh: '这不可能。', tags: ['形容词'] },
+      
+      // 动作与行为
+      { id: 'esperar', word: 'esperar', meaning: '等待/希望', image: '⏳', example: 'Espérame aquí.', exampleZh: '在这里等我。', tags: ['动词'] },
+      { id: 'buscar', word: 'buscar', meaning: '寻找', image: '🔍', example: 'Busco mis llaves.', exampleZh: '我在找钥匙。', tags: ['动词'] },
+      { id: 'encontrar', word: 'encontrar', meaning: '找到', image: '✅', example: 'Encontré mi teléfono.', exampleZh: '我找到手机了。', tags: ['动词'] },
+      { id: 'perder', word: 'perder', meaning: '丢失/输', image: '😢', example: 'Perdí mi cartera.', exampleZh: '我丢了钱包。', tags: ['动词'] },
+      { id: 'ganar', word: 'ganar', meaning: '赢/赚', image: '🏆', example: 'Ganamos el partido.', exampleZh: '我们赢了比赛。', tags: ['动词'] },
+      { id: 'enviar', word: 'enviar', meaning: '发送', image: '📤', example: 'Envío un mensaje.', exampleZh: '我发送一条消息。', tags: ['动词'] },
+      { id: 'recibir', word: 'recibir', meaning: '收到', image: '📥', example: 'Recibí tu carta.', exampleZh: '我收到你的信了。', tags: ['动词'] },
+      { id: 'llamar', word: 'llamar', meaning: '打电话/叫', image: '📞', example: 'Te llamo luego.', exampleZh: '我一会儿给你打电话。', tags: ['动词'] },
+      { id: 'contestar', word: 'contestar', meaning: '回答', image: '💬', example: 'Contesta la pregunta.', exampleZh: '回答问题。', tags: ['动词'] },
+      { id: 'preguntar', word: 'preguntar', meaning: '问', image: '❓', example: 'Quiero preguntar algo.', exampleZh: '我想问点事。', tags: ['动词'] },
+      
+      // 其他常用
+      { id: 'todavia', word: 'todavía', meaning: '还/仍然', image: '⏰', example: 'Todavía no llega.', exampleZh: '他还没到。', tags: ['副词'] },
+      { id: 'ya', word: 'ya', meaning: '已经', image: '✅', example: 'Ya he comido.', exampleZh: '我已经吃过了。', tags: ['副词'] },
+      { id: 'casi', word: 'casi', meaning: '几乎', image: '📊', example: 'Casi termino.', exampleZh: '我快完成了。', tags: ['副词'] },
+      { id: 'bastante', word: 'bastante', meaning: '相当/足够', image: '👌', example: 'Es bastante bueno.', exampleZh: '相当不错。', tags: ['副词'] },
+      { id: 'demasiado', word: 'demasiado', meaning: '太多', image: '📈', example: 'Es demasiado caro.', exampleZh: '太贵了。', tags: ['副词'] },
+      { id: 'otra_vez', word: 'otra vez', meaning: '再一次', image: '🔄', example: 'Inténtalo otra vez.', exampleZh: '再试一次。', tags: ['副词'] },
+      { id: 'a_veces', word: 'a veces', meaning: '有时候', image: '🎲', example: 'A veces voy al cine.', exampleZh: '我有时候去电影院。', tags: ['副词'] },
+      { id: 'cada', word: 'cada', meaning: '每个', image: '📅', example: 'Cada día estudio.', exampleZh: '我每天学习。', tags: ['形容词'] },
+      { id: 'propio', word: 'propio', meaning: '自己的', image: '👤', example: 'Es mi propio coche.', exampleZh: '这是我自己的车。', tags: ['形容词'] },
+      { id: 'junto', word: 'junto', meaning: '一起', image: '🤝', example: 'Vamos juntos.', exampleZh: '我们一起去。', tags: ['副词'] },
+    ];
+
+    // 🇪🇸 入籍考试(CCSE)词汇 - 150个核心词
+    const CITIZENSHIP_WORDS = [
+      // 政府与机构
+      { id: 'constitucion', word: 'Constitución', meaning: '宪法', image: '📜', example: 'La Constitución española es de 1978.', exampleZh: '西班牙宪法是1978年的。', tags: ['政治'] },
+      { id: 'rey', word: 'rey', meaning: '国王', image: '👑', example: 'El Rey de España es Felipe VI.', exampleZh: '西班牙国王是菲利普六世。', tags: ['政治'] },
+      { id: 'reina', word: 'reina', meaning: '王后', image: '👸', example: 'La Reina se llama Letizia.', exampleZh: '王后叫莱蒂西亚。', tags: ['政治'] },
+      { id: 'gobierno', word: 'gobierno', meaning: '政府', image: '🏛️', example: 'El gobierno está en Madrid.', exampleZh: '政府在马德里。', tags: ['政治'] },
+      { id: 'presidente', word: 'presidente', meaning: '总统/主席', image: '🎖️', example: 'El presidente del Gobierno.', exampleZh: '政府主席（首相）。', tags: ['政治'] },
+      { id: 'parlamento', word: 'Parlamento', meaning: '议会', image: '🏛️', example: 'El Parlamento español tiene dos cámaras.', exampleZh: '西班牙议会有两院。', tags: ['政治'] },
+      { id: 'congreso', word: 'Congreso', meaning: '国会/众议院', image: '🏛️', example: 'El Congreso de los Diputados.', exampleZh: '众议院。', tags: ['政治'] },
+      { id: 'senado', word: 'Senado', meaning: '参议院', image: '🏛️', example: 'El Senado es la cámara alta.', exampleZh: '参议院是上议院。', tags: ['政治'] },
+      { id: 'comunidad', word: 'comunidad autónoma', meaning: '自治区', image: '🗺️', example: 'España tiene 17 comunidades autónomas.', exampleZh: '西班牙有17个自治区。', tags: ['地理'] },
+      { id: 'provincia', word: 'provincia', meaning: '省', image: '🗺️', example: 'España tiene 50 provincias.', exampleZh: '西班牙有50个省。', tags: ['地理'] },
+      { id: 'ayuntamiento', word: 'ayuntamiento', meaning: '市政府', image: '🏢', example: 'Voy al ayuntamiento.', exampleZh: '我去市政府。', tags: ['政治'] },
+      { id: 'alcalde', word: 'alcalde', meaning: '市长', image: '👔', example: 'El alcalde de la ciudad.', exampleZh: '城市的市长。', tags: ['政治'] },
+      
+      // 权利与义务
+      { id: 'derecho', word: 'derecho', meaning: '权利', image: '⚖️', example: 'Tenemos derecho a votar.', exampleZh: '我们有投票权。', tags: ['法律'] },
+      { id: 'deber', word: 'deber', meaning: '义务', image: '📋', example: 'Tenemos el deber de pagar impuestos.', exampleZh: '我们有纳税的义务。', tags: ['法律'] },
+      { id: 'votar', word: 'votar', meaning: '投票', image: '🗳️', example: 'Los ciudadanos pueden votar.', exampleZh: '公民可以投票。', tags: ['政治'] },
+      { id: 'elecciones', word: 'elecciones', meaning: '选举', image: '🗳️', example: 'Las elecciones son cada cuatro años.', exampleZh: '选举每四年一次。', tags: ['政治'] },
+      { id: 'ciudadano', word: 'ciudadano', meaning: '公民', image: '👤', example: 'Soy ciudadano español.', exampleZh: '我是西班牙公民。', tags: ['法律'] },
+      { id: 'nacionalidad', word: 'nacionalidad', meaning: '国籍', image: '🛂', example: 'Tengo la nacionalidad española.', exampleZh: '我有西班牙国籍。', tags: ['法律'] },
+      { id: 'residencia', word: 'residencia', meaning: '居留', image: '🏠', example: 'Tengo permiso de residencia.', exampleZh: '我有居留许可。', tags: ['法律'] },
+      { id: 'pasaporte', word: 'pasaporte', meaning: '护照', image: '🛂', example: 'Necesito mi pasaporte.', exampleZh: '我需要护照。', tags: ['文件'] },
+      { id: 'dni', word: 'DNI', meaning: '身份证', image: '🪪', example: 'El DNI es obligatorio.', exampleZh: 'DNI身份证是必须的。', tags: ['文件'] },
+      { id: 'nie', word: 'NIE', meaning: '外国人身份号', image: '🪪', example: 'Tengo un NIE.', exampleZh: '我有NIE外国人身份号。', tags: ['文件'] },
+      { id: 'impuesto', word: 'impuesto', meaning: '税', image: '💶', example: 'Hay que pagar impuestos.', exampleZh: '必须缴税。', tags: ['法律'] },
+      { id: 'ley', word: 'ley', meaning: '法律', image: '⚖️', example: 'La ley es igual para todos.', exampleZh: '法律面前人人平等。', tags: ['法律'] },
+      
+      // 历史
+      { id: 'historia', word: 'historia', meaning: '历史', image: '📚', example: 'La historia de España es rica.', exampleZh: '西班牙历史很丰富。', tags: ['历史'] },
+      { id: 'guerra_civil', word: 'Guerra Civil', meaning: '内战', image: '⚔️', example: 'La Guerra Civil fue de 1936 a 1939.', exampleZh: '内战是1936年到1939年。', tags: ['历史'] },
+      { id: 'democracia', word: 'democracia', meaning: '民主', image: '🗳️', example: 'España es una democracia.', exampleZh: '西班牙是民主国家。', tags: ['政治'] },
+      { id: 'monarquia', word: 'monarquía', meaning: '君主制', image: '👑', example: 'España es una monarquía parlamentaria.', exampleZh: '西班牙是议会君主制。', tags: ['政治'] },
+      { id: 'dictadura', word: 'dictadura', meaning: '独裁', image: '✊', example: 'La dictadura de Franco.', exampleZh: '佛朗哥独裁时期。', tags: ['历史'] },
+      { id: 'transicion', word: 'Transición', meaning: '过渡期', image: '🔄', example: 'La Transición española.', exampleZh: '西班牙民主过渡期。', tags: ['历史'] },
+      { id: 'descubrimiento', word: 'descubrimiento', meaning: '发现', image: '🧭', example: 'El descubrimiento de América en 1492.', exampleZh: '1492年发现美洲。', tags: ['历史'] },
+      { id: 'colon', word: 'Colón', meaning: '哥伦布', image: '🚢', example: 'Cristóbal Colón descubrió América.', exampleZh: '克里斯托弗·哥伦布发现了美洲。', tags: ['历史'] },
+      
+      // 地理
+      { id: 'espana', word: 'España', meaning: '西班牙', image: '🇪🇸', example: 'España está en Europa.', exampleZh: '西班牙在欧洲。', tags: ['地理'] },
+      { id: 'madrid', word: 'Madrid', meaning: '马德里', image: '🏙️', example: 'Madrid es la capital.', exampleZh: '马德里是首都。', tags: ['地理'] },
+      { id: 'barcelona', word: 'Barcelona', meaning: '巴塞罗那', image: '🏙️', example: 'Barcelona está en Cataluña.', exampleZh: '巴塞罗那在加泰罗尼亚。', tags: ['地理'] },
+      { id: 'cataluna', word: 'Cataluña', meaning: '加泰罗尼亚', image: '🗺️', example: 'Cataluña es una comunidad autónoma.', exampleZh: '加泰罗尼亚是一个自治区。', tags: ['地理'] },
+      { id: 'andalucia', word: 'Andalucía', meaning: '安达卢西亚', image: '🗺️', example: 'Andalucía está en el sur.', exampleZh: '安达卢西亚在南部。', tags: ['地理'] },
+      { id: 'valencia', word: 'Valencia', meaning: '瓦伦西亚', image: '🍊', example: 'Valencia es famosa por las naranjas.', exampleZh: '瓦伦西亚以橙子闻名。', tags: ['地理'] },
+      { id: 'galicia', word: 'Galicia', meaning: '加利西亚', image: '🗺️', example: 'Galicia está en el noroeste.', exampleZh: '加利西亚在西北部。', tags: ['地理'] },
+      { id: 'pais_vasco', word: 'País Vasco', meaning: '巴斯克', image: '🗺️', example: 'El País Vasco tiene su propia lengua.', exampleZh: '巴斯克有自己的语言。', tags: ['地理'] },
+      { id: 'islas_canarias', word: 'Islas Canarias', meaning: '加那利群岛', image: '🏝️', example: 'Las Canarias están en el Atlántico.', exampleZh: '加那利群岛在大西洋。', tags: ['地理'] },
+      { id: 'islas_baleares', word: 'Islas Baleares', meaning: '巴利阿里群岛', image: '🏝️', example: 'Mallorca es una isla balear.', exampleZh: '马略卡是巴利阿里群岛的一个岛。', tags: ['地理'] },
+      { id: 'pirineos', word: 'Pirineos', meaning: '比利牛斯山', image: '🏔️', example: 'Los Pirineos están en el norte.', exampleZh: '比利牛斯山在北部。', tags: ['地理'] },
+      { id: 'mediterraneo', word: 'Mediterráneo', meaning: '地中海', image: '🌊', example: 'El mar Mediterráneo.', exampleZh: '地中海。', tags: ['地理'] },
+      { id: 'atlantico', word: 'Atlántico', meaning: '大西洋', image: '🌊', example: 'El océano Atlántico.', exampleZh: '大西洋。', tags: ['地理'] },
+      
+      // 文化与节日
+      { id: 'cultura', word: 'cultura', meaning: '文化', image: '🎭', example: 'La cultura española es diversa.', exampleZh: '西班牙文化是多元的。', tags: ['文化'] },
+      { id: 'fiesta', word: 'fiesta', meaning: '节日/派对', image: '🎉', example: 'Las fiestas españolas son famosas.', exampleZh: '西班牙节日很有名。', tags: ['文化'] },
+      { id: 'navidad', word: 'Navidad', meaning: '圣诞节', image: '🎄', example: 'La Navidad es el 25 de diciembre.', exampleZh: '圣诞节是12月25日。', tags: ['节日'] },
+      { id: 'semana_santa', word: 'Semana Santa', meaning: '圣周', image: '✝️', example: 'La Semana Santa es muy importante.', exampleZh: '圣周非常重要。', tags: ['节日'] },
+      { id: 'dia_nacional', word: 'Día Nacional', meaning: '国庆节', image: '🇪🇸', example: 'El Día Nacional es el 12 de octubre.', exampleZh: '国庆节是10月12日。', tags: ['节日'] },
+      { id: 'dia_constitucion', word: 'Día de la Constitución', meaning: '宪法日', image: '📜', example: 'El 6 de diciembre es el Día de la Constitución.', exampleZh: '12月6日是宪法日。', tags: ['节日'] },
+      { id: 'toros', word: 'toros', meaning: '斗牛', image: '🐂', example: 'Los toros son una tradición.', exampleZh: '斗牛是一种传统。', tags: ['文化'] },
+      { id: 'flamenco', word: 'flamenco', meaning: '弗拉门戈', image: '💃', example: 'El flamenco es de Andalucía.', exampleZh: '弗拉门戈来自安达卢西亚。', tags: ['文化'] },
+      { id: 'paella', word: 'paella', meaning: '海鲜饭', image: '🥘', example: 'La paella es de Valencia.', exampleZh: '海鲜饭来自瓦伦西亚。', tags: ['文化'] },
+      { id: 'siesta', word: 'siesta', meaning: '午睡', image: '😴', example: 'La siesta es una tradición.', exampleZh: '午睡是一种传统。', tags: ['文化'] },
+      { id: 'tapas', word: 'tapas', meaning: '小吃', image: '🍢', example: 'Vamos a tomar unas tapas.', exampleZh: '我们去吃点小吃。', tags: ['文化'] },
+      
+      // 语言
+      { id: 'castellano', word: 'castellano', meaning: '卡斯蒂利亚语/西班牙语', image: '🗣️', example: 'El castellano es el idioma oficial.', exampleZh: '卡斯蒂利亚语是官方语言。', tags: ['语言'] },
+      { id: 'catalan', word: 'catalán', meaning: '加泰罗尼亚语', image: '🗣️', example: 'En Cataluña hablan catalán.', exampleZh: '在加泰罗尼亚说加泰罗尼亚语。', tags: ['语言'] },
+      { id: 'gallego', word: 'gallego', meaning: '加利西亚语', image: '🗣️', example: 'El gallego se habla en Galicia.', exampleZh: '加利西亚语在加利西亚使用。', tags: ['语言'] },
+      { id: 'euskera', word: 'euskera', meaning: '巴斯克语', image: '🗣️', example: 'El euskera es muy antiguo.', exampleZh: '巴斯克语非常古老。', tags: ['语言'] },
+      { id: 'valenciano', word: 'valenciano', meaning: '瓦伦西亚语', image: '🗣️', example: 'El valenciano se habla en Valencia.', exampleZh: '瓦伦西亚语在瓦伦西亚使用。', tags: ['语言'] },
+      
+      // 欧盟与国际
+      { id: 'union_europea', word: 'Unión Europea', meaning: '欧盟', image: '🇪🇺', example: 'España es miembro de la UE.', exampleZh: '西班牙是欧盟成员。', tags: ['政治'] },
+      { id: 'euro', word: 'euro', meaning: '欧元', image: '💶', example: 'España usa el euro.', exampleZh: '西班牙使用欧元。', tags: ['经济'] },
+      { id: 'otan', word: 'OTAN', meaning: '北约', image: '🛡️', example: 'España pertenece a la OTAN.', exampleZh: '西班牙属于北约。', tags: ['政治'] },
+      { id: 'onu', word: 'ONU', meaning: '联合国', image: '🌍', example: 'España es miembro de la ONU.', exampleZh: '西班牙是联合国成员。', tags: ['政治'] },
+      { id: 'tratado', word: 'tratado', meaning: '条约', image: '📄', example: 'España firmó el tratado.', exampleZh: '西班牙签署了条约。', tags: ['政治'] },
+      
+      // 教育与社会
+      { id: 'educacion', word: 'educación', meaning: '教育', image: '📚', example: 'La educación es un derecho.', exampleZh: '教育是一项权利。', tags: ['社会'] },
+      { id: 'sanidad', word: 'sanidad', meaning: '医疗卫生', image: '🏥', example: 'La sanidad pública es gratis.', exampleZh: '公共医疗是免费的。', tags: ['社会'] },
+      { id: 'seguridad_social', word: 'Seguridad Social', meaning: '社会保障', image: '🛡️', example: 'La Seguridad Social protege a los ciudadanos.', exampleZh: '社会保障保护公民。', tags: ['社会'] },
+      { id: 'pension', word: 'pensión', meaning: '养老金', image: '👴', example: 'Los jubilados reciben una pensión.', exampleZh: '退休人员领取养老金。', tags: ['社会'] },
+      { id: 'desempleo', word: 'desempleo', meaning: '失业', image: '📉', example: 'El desempleo es un problema.', exampleZh: '失业是一个问题。', tags: ['社会'] },
+      { id: 'trabajo', word: 'trabajo', meaning: '工作', image: '💼', example: 'Busco trabajo.', exampleZh: '我在找工作。', tags: ['社会'] },
+      { id: 'contrato', word: 'contrato', meaning: '合同', image: '📝', example: 'Firmé un contrato.', exampleZh: '我签了合同。', tags: ['法律'] },
+      { id: 'sueldo', word: 'sueldo', meaning: '工资', image: '💰', example: '¿Cuál es tu sueldo?', exampleZh: '你的工资是多少？', tags: ['社会'] },
+      
+      // 重要人物
+      { id: 'cervantes', word: 'Cervantes', meaning: '塞万提斯', image: '✍️', example: 'Cervantes escribió Don Quijote.', exampleZh: '塞万提斯写了《堂吉诃德》。', tags: ['文化'] },
+      { id: 'don_quijote', word: 'Don Quijote', meaning: '堂吉诃德', image: '📖', example: 'Don Quijote es una novela famosa.', exampleZh: '《堂吉诃德》是一部著名小说。', tags: ['文化'] },
+      { id: 'picasso', word: 'Picasso', meaning: '毕加索', image: '🎨', example: 'Picasso fue un pintor famoso.', exampleZh: '毕加索是著名画家。', tags: ['文化'] },
+      { id: 'gaudi', word: 'Gaudí', meaning: '高迪', image: '🏛️', example: 'Gaudí diseñó la Sagrada Familia.', exampleZh: '高迪设计了圣家堂。', tags: ['文化'] },
+      { id: 'sagrada_familia', word: 'Sagrada Familia', meaning: '圣家堂', image: '⛪', example: 'La Sagrada Familia está en Barcelona.', exampleZh: '圣家堂在巴塞罗那。', tags: ['文化'] },
+      { id: 'alhambra', word: 'Alhambra', meaning: '阿尔罕布拉宫', image: '🏰', example: 'La Alhambra está en Granada.', exampleZh: '阿尔罕布拉宫在格拉纳达。', tags: ['文化'] },
+      { id: 'prado', word: 'Museo del Prado', meaning: '普拉多博物馆', image: '🖼️', example: 'El Prado está en Madrid.', exampleZh: '普拉多博物馆在马德里。', tags: ['文化'] },
+      
+      // 更多政治词汇
+      { id: 'partido', word: 'partido político', meaning: '政党', image: '🏛️', example: 'Hay muchos partidos políticos.', exampleZh: '有很多政党。', tags: ['政治'] },
+      { id: 'ministro', word: 'ministro', meaning: '部长', image: '👔', example: 'El ministro de Educación.', exampleZh: '教育部长。', tags: ['政治'] },
+      { id: 'diputado', word: 'diputado', meaning: '众议员', image: '👔', example: 'Los diputados votan las leyes.', exampleZh: '众议员投票表决法律。', tags: ['政治'] },
+      { id: 'senador', word: 'senador', meaning: '参议员', image: '👔', example: 'Los senadores representan las provincias.', exampleZh: '参议员代表各省。', tags: ['政治'] },
+      { id: 'himno', word: 'himno nacional', meaning: '国歌', image: '🎵', example: 'El himno de España no tiene letra.', exampleZh: '西班牙国歌没有歌词。', tags: ['文化'] },
+      { id: 'bandera', word: 'bandera', meaning: '国旗', image: '🇪🇸', example: 'La bandera española es roja y amarilla.', exampleZh: '西班牙国旗是红黄色的。', tags: ['文化'] },
+      { id: 'escudo', word: 'escudo', meaning: '国徽', image: '🛡️', example: 'El escudo de España.', exampleZh: '西班牙国徽。', tags: ['文化'] },
+      
+      // 宗教
+      { id: 'religion', word: 'religión', meaning: '宗教', image: '⛪', example: 'España tiene libertad de religión.', exampleZh: '西班牙有宗教自由。', tags: ['文化'] },
+      { id: 'catolico', word: 'católico', meaning: '天主教的', image: '✝️', example: 'Muchos españoles son católicos.', exampleZh: '许多西班牙人是天主教徒。', tags: ['文化'] },
+      { id: 'iglesia', word: 'iglesia', meaning: '教堂', image: '⛪', example: 'Voy a la iglesia los domingos.', exampleZh: '我周日去教堂。', tags: ['文化'] },
+      
+      // 其他重要词汇
+      { id: 'libertad', word: 'libertad', meaning: '自由', image: '🕊️', example: 'La libertad es un derecho fundamental.', exampleZh: '自由是基本权利。', tags: ['法律'] },
+      { id: 'igualdad', word: 'igualdad', meaning: '平等', image: '⚖️', example: 'Todos tenemos derecho a la igualdad.', exampleZh: '我们都有平等的权利。', tags: ['法律'] },
+      { id: 'justicia', word: 'justicia', meaning: '公正/司法', image: '⚖️', example: 'La justicia es importante.', exampleZh: '公正很重要。', tags: ['法律'] },
+      { id: 'solidaridad', word: 'solidaridad', meaning: '团结', image: '🤝', example: 'La solidaridad entre los pueblos.', exampleZh: '人民之间的团结。', tags: ['社会'] },
+      { id: 'respeto', word: 'respeto', meaning: '尊重', image: '🙏', example: 'El respeto a los demás.', exampleZh: '对他人的尊重。', tags: ['社会'] },
+      { id: 'tolerancia', word: 'tolerancia', meaning: '包容', image: '🤗', example: 'La tolerancia es fundamental.', exampleZh: '包容是根本。', tags: ['社会'] },
+    ];
+
     // 获取词库单词
     function getWordBook(bookId) {
       switch(bookId) {
         case 'A1': return A1_WORDS;
-        case 'A2': return A1_WORDS; // 暂时使用A1，后续扩展
-        case 'B1': return A1_WORDS;
-        case 'citizenship': return A1_WORDS;
+        case 'A2': return [...A1_WORDS, ...A2_WORDS]; // A2包含A1词汇
+        case 'B1': return [...A1_WORDS, ...A2_WORDS]; // 暂时使用A1+A2
+        case 'citizenship': return CITIZENSHIP_WORDS;
         default: return A1_WORDS;
       }
     }
@@ -2947,7 +3187,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                       <span class="text-xl">${b.icon}</span>
                       <span class="font-bold text-gray-800 text-sm">${b.name}</span>
                     </div>
-                    <div class="text-xs text-gray-500">${b.desc}</div>
+                    <div class="text-xs text-gray-500 mb-1">${b.desc}</div>
+                    <div class="text-xs text-primary-600 font-medium">${b.count} 词</div>
                   </button>
                 `).join('')}
               </div>
