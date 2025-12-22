@@ -3489,6 +3489,24 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               </button>
             </div>
             
+            <!-- 困难模式快捷开关 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">🔥</span>
+                  <div>
+                    <span class="font-bold text-gray-800">困难模式</span>
+                    <div class="text-xs text-gray-400">隐藏emoji图片提示，增加难度</div>
+                  </div>
+                </div>
+                <button onclick="toggleHideEmoji()" 
+                  class="w-14 h-8 rounded-full ${state.wordSettings.hideEmoji ? 'bg-red-500' : 'bg-gray-300'} flex items-center transition-all">
+                  <div class="w-6 h-6 rounded-full bg-white shadow-md transform transition-all ${state.wordSettings.hideEmoji ? 'translate-x-7' : 'translate-x-1'}"></div>
+                </button>
+              </div>
+              ${state.wordSettings.hideEmoji ? '<div class="mt-2 text-xs text-red-500 text-center">🔥 困难模式已开启</div>' : ''}
+            </div>
+            
             <!-- 今日任务 -->
             <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
               <h3 class="font-bold text-gray-800 mb-3">🎯 今日任务</h3>
@@ -3584,16 +3602,6 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                     <span class="w-12 text-center font-bold">${state.wordSettings.dailyReview}</span>
                     <button onclick="state.wordSettings.dailyReview=Math.min(100,state.wordSettings.dailyReview+10);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
                   </div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div>
-                    <span class="text-gray-600">困难模式</span>
-                    <div class="text-xs text-gray-400">隐藏图片提示</div>
-                  </div>
-                  <button onclick="toggleHideEmoji()" 
-                    class="w-14 h-8 rounded-full ${state.wordSettings.hideEmoji ? 'bg-primary-500' : 'bg-gray-200'} relative transition-all">
-                    <div class="w-6 h-6 rounded-full bg-white shadow absolute top-1 transition-all ${state.wordSettings.hideEmoji ? 'right-1' : 'left-1'}"></div>
-                  </button>
                 </div>
               </div>
             </div>
