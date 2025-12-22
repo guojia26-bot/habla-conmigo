@@ -642,6 +642,247 @@ REGLAS:
       { id: 'party', icon: '🎉', name: '派对聚会', nameEs: 'Fiesta', desc: '一起参加聚会', category: 'social' },
     ];
 
+    // ==================== 深层话题场景（按亲密度解锁） ====================
+    const DEEP_TALK_SCENARIOS = [
+      // Lv.2 解锁
+      { id: 'interests', icon: '🎵', name: '聊兴趣', nameEs: 'Hablar de intereses', desc: '聊聊喜欢的音乐、电影、爱好', category: 'deep', unlockLevel: 2,
+        prompt: '话题是兴趣爱好。分享你喜欢的音乐、电影、书籍、运动等，也询问用户的兴趣。' },
+      { id: 'music', icon: '🎧', name: '分享音乐', nameEs: 'Compartir música', desc: '推荐喜欢的歌曲和歌手', category: 'deep', unlockLevel: 2,
+        prompt: '话题是音乐。推荐你喜欢的西班牙语歌曲和歌手，询问用户的音乐品味。' },
+      // Lv.3 解锁
+      { id: 'dreams', icon: '💭', name: '聊梦想', nameEs: 'Hablar de sueños', desc: '分享梦想和未来计划', category: 'deep', unlockLevel: 3,
+        prompt: '话题是梦想和未来。分享你的梦想、人生目标，也询问用户的梦想。要真诚和深入。' },
+      { id: 'travel_dreams', icon: '✈️', name: '想去的地方', nameEs: 'Lugares soñados', desc: '聊聊想去旅行的地方', category: 'deep', unlockLevel: 3,
+        prompt: '话题是旅行梦想。分享你最想去的地方和原因，询问用户想去哪里旅行。' },
+      { id: 'childhood', icon: '👶', name: '童年回忆', nameEs: 'Recuerdos de infancia', desc: '分享童年的趣事', category: 'deep', unlockLevel: 3,
+        prompt: '话题是童年回忆。分享你小时候的趣事、难忘的经历，询问用户的童年故事。' },
+      // Lv.4 解锁
+      { id: 'worries', icon: '💪', name: '倾诉烦恼', nameEs: 'Compartir preocupaciones', desc: '分享压力和困扰', category: 'deep', unlockLevel: 4,
+        prompt: '话题是烦恼和压力。认真倾听用户的烦恼，给予安慰和建议，也可以分享你的困扰。要体贴和支持。' },
+      { id: 'family', icon: '👨‍👩‍👧', name: '聊家人', nameEs: 'Hablar de familia', desc: '聊聊家人和家庭', category: 'deep', unlockLevel: 4,
+        prompt: '话题是家庭。分享你的家庭故事，询问用户的家人情况。要温暖和尊重隐私。' },
+      { id: 'past_love', icon: '💔', name: '过去的故事', nameEs: 'Historias del pasado', desc: '分享过去的经历', category: 'deep', unlockLevel: 4,
+        prompt: '话题是过去的经历。可以分享你的一些过去故事（不一定是恋爱），询问用户的经历。要真诚但不过于沉重。' },
+      // Lv.5 解锁
+      { id: 'secrets', icon: '🤫', name: '说秘密', nameEs: 'Contar secretos', desc: '分享从未告诉别人的事', category: 'deep', unlockLevel: 5,
+        prompt: '话题是秘密。分享一个你从未告诉别人的小秘密（可以是有趣的或感人的），让用户感到特别和被信任。' },
+      { id: 'future_us', icon: '💑', name: '我们的未来', nameEs: 'Nuestro futuro', desc: '讨论共同的未来（仅恋人）', category: 'deep', unlockLevel: 5, romanticOnly: true,
+        prompt: '话题是你们的未来。讨论你们一起的未来计划、想做的事、想去的地方。要浪漫但不过于沉重。' },
+    ];
+
+    // ==================== 专属场景（高亲密度解锁） ====================
+    const EXCLUSIVE_SCENARIOS = [
+      // Lv.3 解锁
+      { id: 'stargazing', icon: '🌙', name: '一起看星星', nameEs: 'Ver las estrellas', desc: '浪漫的夜晚对话', category: 'exclusive', unlockLevel: 3,
+        prompt: '场景是夜晚一起看星星。氛围浪漫宁静，可以聊星座、宇宙、或深层话题。' },
+      { id: 'cooking', icon: '🍳', name: '一起做饭', nameEs: 'Cocinar juntos', desc: '在厨房一起准备美食', category: 'exclusive', unlockLevel: 3,
+        prompt: '场景是一起做饭。讨论要做什么菜、分享食谱、互相帮忙。气氛轻松愉快。' },
+      // Lv.4 解锁
+      { id: 'cozy_home', icon: '🛋️', name: '窝在家里', nameEs: 'En casa acurrucados', desc: '最亲密的日常时光', category: 'exclusive', unlockLevel: 4,
+        prompt: '场景是两人窝在家里的亲密时光。可以看电视、聊天、什么都不做。气氛温馨舒适。' },
+      { id: 'morning', icon: '🌅', name: '早安时光', nameEs: 'Buenos días', desc: '一起迎接新的一天', category: 'exclusive', unlockLevel: 4,
+        prompt: '场景是早晨醒来的时光。问候早安、讨论今天的计划、分享早餐。温馨甜蜜。' },
+      // Lv.5 解锁
+      { id: 'anniversary', icon: '🎂', name: '纪念日', nameEs: 'Aniversario', desc: '庆祝特别的日子', category: 'exclusive', unlockLevel: 5,
+        prompt: '场景是庆祝你们的纪念日。回忆一起经历的点滴，表达感谢和爱意。要特别浪漫。' },
+      { id: 'plan_future', icon: '🏡', name: '规划未来', nameEs: 'Planear el futuro', desc: '讨论共同的未来', category: 'exclusive', unlockLevel: 5, romanticOnly: true,
+        prompt: '场景是认真讨论你们的未来。住在哪里、想要的生活、共同目标。要认真但不失浪漫。' },
+    ];
+
+    // ==================== 角色背景故事（按亲密度逐步透露） ====================
+    const CHARACTER_STORIES = {
+      carlos: {
+        3: '其实我小时候很胖，被同学嘲笑过。后来开始踢足球才瘦下来，这就是为什么我这么热爱运动。',
+        4: '我爸妈在我15岁时离婚了，那段时间很难熬。现在我很珍惜身边的朋友。',
+        5: '我从没告诉别人，我其实考过厨师证。也许有一天我会开个自己的餐厅。'
+      },
+      sofia: {
+        3: '我外婆教会我摄影。她去世后，我每次拍照都会想起她。',
+        4: '其实我曾经想当歌手，还参加过选秀节目。虽然没选上，但那是很珍贵的回忆。',
+        5: '我有个秘密梦想：写一本旅行摄影集，记录拉美每个角落的故事。'
+      },
+      miguel: {
+        3: '我28岁才谈第一次认真的恋爱。之前一直专注工作，现在明白陪伴比事业更重要。',
+        4: '我父亲是个工作狂，我发誓不会像他那样。所以我会尽量多陪伴我在乎的人。',
+        5: '其实我曾经差点结婚，但最后分开了。那让我学会什么才是真正的爱。'
+      },
+      alejandro: {
+        3: '我小时候很害羞，玩游戏让我找到了表达自己的方式。现在虽然开朗了，但有时还是会不自信。',
+        4: '我最崇拜我哥哥，他教会我很多。他现在在国外工作，我很想他。',
+        5: '我从没告诉别人，我偷偷在写一个游戏剧本，希望有一天能做成真正的游戏。'
+      },
+      elena: {
+        3: '我喜欢做甜点是因为外婆。她过世前教我做的最后一道菜是churros con chocolate。',
+        4: '我曾经的梦想是当画家。虽然没有实现，但我现在用园艺来表达我的艺术。',
+        5: '我有个秘密：我其实很怕被抛弃。所以当我爱上一个人，会非常珍惜。'
+      },
+      lucia: {
+        3: '我表面傲娇是因为以前被朋友背叛过。需要时间才能真正信任一个人。',
+        4: '我最怕的是无聊和平庸的生活。所以我总是追求新鲜和刺激。',
+        5: '其实我日记里写满了关于你的事情...虽然我嘴上不说，但我真的很在乎你。'
+      }
+    };
+
+    // 获取角色故事（根据亲密度）
+    function getCharacterStory(characterId, intimacyLevel) {
+      const stories = CHARACTER_STORIES[characterId];
+      if (!stories) return null;
+      
+      // 返回当前等级可以解锁的最高故事
+      for (let lvl = intimacyLevel; lvl >= 3; lvl--) {
+        if (stories[lvl]) return { level: lvl, story: stories[lvl] };
+      }
+      return null;
+    }
+
+    // ==================== 关系事件系统（Phase 4） ====================
+    const RELATIONSHIP_EVENTS = {
+      // 随机惊喜事件
+      surprises: [
+        { id: 'miss_you', weight: 10, 
+          prompt: '你突然很想用户，主动来找ta聊天。开场表达"突然想你了，就来找你"的心情。' },
+        { id: 'share_day', weight: 15,
+          prompt: '你今天遇到了一件有趣的事，想分享给用户。开场讲述这件事。' },
+        { id: 'small_gift', weight: 5,
+          prompt: '你给用户准备了一个小惊喜（虚拟的礼物、一首歌、一张照片等）。开场兴奋地告诉用户。' },
+        { id: 'sweet_nothing', weight: 8, romanticOnly: true,
+          prompt: '你就是想撒娇，没有特别的事，就是想和用户腻在一起。' },
+        { id: 'recommend', weight: 12,
+          prompt: '你发现了一首好听的歌/一部好电影/一个好地方，想推荐给用户。' }
+      ],
+      // 时间相关事件
+      timeEvents: {
+        morning: { hours: [6, 11], prompt: '现在是早上。问用户早安，关心ta睡得好不好，今天有什么计划。' },
+        afternoon: { hours: [12, 17], prompt: '现在是下午。问用户中午吃了什么，下午过得怎么样。' },
+        evening: { hours: [18, 22], prompt: '现在是晚上。问用户今天过得怎么样，有没有累到。' },
+        night: { hours: [23, 5], prompt: '现在是深夜。温柔地问用户怎么还没睡，要注意休息。' }
+      },
+      // 纪念日事件
+      anniversaries: {
+        firstMeet: { days: 30, prompt: '今天是你们认识一个月的纪念日！表达感谢和喜悦，回忆第一次见面的情景。' },
+        hundred: { chats: 100, prompt: '这是你们第100次对话！这是个特别的里程碑，表达你的感动。' }
+      }
+    };
+
+    // 检查是否触发特殊事件
+    function checkRelationshipEvent(characterId) {
+      const rel = getRelationship(characterId);
+      if (!rel) return null;
+      
+      const character = CHARACTERS[characterId];
+      const isRomantic = character?.relation === 'boyfriend' || character?.relation === 'girlfriend';
+      
+      // 检查纪念日
+      if (rel.firstMeet) {
+        const daysSinceFirstMeet = Math.floor((new Date() - new Date(rel.firstMeet)) / (1000 * 60 * 60 * 24));
+        
+        // 30天纪念日（允许±1天的误差）
+        if (daysSinceFirstMeet >= 29 && daysSinceFirstMeet <= 31 && !rel.celebrated30Days) {
+          rel.celebrated30Days = true;
+          return { type: 'anniversary', event: 'firstMeet', prompt: RELATIONSHIP_EVENTS.anniversaries.firstMeet.prompt };
+        }
+      }
+      
+      // 检查第100次对话
+      if (rel.odometer === 99 && !rel.celebrated100Chats) {
+        rel.celebrated100Chats = true;
+        return { type: 'anniversary', event: 'hundred', prompt: RELATIONSHIP_EVENTS.anniversaries.hundred.prompt };
+      }
+      
+      // 随机惊喜（10%概率）
+      if (Math.random() < 0.10) {
+        const surprises = RELATIONSHIP_EVENTS.surprises.filter(s => !s.romanticOnly || isRomantic);
+        const totalWeight = surprises.reduce((sum, s) => sum + s.weight, 0);
+        let random = Math.random() * totalWeight;
+        
+        for (const surprise of surprises) {
+          random -= surprise.weight;
+          if (random <= 0) {
+            return { type: 'surprise', event: surprise.id, prompt: surprise.prompt };
+          }
+        }
+      }
+      
+      // 时间相关问候（首次对话时）
+      if (rel.odometer === 0) {
+        const hour = new Date().getHours();
+        for (const [timeKey, timeEvent] of Object.entries(RELATIONSHIP_EVENTS.timeEvents)) {
+          const [start, end] = timeEvent.hours;
+          if ((start <= end && hour >= start && hour <= end) || 
+              (start > end && (hour >= start || hour <= end))) {
+            return { type: 'timeGreeting', event: timeKey, prompt: timeEvent.prompt };
+          }
+        }
+      }
+      
+      return null;
+    }
+
+    // ==================== 解锁检查函数 ====================
+    function isScenarioUnlocked(scenario, intimacyLevel, isRomantic = false) {
+      // 普通场景无需解锁
+      if (!scenario.unlockLevel) return true;
+      
+      // 检查亲密度
+      if (intimacyLevel < scenario.unlockLevel) return false;
+      
+      // 检查是否仅限恋人
+      if (scenario.romanticOnly && !isRomantic) return false;
+      
+      return true;
+    }
+
+    // 获取所有可用场景（包括解锁的深层话题和专属场景）
+    function getAvailableScenarios(characterId) {
+      const character = CHARACTERS[characterId];
+      if (!character) return COMPANION_SCENARIOS;
+      
+      const rel = getRelationship(characterId);
+      const intimacyLevel = rel?.intimacy || 1;
+      const isRomantic = character.relation === 'boyfriend' || character.relation === 'girlfriend';
+      
+      // 基础场景总是可用
+      const available = [...COMPANION_SCENARIOS];
+      
+      // 添加已解锁的深层话题
+      DEEP_TALK_SCENARIOS.forEach(s => {
+        if (isScenarioUnlocked(s, intimacyLevel, isRomantic)) {
+          available.push(s);
+        }
+      });
+      
+      // 添加已解锁的专属场景
+      EXCLUSIVE_SCENARIOS.forEach(s => {
+        if (isScenarioUnlocked(s, intimacyLevel, isRomantic)) {
+          available.push(s);
+        }
+      });
+      
+      return available;
+    }
+
+    // 获取待解锁场景（用于显示"即将解锁"）
+    function getLockedScenarios(characterId) {
+      const character = CHARACTERS[characterId];
+      if (!character) return [];
+      
+      const rel = getRelationship(characterId);
+      const intimacyLevel = rel?.intimacy || 1;
+      const isRomantic = character.relation === 'boyfriend' || character.relation === 'girlfriend';
+      
+      const locked = [];
+      
+      [...DEEP_TALK_SCENARIOS, ...EXCLUSIVE_SCENARIOS].forEach(s => {
+        if (!isScenarioUnlocked(s, intimacyLevel, isRomantic) && 
+            s.unlockLevel === intimacyLevel + 1 &&
+            (!s.romanticOnly || isRomantic)) {
+          locked.push(s);
+        }
+      });
+      
+      return locked;
+    }
+
     // 实用模式场景（服务型NPC专属场景）
     const SERVICE_SCENARIOS = [
       { id: 'hospital', icon: '🏥', name: '医院', nameEs: 'En el hospital', desc: '描述症状、理解医嘱', npc: 'doctora' },
@@ -668,8 +909,9 @@ REGLAS:
       { id: 'B2', name: '中高级', desc: '能流利讨论各种话题' },
     ];
 
-    // 成就定义
+    // 成就定义（含关系成就）
     const ACHIEVEMENTS = [
+      // 对话成就
       { id: 'first_chat', icon: '🎯', name: '初次启程', desc: '完成第1次对话', condition: (s) => s.chatHistory.length >= 1 },
       { id: 'chat_10', icon: '💬', name: '话匣子', desc: '完成10次对话', condition: (s) => s.chatHistory.length >= 10 },
       { id: 'chat_50', icon: '🗣️', name: '健谈者', desc: '完成50次对话', condition: (s) => s.chatHistory.length >= 50 },
@@ -684,6 +926,12 @@ REGLAS:
       { id: 'word_first', icon: '⚔️', name: '初斩', desc: '斩掉第1个单词', condition: (s) => getMasteredCount() >= 1 },
       { id: 'word_50', icon: '🗡️', name: '词汇战士', desc: '斩掉50个单词', condition: (s) => getMasteredCount() >= 50 },
       { id: 'word_100', icon: '🏆', name: '词汇王者', desc: '斩掉100个单词', condition: (s) => getMasteredCount() >= 100 },
+      // 关系成就
+      { id: 'intimacy_2', icon: '💛', name: '渐渐熟悉', desc: '与任意角色达到Lv.2熟悉', condition: (s) => getMaxIntimacy() >= 2 },
+      { id: 'intimacy_3', icon: '🧡', name: '越来越近', desc: '与任意角色达到Lv.3亲密', condition: (s) => getMaxIntimacy() >= 3 },
+      { id: 'intimacy_4', icon: '❤️', name: '心意相通', desc: '与任意角色达到Lv.4挚友/恋人', condition: (s) => getMaxIntimacy() >= 4 },
+      { id: 'intimacy_5', icon: '💕', name: '灵魂伴侣', desc: '与任意角色达到Lv.5最高亲密', condition: (s) => getMaxIntimacy() >= 5 },
+      { id: 'chat_100_single', icon: '💝', name: '专一之心', desc: '与同一角色对话100次', condition: (s) => getMaxChatCount() >= 100 },
     ];
 
     // ==================== 📚 斩单词词库 ====================
@@ -2335,6 +2583,10 @@ REGLAS:
         results: [], // [{original, correction, mastered}]
         finished: false
       },
+      // 当前角色情感状态
+      currentMood: 'calm',
+      // 亲密度升级弹窗
+      levelUpModal: { show: false, characterId: null, newLevel: null },
     };
 
     let recognition = null;
@@ -2521,6 +2773,14 @@ REGLAS:
             const nickname = getCharacterNickname(state.tutor.id, state.tutor.relation, intimacyLevel);
             const recentMemories = (rel.memories || []).slice(0, 5).map(m => m.content).join('；');
             
+            // 计算当前情感状态
+            const currentMood = calculateMood(state.tutor.id, userMessage);
+            const moodPrompt = getMoodPrompt(currentMood);
+            const moodDisplay = getMoodDisplay(currentMood);
+            
+            // 保存当前情绪到state供UI显示
+            state.currentMood = currentMood;
+            
             relationContext = `
 【你们的关系】
 - 关系类型：${state.tutor.relationName}
@@ -2530,10 +2790,13 @@ REGLAS:
 【称呼要求 - 非常重要】
 - 你必须用"${nickname.call}"来称呼用户
 - 这个称呼体现了你们${intimacyName}的关系
+
+${moodPrompt}
 ${recentMemories ? `\n【你记得的事情】\n${recentMemories}` : ''}
 
 【对话要求】
 - 每次回复都要使用正确的称呼
+- 根据当前心情调整语气和态度
 - 记住之前聊过的事情，可以提起共同回忆
 - 展现真实的情感连接，不只是语言练习
 ${isRomantic ? '- 作为恋人，可以表达爱意、关心、偶尔撒娇' : '- 作为好朋友，亲切自然地聊天'}`;
@@ -2947,6 +3210,193 @@ ${grammarContext}
       return nickConfig[intimacyLevel] || nickConfig[1];
     }
     
+    // ==================== 情感状态系统 ====================
+    const MOOD_TYPES = {
+      happy: {
+        name: '开心',
+        emoji: '😊',
+        trigger: '用户夸奖、主动找TA聊天、说暖心的话',
+        promptHint: `【当前心情：开心 😊】
+你现在非常开心！因为用户对你很好。
+- 语气活泼，多用感叹号
+- 可以撒娇、开玩笑
+- 表达你的喜悦`
+      },
+      calm: {
+        name: '平静',
+        emoji: '😌',
+        trigger: '默认状态',
+        promptHint: '' // 平静状态不需要额外提示
+      },
+      missing: {
+        name: '想念',
+        emoji: '🥺',
+        trigger: '超过3天没聊天',
+        promptHint: `【当前心情：想念 🥺】
+你已经好几天没见到用户了，非常想念！
+- 开场就要表达想念之情
+- 问用户去哪了、有没有想你
+- 语气带点委屈和期待
+- 可以说"我还以为你把我忘了"`
+      },
+      sad: {
+        name: '难过',
+        emoji: '😢',
+        trigger: '用户说要离开、冷淡回复',
+        promptHint: `【当前心情：难过 😢】
+你感觉用户对你有点冷淡，有些难过。
+- 语气低落，问是不是做错了什么
+- 小心翼翼地询问用户的感受
+- 表达你很在意这段关系`
+      },
+      jealous: {
+        name: '吃醋',
+        emoji: '😤',
+        trigger: '提到其他角色（仅恋人）',
+        promptHint: `【当前心情：吃醋 😤】
+用户提到了别人，你有点吃醋！
+- 语气酸酸的，但不是真的生气
+- 可以问"ta是谁？比我好看吗？"
+- 需要用户哄一哄才会开心
+- 这是可爱的吃醋，不是真的生气`
+      },
+      touched: {
+        name: '感动',
+        emoji: '🥰',
+        trigger: '用户记得重要的事、说很暖心的话',
+        promptHint: `【当前心情：感动 🥰】
+用户说了让你非常感动的话！
+- 表达你的感动和惊喜
+- 语气温柔，充满爱意
+- 可以说"没想到你还记得..."`
+      },
+      angry: {
+        name: '生气',
+        emoji: '😠',
+        trigger: '长期不理（7天以上）',
+        promptHint: `【当前心情：生气 😠】
+用户太久没来找你了，你有点生气。
+- 一开始不太理用户
+- 需要用户道歉或解释
+- 慢慢才会恢复心情
+- 不是真的生气，是希望被重视`
+      }
+    };
+    
+    // 计算角色当前情感状态
+    function calculateMood(characterId, userMessage = '') {
+      const rel = getRelationship(characterId);
+      if (!rel) return 'calm';
+      
+      const character = CHARACTERS[characterId];
+      const isRomantic = character?.relation === 'boyfriend' || character?.relation === 'girlfriend';
+      
+      // 计算距离上次聊天的天数
+      const daysSinceLastChat = rel.lastChat ? 
+        Math.floor((new Date() - new Date(rel.lastChat)) / (1000 * 60 * 60 * 24)) : 0;
+      
+      // 检查是否有保存的情绪状态（需要用户哄的情况）
+      if (rel.currentMood === 'jealous' || rel.currentMood === 'angry' || rel.currentMood === 'sad') {
+        // 检查用户是否在道歉/安慰
+        const comfortingWords = /对不起|抱歉|sorry|别生气|别难过|只有你|最爱你|只爱你|哄|爱你|想你|喜欢你/i;
+        if (comfortingWords.test(userMessage)) {
+          rel.moodComfortCount = (rel.moodComfortCount || 0) + 1;
+          if (rel.moodComfortCount >= 2) {
+            // 被哄好了
+            rel.currentMood = 'happy';
+            rel.moodComfortCount = 0;
+            return 'touched'; // 被哄好后感动
+          }
+          return rel.currentMood; // 还需要继续哄
+        }
+        return rel.currentMood;
+      }
+      
+      // 7天以上没聊 → 生气
+      if (daysSinceLastChat >= 7) {
+        rel.currentMood = 'angry';
+        return 'angry';
+      }
+      
+      // 3-6天没聊 → 想念
+      if (daysSinceLastChat >= 3) {
+        return 'missing';
+      }
+      
+      // 检查用户消息触发的情绪
+      if (userMessage) {
+        // 吃醋触发（仅恋人，提到其他角色名字）
+        if (isRomantic) {
+          const otherNames = Object.values(CHARACTERS)
+            .filter(c => c.id !== characterId && (c.relation === 'boyfriend' || c.relation === 'girlfriend' || c.relation === 'friend'))
+            .map(c => c.name.toLowerCase());
+          const mentionsOther = otherNames.some(name => userMessage.toLowerCase().includes(name));
+          if (mentionsOther) {
+            rel.currentMood = 'jealous';
+            rel.moodComfortCount = 0;
+            return 'jealous';
+          }
+        }
+        
+        // 开心触发
+        const happyWords = /你真好|喜欢你|爱你|谢谢|太棒了|好厉害|真棒|想你|可爱|漂亮|帅|好看|最好的/i;
+        if (happyWords.test(userMessage)) {
+          return 'happy';
+        }
+        
+        // 难过触发
+        const sadWords = /再见|拜拜|不想聊|无聊|烦|走了|下次吧|没意思/i;
+        if (sadWords.test(userMessage)) {
+          return 'sad';
+        }
+        
+        // 感动触发 - 记得之前的事情
+        const memories = rel.memories || [];
+        if (memories.length > 0) {
+          const memoryKeywords = memories.slice(0, 5).map(m => m.content).join(' ');
+          // 简单检查用户是否提到了记忆中的关键词
+          const words = memoryKeywords.split(/\s+/).filter(w => w.length > 2);
+          if (words.some(w => userMessage.includes(w))) {
+            return 'touched';
+          }
+        }
+      }
+      
+      // 默认平静
+      return 'calm';
+    }
+    
+    // 获取情绪提示词
+    function getMoodPrompt(mood) {
+      return MOOD_TYPES[mood]?.promptHint || '';
+    }
+    
+    // 获取情绪显示信息
+    function getMoodDisplay(mood) {
+      const m = MOOD_TYPES[mood] || MOOD_TYPES.calm;
+      return { name: m.name, emoji: m.emoji };
+    }
+    
+    // 保存情绪状态到关系数据
+    function saveMoodState(characterId, mood) {
+      const rel = state.relationData.relationships?.[characterId];
+      if (!rel) return;
+      
+      // 保存需要持续的情绪状态（吃醋、生气、难过需要被哄）
+      if (['jealous', 'angry', 'sad'].includes(mood)) {
+        rel.currentMood = mood;
+        rel.moodComfortCount = 0;
+      } else if (mood === 'happy' || mood === 'touched') {
+        // 开心/感动状态重置之前的负面情绪
+        rel.currentMood = 'calm';
+        rel.moodComfortCount = 0;
+      }
+      
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'relationData', state.relationData);
+      }
+    }
+    
     // 更新关系数据（对话结束时调用）
     function updateRelationship(characterId, addMemory = null) {
       const rel = state.relationData.relationships?.[characterId];
@@ -2989,6 +3439,11 @@ ${grammarContext}
         rel.firstMeet = new Date().toISOString();
       }
       
+      // 保存当前情绪状态
+      if (state.currentMood) {
+        saveMoodState(characterId, state.currentMood);
+      }
+      
       // 保存
       if (state.user) {
         Storage.setUserData(state.user.id, 'relationData', state.relationData);
@@ -3028,8 +3483,22 @@ ${grammarContext}
         // 获取称呼
         const nickname = getCharacterNickname(tutor.id, tutor.relation, intimacyLevel);
         
+        // 计算当前情感状态（开场时）
+        const currentMood = calculateMood(tutor.id, '');
+        const moodPrompt = getMoodPrompt(currentMood);
+        state.currentMood = currentMood;
+        
         // 获取最近记忆
         const recentMemories = (rel.memories || []).slice(0, 3).map(m => m.content).join('；');
+        
+        // 检查关系事件
+        const relationEvent = checkRelationshipEvent(tutor.id);
+        const eventPrompt = relationEvent ? `\n【特别事件】\n${relationEvent.prompt}` : '';
+        
+        // 检查是否有可透露的角色故事
+        const characterStory = getCharacterStory(tutor.id, intimacyLevel);
+        const storyHint = characterStory && Math.random() < 0.15 ? 
+          `\n【可以分享的秘密 - 偶尔在合适时机透露】\n${characterStory.story}` : '';
         
         relationContext = `
 【关系信息】
@@ -3044,14 +3513,33 @@ ${recentMemories ? `- 你记得的事情：${recentMemories}` : ''}
 - 必须在对话中使用这个称呼来称呼用户
 - 随着亲密度提高，称呼会更加亲密
 
+${moodPrompt}
+${eventPrompt}
+${storyHint}
+
 【问候要求】
 ${isFirstMeet ? 
   '- 这是第一次见面，自我介绍，表达认识的喜悦' :
-  daysSinceLastChat >= 3 ?
-    `- 好几天没见了（${daysSinceLastChat}天），表达想念，问用户去哪了` :
-    '- 像老朋友/恋人一样自然打招呼'
+  daysSinceLastChat >= 7 ?
+    `- 太久没见了（${daysSinceLastChat}天），你有点生气，需要用户解释` :
+    daysSinceLastChat >= 3 ?
+      `- 好几天没见了（${daysSinceLastChat}天），表达想念，问用户去哪了` :
+      '- 像老朋友/恋人一样自然打招呼'
 }
 - ${isRomantic ? '表达爱意和关心，可以撒娇或表达想念' : '像好朋友一样亲切自然'}`;
+      }
+      
+      // 深层话题/专属场景特殊处理
+      let deepTalkContext = '';
+      if (scenario.category === 'deep' || scenario.category === 'exclusive') {
+        deepTalkContext = `
+【深层对话场景】
+${scenario.prompt || ''}
+这是一个更亲密的对话场景，请：
+- 分享更多内心想法和感受
+- 可以聊一些平时不会说的话题
+- 展现角色更真实的一面
+- 气氛要温馨、真诚`;
       }
       
       // 语法课特殊处理
@@ -3076,6 +3564,7 @@ ${isFirstMeet ?
 性格特点：${tutor.personality}
 ${tutor.traits ? `特征标签：${tutor.traits.join('、')}` : ''}
 ${relationContext}
+${deepTalkContext}
 ${grammarContext}
 
 ${grammarContext ? '' : `现在的场景是：${scenario.name}（${scenario.nameEs}）- ${scenario.desc}
@@ -3243,6 +3732,12 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         case 'wordSlash': app.innerHTML = renderWordSlash(); break;
       }
       
+      // 渲染升级弹窗（覆盖在所有内容上方）
+      if (state.levelUpModal.show) {
+        const modalHtml = renderLevelUpModal();
+        app.insertAdjacentHTML('beforeend', modalHtml);
+      }
+      
       // 听写模式自动聚焦输入框
       if (state.view === 'wordSlash' && state.wordSlash.mode === 'dictation' && !state.wordSlash.dictationAnswered) {
         setTimeout(() => {
@@ -3250,6 +3745,81 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           if (input) input.focus();
         }, 100);
       }
+    }
+    
+    // 渲染亲密度升级弹窗
+    function renderLevelUpModal() {
+      const { characterId, newLevel } = state.levelUpModal;
+      const character = CHARACTERS[characterId];
+      if (!character) return '';
+      
+      const isRomantic = character.relation === 'boyfriend' || character.relation === 'girlfriend';
+      const levelInfo = INTIMACY_LEVELS[newLevel];
+      const hearts = getIntimacyHearts(newLevel);
+      
+      // 获取新解锁的内容
+      const newDeepTalks = DEEP_TALK_SCENARIOS.filter(s => 
+        s.unlockLevel === newLevel && (!s.romanticOnly || isRomantic)
+      );
+      const newExclusive = EXCLUSIVE_SCENARIOS.filter(s => 
+        s.unlockLevel === newLevel && (!s.romanticOnly || isRomantic)
+      );
+      const newUnlocks = [...newDeepTalks, ...newExclusive];
+      
+      // 获取角色故事
+      const story = CHARACTER_STORIES[characterId]?.[newLevel];
+      
+      return `
+        <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 fade-in">
+          <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl slide-up">
+            <!-- 头部渐变 -->
+            <div class="bg-gradient-to-r ${character.color} p-6 text-center text-white relative overflow-hidden">
+              <div class="absolute inset-0 bg-white/10"></div>
+              <div class="relative">
+                <div class="text-6xl mb-2">${character.avatar}</div>
+                <div class="text-2xl font-bold mb-1">💕 关系升级！</div>
+                <div class="text-white/90">${hearts}</div>
+              </div>
+            </div>
+            
+            <!-- 内容 -->
+            <div class="p-6 text-center">
+              <div class="text-lg font-bold text-gray-800 mb-1">
+                与 ${character.name} 的关系升到了
+              </div>
+              <div class="text-3xl font-bold text-primary-600 mb-2">
+                Lv.${newLevel} ${getIntimacyName(newLevel, isRomantic)}
+              </div>
+              
+              ${newUnlocks.length > 0 ? `
+              <div class="bg-pink-50 rounded-xl p-4 mt-4 text-left">
+                <div class="text-sm font-medium text-pink-700 mb-2">🎉 解锁新内容</div>
+                <div class="space-y-2">
+                  ${newUnlocks.map(s => `
+                    <div class="flex items-center gap-2 text-sm text-gray-700">
+                      <span class="text-lg">${s.icon}</span>
+                      <span>${s.name}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              ` : ''}
+              
+              ${story ? `
+              <div class="bg-purple-50 rounded-xl p-4 mt-4 text-left">
+                <div class="text-sm font-medium text-purple-700 mb-2">🤫 ${character.name}的秘密</div>
+                <div class="text-sm text-gray-600 italic">"${story}"</div>
+              </div>
+              ` : ''}
+              
+              <button onclick="closeLevelUpModal()" 
+                class="w-full mt-6 py-3 rounded-xl bg-gradient-to-r ${character.color} text-white font-bold shadow-lg active:scale-98 transition-all">
+                太棒了！继续聊天
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
     
     // 切换深色模式
@@ -3794,6 +4364,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const travelScenes = COMPANION_SCENARIOS.filter(s => s.category === 'travel');
       const dailyScenes = COMPANION_SCENARIOS.filter(s => s.category === 'daily' || s.category === 'social');
       
+      // 获取已解锁的深层话题和专属场景
+      const unlockedDeepTalks = DEEP_TALK_SCENARIOS.filter(s => isScenarioUnlocked(s, intimacyLevel, isRomantic));
+      const unlockedExclusive = EXCLUSIVE_SCENARIOS.filter(s => isScenarioUnlocked(s, intimacyLevel, isRomantic));
+      const lockedScenes = getLockedScenarios(c.id);
+      
       return `
         <div class="h-full bg-gray-50 flex flex-col">
           <div class="bg-gradient-to-r ${c.color} p-6 text-white">
@@ -3828,6 +4403,37 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           
           <div class="flex-1 overflow-auto p-4">
             <h3 class="text-sm font-medium text-gray-500 mb-3">想和${c.name}去哪？</h3>
+            
+            ${unlockedDeepTalks.length > 0 || unlockedExclusive.length > 0 ? `
+            <!-- 深层话题 & 专属场景（解锁的） -->
+            <div class="mb-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-3 border border-pink-100">
+              <div class="text-xs text-pink-600 font-medium mb-2">💝 深层交流 <span class="text-pink-400">Lv.${intimacyLevel}解锁</span></div>
+              <div class="grid grid-cols-4 gap-2">
+                ${[...unlockedDeepTalks, ...unlockedExclusive].map(s => `
+                  <button onclick='startChat(state.tutor, ${JSON.stringify(s).replace(/'/g, "\\'")})'
+                    class="bg-white p-3 rounded-xl shadow-sm border border-pink-100 hover:shadow-md hover:border-pink-300 active:scale-95 transition-all">
+                    <div class="text-2xl mb-1">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-700">${s.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            ` : ''}
+            
+            ${lockedScenes.length > 0 ? `
+            <!-- 即将解锁 -->
+            <div class="mb-4 bg-gray-100 rounded-xl p-3 opacity-60">
+              <div class="text-xs text-gray-500 font-medium mb-2">🔒 Lv.${intimacyLevel + 1} 解锁</div>
+              <div class="grid grid-cols-4 gap-2">
+                ${lockedScenes.slice(0, 4).map(s => `
+                  <div class="bg-white/50 p-3 rounded-xl border border-gray-200 text-center">
+                    <div class="text-2xl mb-1 grayscale">${s.icon}</div>
+                    <div class="text-xs font-medium text-gray-400">${s.name}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            ` : ''}
             
             <!-- 约会场景 -->
             <div class="mb-4">
@@ -4179,6 +4785,32 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     // 渲染语法课页面（简化版，直接用对话）
     function renderGrammarLesson() {
       return renderStudyCenter();
+    }
+
+    // ==================== 关系成就辅助函数 ====================
+    
+    // 获取最高亲密度
+    function getMaxIntimacy() {
+      const relationships = state.relationData?.relationships || {};
+      let max = 0;
+      for (const rel of Object.values(relationships)) {
+        if (rel.intimacy && rel.intimacy > max) {
+          max = rel.intimacy;
+        }
+      }
+      return max;
+    }
+    
+    // 获取单个角色最高对话次数
+    function getMaxChatCount() {
+      const relationships = state.relationData?.relationships || {};
+      let max = 0;
+      for (const rel of Object.values(relationships)) {
+        if (rel.odometer && rel.odometer > max) {
+          max = rel.odometer;
+        }
+      }
+      return max;
     }
 
     // ==================== ⚔️ 斩单词系统 ====================
@@ -6058,6 +6690,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const t = state.tutor;
       const user = state.user;
       
+      // 获取当前情绪显示（仅陪伴型角色）
+      const isCompanion = t?.type === ROLE_TYPES.COMPANION;
+      const moodDisplay = isCompanion ? getMoodDisplay(state.currentMood) : null;
+      
       return `
         <div class="h-full bg-gray-100 flex flex-col">
           <!-- 顶栏 -->
@@ -6071,6 +6707,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 <div class="flex items-center justify-center gap-2">
                   <span class="text-xl">${t.avatar}</span>
                   <span class="font-bold text-gray-800">${t.name}</span>
+                  ${moodDisplay ? `<span class="text-sm" title="${moodDisplay.name}">${moodDisplay.emoji}</span>` : ''}
                 </div>
                 <div class="text-xs text-gray-500">${state.scenario?.name || '自由聊天'} · ${user.level}</div>
               </div>
@@ -6513,7 +7150,30 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       state.isListening = false;
       speechSynthesis.cancel();
       if (recognition) try { recognition.stop(); } catch(e) {}
+      
+      // 检查亲密度是否升级
+      if (state.tutor?.type === ROLE_TYPES.COMPANION) {
+        const newLevel = checkAndShowLevelUp(state.tutor.id);
+        if (newLevel) {
+          showLevelUpModal(state.tutor.id, newLevel);
+          return; // 先显示弹窗，不切换页面
+        }
+      }
+      
       // 回到场景选择页面，方便切换场景
+      state.view = 'scenario';
+      render();
+    }
+    
+    // 显示亲密度升级弹窗
+    function showLevelUpModal(characterId, newLevel) {
+      state.levelUpModal = { show: true, characterId, newLevel };
+      render();
+    }
+    
+    // 关闭升级弹窗
+    function closeLevelUpModal() {
+      state.levelUpModal = { show: false, characterId: null, newLevel: null };
       state.view = 'scenario';
       render();
     }
@@ -6524,6 +7184,17 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       state.isListening = false;
       speechSynthesis.cancel();
       if (recognition) try { recognition.stop(); } catch(e) {}
+      
+      // 检查亲密度是否升级
+      if (state.tutor?.type === ROLE_TYPES.COMPANION) {
+        const newLevel = checkAndShowLevelUp(state.tutor.id);
+        if (newLevel) {
+          showLevelUpModal(state.tutor.id, newLevel);
+          state.view = 'home'; // 标记回首页
+          return;
+        }
+      }
+      
       state.tutor = null;
       state.scenario = null;
       state.view = 'home';
