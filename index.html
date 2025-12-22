@@ -947,8 +947,22 @@ ${recentMemories ? `- 你记得的事情：${recentMemories}` : ''}
           }
         }
         
+        // 语法课特殊处理
+        let grammarContext = '';
+        if (state.scenario?.isGrammarLesson && state.scenario?.grammarTopic) {
+          const topic = state.scenario.grammarTopic;
+          grammarContext = `
+【当前是语法课：${topic.name}】
+- 继续教授这个语法点
+- 解释可以用中文，例句用西班牙语
+- 回答学生的问题
+- 如果学生回答正确，给予鼓励
+- 如果学生回答错误，耐心纠正`;
+        }
+        
         systemPrompt = `${state.tutor.prompt}
 ${relationContext}
+${grammarContext}
 
 学生信息：
 - 名字：${user.name}
@@ -1319,20 +1333,39 @@ ${isFirstMeet ?
 - ${tutor.relation === 'boyfriend' || tutor.relation === 'girlfriend' ? '可以适当表达爱意和关心' : '像好朋友一样亲切'}`;
       }
       
+      // 语法课特殊处理
+      let grammarContext = '';
+      if (scenario.isGrammarLesson && scenario.grammarTopic) {
+        const topic = scenario.grammarTopic;
+        grammarContext = `
+【特别任务：语法课】
+你现在要给学生上一堂关于"${topic.name}（${topic.nameEs}）"的语法课。
+
+教学要求：
+1. 用西班牙语介绍今天要学什么（配合中文解释）
+2. 清晰解释语法规则
+3. 给出3-5个实用例句
+4. 可以问学生问题，检验理解
+5. 如果学生回答错误，耐心纠正并鼓励
+
+请开始你的语法课介绍！`;
+      }
+      
       const systemPrompt = `你是${tutor.name}，${tutor.description}。
 性格特点：${tutor.personality}
 ${tutor.traits ? `特征标签：${tutor.traits.join('、')}` : ''}
 ${relationContext}
+${grammarContext}
 
-现在的场景是：${scenario.name}（${scenario.nameEs}）- ${scenario.desc}
+${grammarContext ? '' : `现在的场景是：${scenario.name}（${scenario.nameEs}）- ${scenario.desc}
 
-请用西班牙语向${user.name}打招呼，并自然地引入这个场景。
+请用西班牙语向${user.name}打招呼，并自然地引入这个场景。`}
 要求：
 1. 完全符合你的角色性格和说话方式
-2. 自然地带入场景
+${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
 3. 根据学生水平${user.level}调整语言难度
-4. 只说1-2句话，简洁自然
-5. 只输出西班牙语，不要中文`;
+4. ${grammarContext ? '语法解释可以用中文，例句用西班牙语' : '只说1-2句话，简洁自然'}
+5. ${grammarContext ? '' : '只输出西班牙语，不要中文'}`;
 
       try {
         const res = await fetch('/api/chat', {
@@ -1340,7 +1373,7 @@ ${relationContext}
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             system: systemPrompt, 
-            messages: [{ role: 'user', content: '开始对话' }] 
+            messages: [{ role: 'user', content: grammarContext ? '开始上课' : '开始对话' }] 
           })
         });
 
@@ -1479,6 +1512,9 @@ ${relationContext}
         case 'companion': app.innerHTML = renderCompanionSelect(); break;
         case 'service': app.innerHTML = renderServiceSelect(); break;
         case 'companionScenario': app.innerHTML = renderCompanionScenario(); break;
+        case 'studyCenter': app.innerHTML = renderStudyCenter(); break;
+        case 'askTeacher': app.innerHTML = renderAskTeacher(); break;
+        case 'grammarLesson': app.innerHTML = renderGrammarLesson(); break;
       }
     }
     
@@ -1877,9 +1913,31 @@ ${relationContext}
       if (!teacher || teacher.type !== ROLE_TYPES.TEACHER) return;
       
       state.tutor = teacher;
-      // 老师直接进入自由对话模式
-      const freeScenario = { id: 'lesson', icon: '📚', name: '上课', nameEs: 'Clase', desc: '和老师学习' };
-      startChat(teacher, freeScenario);
+      state.view = 'studyCenter';
+      render();
+    }
+    
+    // 开始和老师对话
+    function startTeacherChat(mode = 'free') {
+      const teacher = state.tutor;
+      if (!teacher) return;
+      
+      let scenario;
+      switch (mode) {
+        case 'grammar':
+          scenario = { id: 'grammar', icon: '📖', name: '语法讲解', nameEs: 'Gramática', desc: '学习语法知识' };
+          break;
+        case 'practice':
+          scenario = { id: 'practice', icon: '✍️', name: '练习题', nameEs: 'Ejercicios', desc: '做练习巩固知识' };
+          break;
+        case 'qa':
+          scenario = { id: 'qa', icon: '❓', name: '答疑解惑', nameEs: 'Preguntas', desc: '问老师问题' };
+          break;
+        default:
+          scenario = { id: 'lesson', icon: '📚', name: '自由学习', nameEs: 'Clase libre', desc: '和老师自由交流' };
+      }
+      
+      startChat(teacher, scenario);
     }
     
     // 开始服务场景
@@ -2117,6 +2175,253 @@ ${relationContext}
           </div>
         </div>
       `;
+    }
+
+    // ==================== 学习中心 ====================
+    // 计算学习统计数据
+    function getStudyStats() {
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      // 本周对话数
+      const weekChats = state.chatHistory.filter(c => new Date(c.date) >= weekAgo);
+      const weekChatCount = weekChats.length;
+      
+      // 本周纠正数
+      const weekCorrections = weekChats.reduce((sum, c) => sum + (c.corrections || 0), 0);
+      
+      // 总体统计
+      const totalChats = state.chatHistory.length;
+      const totalCorrections = state.chatHistory.reduce((sum, c) => sum + (c.corrections || 0), 0);
+      
+      // 连续打卡
+      const streak = getStreakDays();
+      
+      // 词汇量
+      const vocabCount = state.vocabulary.length;
+      
+      // 常见错误类型（简单分析）
+      const recentMistakes = state.mistakeBook.slice(0, 10);
+      
+      return {
+        weekChatCount,
+        weekCorrections,
+        totalChats,
+        totalCorrections,
+        streak,
+        vocabCount,
+        recentMistakes
+      };
+    }
+    
+    // 生成今日任务
+    function getDailyTasks() {
+      const stats = getStudyStats();
+      const checkedToday = hasCheckedInToday();
+      
+      // 今天的对话数
+      const today = new Date().toDateString();
+      const todayChats = state.chatHistory.filter(c => new Date(c.date).toDateString() === today).length;
+      
+      // 今天复习的单词数（简化：检查最近的flashcard review）
+      const todayVocabReviewed = state.stats?.todayVocabReviewed || 0;
+      
+      return [
+        { 
+          id: 'checkin', 
+          icon: '📅', 
+          name: '每日打卡', 
+          done: checkedToday,
+          action: "state.view='calendar';render()"
+        },
+        { 
+          id: 'chat', 
+          icon: '💬', 
+          name: '完成1次对话', 
+          done: todayChats >= 1,
+          progress: `${todayChats}/1`,
+          action: "state.view='home';render()"
+        },
+        { 
+          id: 'vocab', 
+          icon: '📚', 
+          name: '复习5个单词', 
+          done: todayVocabReviewed >= 5,
+          progress: `${Math.min(todayVocabReviewed, 5)}/5`,
+          action: "state.view='vocabulary';render()"
+        },
+        { 
+          id: 'mistakes', 
+          icon: '📝', 
+          name: '复习错题', 
+          done: false,
+          action: "state.view='mistakes';render()"
+        }
+      ];
+    }
+    
+    // 渲染学习中心
+    function renderStudyCenter() {
+      const t = state.tutor;
+      if (!t || t.type !== ROLE_TYPES.TEACHER) {
+        state.view = 'home';
+        render();
+        return '';
+      }
+      
+      const stats = getStudyStats();
+      const tasks = getDailyTasks();
+      const completedTasks = tasks.filter(t => t.done).length;
+      
+      // 语法主题列表
+      const grammarTopics = [
+        { id: 'ser_estar', icon: '🔤', name: 'Ser vs Estar', desc: '两个"是"的区别' },
+        { id: 'preterito', icon: '⏰', name: '简单过去时', desc: 'Pretérito indefinido' },
+        { id: 'imperfecto', icon: '🔄', name: '过去未完成时', desc: 'Pretérito imperfecto' },
+        { id: 'subjuntivo', icon: '💭', name: '虚拟式', desc: 'Modo subjuntivo' },
+        { id: 'por_para', icon: '↔️', name: 'Por vs Para', desc: '两个"为了"的区别' },
+        { id: 'pronouns', icon: '👆', name: '代词', desc: '直接/间接宾语代词' },
+      ];
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部：老师信息 -->
+          <div class="bg-gradient-to-r ${t.color} p-6 text-white">
+            <div class="flex items-center justify-between mb-3">
+              <button onclick="state.view='home';render()" class="text-white/80 text-sm flex items-center gap-1">← 返回</button>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-4xl">${t.avatar}</div>
+              <div>
+                <div class="text-xl font-bold">${t.name}</div>
+                <div class="text-white/80">${t.role}</div>
+                <div class="text-white/60 text-sm">${t.personality}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 📊 学习报告 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📊 学习报告</h3>
+              <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="bg-blue-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-blue-600">${stats.weekChatCount}</div>
+                  <div class="text-xs text-gray-500">本周对话</div>
+                </div>
+                <div class="bg-amber-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-amber-600">${stats.weekCorrections}</div>
+                  <div class="text-xs text-gray-500">本周纠正</div>
+                </div>
+                <div class="bg-green-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-green-600">${stats.streak}</div>
+                  <div class="text-xs text-gray-500">连续天数</div>
+                </div>
+                <div class="bg-purple-50 rounded-xl p-2">
+                  <div class="text-xl font-bold text-purple-600">${stats.vocabCount}</div>
+                  <div class="text-xs text-gray-500">词汇量</div>
+                </div>
+              </div>
+              ${stats.weekChatCount === 0 ? `
+                <div class="mt-3 text-center text-gray-400 text-sm">本周还没有练习，开始学习吧！</div>
+              ` : stats.weekCorrections > 5 ? `
+                <div class="mt-3 text-center text-amber-600 text-sm">💡 建议复习一下错题本，巩固薄弱点</div>
+              ` : `
+                <div class="mt-3 text-center text-green-600 text-sm">👍 保持得不错！继续努力</div>
+              `}
+            </div>
+            
+            <!-- 📝 今日任务 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-gray-800">📝 今日任务</h3>
+                <span class="text-xs text-gray-400">${completedTasks}/${tasks.length} 完成</span>
+              </div>
+              <div class="space-y-2">
+                ${tasks.map(task => `
+                  <button onclick="${task.action}" 
+                    class="w-full flex items-center gap-3 p-3 rounded-xl ${task.done ? 'bg-green-50' : 'bg-gray-50'} hover:bg-gray-100 transition-all text-left">
+                    <span class="text-xl">${task.done ? '✅' : task.icon}</span>
+                    <span class="flex-1 ${task.done ? 'text-green-700 line-through' : 'text-gray-700'}">${task.name}</span>
+                    ${task.progress ? `<span class="text-xs text-gray-400">${task.progress}</span>` : ''}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 💬 和老师交流 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">💬 和老师交流</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="startTeacherChat('free')" 
+                  class="p-4 rounded-xl bg-gradient-to-br ${t.color} text-white hover:shadow-md active:scale-98 transition-all">
+                  <div class="text-2xl mb-1">📚</div>
+                  <div class="font-bold">自由学习</div>
+                  <div class="text-xs text-white/70">随便聊聊练西语</div>
+                </button>
+                <button onclick="startTeacherChat('qa')" 
+                  class="p-4 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-98 transition-all">
+                  <div class="text-2xl mb-1">❓</div>
+                  <div class="font-bold text-gray-800">问问题</div>
+                  <div class="text-xs text-gray-500">语法、词汇疑问</div>
+                </button>
+              </div>
+            </div>
+            
+            <!-- 📖 语法课堂 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📖 语法课堂</h3>
+              <div class="grid grid-cols-3 gap-2">
+                ${grammarTopics.map(topic => `
+                  <button onclick="startGrammarLesson('${topic.id}')" 
+                    class="p-3 rounded-xl bg-gray-50 hover:bg-gray-100 active:scale-98 transition-all text-center">
+                    <div class="text-xl mb-1">${topic.icon}</div>
+                    <div class="text-xs font-bold text-gray-700">${topic.name}</div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 开始语法课
+    function startGrammarLesson(topicId) {
+      const topics = {
+        'ser_estar': { name: 'Ser vs Estar', nameEs: 'Ser y Estar', desc: '学习ser和estar的区别和用法' },
+        'preterito': { name: '简单过去时', nameEs: 'Pretérito indefinido', desc: '学习简单过去时的变位和用法' },
+        'imperfecto': { name: '过去未完成时', nameEs: 'Pretérito imperfecto', desc: '学习过去未完成时及其与简单过去时的区别' },
+        'subjuntivo': { name: '虚拟式', nameEs: 'Subjuntivo', desc: '学习虚拟式的构成和使用场景' },
+        'por_para': { name: 'Por vs Para', nameEs: 'Por y Para', desc: '学习por和para的区别' },
+        'pronouns': { name: '代词', nameEs: 'Pronombres', desc: '学习直接和间接宾语代词' }
+      };
+      
+      const topic = topics[topicId];
+      if (!topic) return;
+      
+      // 把语法主题信息放到scenario中
+      const scenario = { 
+        id: `grammar_${topicId}`, 
+        icon: '📖', 
+        name: topic.name, 
+        nameEs: topic.nameEs, 
+        desc: topic.desc,
+        isGrammarLesson: true,  // 标记这是语法课
+        grammarTopic: topic
+      };
+      
+      startChat(state.tutor, scenario);
+    }
+    
+    // 渲染问老师页面（简化版，直接用对话）
+    function renderAskTeacher() {
+      return renderStudyCenter();
+    }
+    
+    // 渲染语法课页面（简化版，直接用对话）
+    function renderGrammarLesson() {
+      return renderStudyCenter();
     }
 
     function renderTutor() {
