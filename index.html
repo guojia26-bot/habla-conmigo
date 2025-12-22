@@ -1947,6 +1947,14 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         case 'grammarLesson': app.innerHTML = renderGrammarLesson(); break;
         case 'wordSlash': app.innerHTML = renderWordSlash(); break;
       }
+      
+      // 听写模式自动聚焦输入框
+      if (state.view === 'wordSlash' && state.wordSlash.mode === 'dictation' && !state.wordSlash.dictationAnswered) {
+        setTimeout(() => {
+          const input = document.getElementById('dictationInput');
+          if (input) input.focus();
+        }, 100);
+      }
     }
     
     // 切换深色模式
@@ -3065,6 +3073,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       
       if (ws.mode === 'learning') {
         return renderWordLearning();
+      } else if (ws.mode === 'dictation') {
+        return renderDictation();
       } else if (ws.mode === 'result') {
         return renderWordResult();
       } else {
@@ -3170,6 +3180,16 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   <div class="flex-1 text-left">
                     <div class="font-bold">开始斩词</div>
                     <div class="text-white/80 text-sm">复习 + 新词混合模式</div>
+                  </div>
+                  <span class="text-2xl">→</span>
+                </button>
+                
+                <button onclick="startDictation()" 
+                  class="w-full p-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                  <span class="text-3xl">✍️</span>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold">听写模式</div>
+                    <div class="text-white/80 text-sm">听音拼写，强化记忆</div>
                   </div>
                   <span class="text-2xl">→</span>
                 </button>
@@ -3364,6 +3384,249 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 返回首页
               </button>
             </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== ✍️ 听写模式 ====================
+    
+    // 开始听写
+    function startDictation() {
+      const words = getWordBook(state.wordSettings.currentBook);
+      // 优先选择已学过的单词进行听写
+      const learnedWords = words.filter(w => state.wordProgress[w.id]);
+      const queue = learnedWords.length >= 10 
+        ? learnedWords.sort(() => Math.random() - 0.5).slice(0, 20)
+        : words.sort(() => Math.random() - 0.5).slice(0, 20);
+      
+      if (queue.length === 0) {
+        alert('请先学习一些单词再来听写！');
+        return;
+      }
+      
+      state.wordSlash = {
+        ...state.wordSlash,
+        mode: 'dictation',
+        queue: queue,
+        currentIndex: 0,
+        dictationInput: '',
+        dictationAnswered: false,
+        dictationCorrect: null,
+        dictationHint: 0, // 0=无提示, 1=首字母, 2=更多提示
+        results: [],
+      };
+      
+      render();
+      
+      // 自动播放第一个单词
+      setTimeout(() => speak(queue[0].word), 500);
+    }
+    
+    // 听写输入处理
+    function handleDictationInput(value) {
+      state.wordSlash.dictationInput = value;
+      render();
+    }
+    
+    // 获取提示
+    function getDictationHint() {
+      const ws = state.wordSlash;
+      const currentWord = ws.queue[ws.currentIndex];
+      ws.dictationHint = Math.min(ws.dictationHint + 1, 2);
+      render();
+    }
+    
+    // 生成提示文字
+    function getHintText(word, hintLevel) {
+      if (hintLevel === 0) return '';
+      if (hintLevel === 1) {
+        // 显示首字母和长度
+        return word.charAt(0) + '_'.repeat(word.length - 1) + ` (${word.length}字母)`;
+      }
+      // 显示更多字母
+      const revealed = Math.ceil(word.length / 2);
+      return word.substring(0, revealed) + '_'.repeat(word.length - revealed);
+    }
+    
+    // 提交听写答案
+    function submitDictation() {
+      const ws = state.wordSlash;
+      if (ws.dictationAnswered) return;
+      
+      const currentWord = ws.queue[ws.currentIndex];
+      const userInput = ws.dictationInput.trim().toLowerCase();
+      const correctAnswer = currentWord.word.toLowerCase();
+      
+      // 检查答案（忽略重音符号进行宽松匹配）
+      const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const isCorrect = normalize(userInput) === normalize(correctAnswer) || userInput === correctAnswer;
+      
+      ws.dictationAnswered = true;
+      ws.dictationCorrect = isCorrect;
+      ws.results.push({
+        word: currentWord,
+        correct: isCorrect,
+        userAnswer: ws.dictationInput
+      });
+      
+      // 更新进度（听写模式也计入学习进度）
+      const progress = state.wordProgress[currentWord.id] || {
+        status: 'new',
+        correctCount: 0,
+        wrongCount: 0,
+        lastSeen: null,
+        nextReview: null
+      };
+      
+      progress.lastSeen = new Date().toISOString();
+      if (isCorrect) {
+        progress.correctCount = (progress.correctCount || 0) + 1;
+        if (progress.correctCount >= 5) {
+          progress.status = 'mastered';
+        } else {
+          progress.status = 'reviewing';
+          progress.nextReview = getNextReviewTime(progress.correctCount);
+        }
+      } else {
+        progress.wrongCount = (progress.wrongCount || 0) + 1;
+        progress.correctCount = Math.max(0, (progress.correctCount || 0) - 1);
+        progress.status = 'learning';
+        progress.nextReview = getNextReviewTime(0);
+      }
+      
+      state.wordProgress[currentWord.id] = progress;
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'wordProgress', state.wordProgress);
+      }
+      
+      render();
+      checkAchievements();
+    }
+    
+    // 下一个听写单词
+    function nextDictation() {
+      const ws = state.wordSlash;
+      
+      if (ws.currentIndex >= ws.queue.length - 1) {
+        ws.mode = 'result';
+        render();
+        return;
+      }
+      
+      ws.currentIndex++;
+      ws.dictationInput = '';
+      ws.dictationAnswered = false;
+      ws.dictationCorrect = null;
+      ws.dictationHint = 0;
+      
+      render();
+      
+      // 自动播放下一个单词
+      setTimeout(() => speak(ws.queue[ws.currentIndex].word), 300);
+    }
+    
+    // 渲染听写界面
+    function renderDictation() {
+      const ws = state.wordSlash;
+      const currentWord = ws.queue[ws.currentIndex];
+      const hintText = getHintText(currentWord.word, ws.dictationHint);
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部进度 -->
+          <div class="bg-white border-b p-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="state.wordSlash.mode='home';render()" class="text-gray-500">✕ 退出</button>
+              <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">✍️ 听写模式</span>
+              <span class="text-sm text-gray-500">${ws.currentIndex + 1} / ${ws.queue.length}</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full bg-purple-500 rounded-full transition-all duration-300" 
+                style="width: ${((ws.currentIndex + 1) / ws.queue.length) * 100}%"></div>
+            </div>
+          </div>
+          
+          <!-- 听写区域 -->
+          <div class="flex-1 flex flex-col items-center justify-center p-6">
+            <div class="text-center mb-6">
+              <div class="text-6xl mb-4">${currentWord.image}</div>
+              <div class="text-gray-500 mb-2">${currentWord.meaning}</div>
+              
+              <!-- 播放按钮 -->
+              <button onclick="speak('${currentWord.word}')" 
+                class="w-16 h-16 rounded-full bg-purple-500 text-white text-2xl flex items-center justify-center mx-auto hover:bg-purple-600 active:scale-95 transition-all shadow-lg">
+                🔊
+              </button>
+              <p class="text-sm text-gray-400 mt-2">点击播放发音</p>
+              
+              ${hintText ? `
+                <div class="mt-3 px-4 py-2 bg-amber-50 rounded-lg">
+                  <span class="text-amber-700 font-mono text-lg">${hintText}</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            ${!ws.dictationAnswered ? `
+              <!-- 输入框 -->
+              <div class="w-full max-w-sm">
+                <input type="text" 
+                  id="dictationInput"
+                  value="${ws.dictationInput}"
+                  oninput="handleDictationInput(this.value)"
+                  onkeypress="if(event.key==='Enter')submitDictation()"
+                  placeholder="输入你听到的单词..."
+                  class="w-full p-4 text-center text-xl border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+                  autocomplete="off"
+                  autocapitalize="off">
+                
+                <div class="flex gap-2 mt-4">
+                  <button onclick="getDictationHint()" 
+                    class="flex-1 p-3 rounded-xl bg-amber-100 text-amber-700 font-medium hover:bg-amber-200 transition-all ${ws.dictationHint >= 2 ? 'opacity-50' : ''}">
+                    💡 提示
+                  </button>
+                  <button onclick="submitDictation()" 
+                    class="flex-1 p-3 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 active:scale-98 transition-all">
+                    确认 ✓
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <!-- 答案反馈 -->
+              <div class="w-full max-w-sm">
+                <div class="p-4 rounded-xl ${ws.dictationCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">${ws.dictationCorrect ? '✅' : '❌'}</span>
+                    <span class="font-bold ${ws.dictationCorrect ? 'text-green-700' : 'text-red-700'}">
+                      ${ws.dictationCorrect ? '拼写正确！' : '拼写错误'}
+                    </span>
+                  </div>
+                  
+                  ${!ws.dictationCorrect ? `
+                    <div class="mb-2">
+                      <span class="text-gray-500">你的答案：</span>
+                      <span class="text-red-600 line-through">${ws.dictationInput || '(空)'}</span>
+                    </div>
+                  ` : ''}
+                  
+                  <div class="text-lg">
+                    <span class="text-gray-500">正确答案：</span>
+                    <span class="font-bold text-gray-800">${currentWord.word}</span>
+                    <button onclick="speak('${currentWord.word}')" class="ml-2 text-purple-500">🔊</button>
+                  </div>
+                  
+                  <div class="mt-2 text-sm text-gray-600">
+                    <div class="italic">"${currentWord.example}"</div>
+                    <div class="text-gray-500">${currentWord.exampleZh}</div>
+                  </div>
+                </div>
+                
+                <button onclick="nextDictation()" 
+                  class="w-full mt-4 p-4 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 active:scale-98 transition-all">
+                  ${ws.currentIndex >= ws.queue.length - 1 ? '查看结果' : '下一个 →'}
+                </button>
+              </div>
+            `}
           </div>
         </div>
       `;
