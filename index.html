@@ -2514,19 +2514,29 @@ REGLAS:
         if (state.tutor?.type === ROLE_TYPES.COMPANION) {
           const rel = getRelationship(state.tutor.id);
           if (rel) {
-            const intimacyName = getIntimacyName(rel.intimacy || 1);
+            const intimacyLevel = rel.intimacy || 1;
+            const isRomantic = state.tutor.relation === 'boyfriend' || state.tutor.relation === 'girlfriend';
+            const intimacyName = getIntimacyName(intimacyLevel, isRomantic);
+            const intimacyHearts = getIntimacyHearts(intimacyLevel);
+            const nickname = getCharacterNickname(state.tutor.id, state.tutor.relation, intimacyLevel);
             const recentMemories = (rel.memories || []).slice(0, 5).map(m => m.content).join('；');
+            
             relationContext = `
 【你们的关系】
 - 关系类型：${state.tutor.relationName}
-- 亲密程度：${intimacyName}（${rel.intimacy || 1}/3级）
+- 亲密程度：${intimacyName}（等级${intimacyLevel}/5）${intimacyHearts}
 - 已经对话${rel.odometer || 0}次
-${recentMemories ? `- 你记得的事情：${recentMemories}` : ''}
+
+【称呼要求 - 非常重要】
+- 你必须用"${nickname.call}"来称呼用户
+- 这个称呼体现了你们${intimacyName}的关系
+${recentMemories ? `\n【你记得的事情】\n${recentMemories}` : ''}
 
 【对话要求】
-- 根据亲密度使用相应的称呼和语气
+- 每次回复都要使用正确的称呼
 - 记住之前聊过的事情，可以提起共同回忆
-- 展现真实的情感连接，不只是语言练习`;
+- 展现真实的情感连接，不只是语言练习
+${isRomantic ? '- 作为恋人，可以表达爱意、关心、偶尔撒娇' : '- 作为好朋友，亲切自然地聊天'}`;
           }
         }
         
@@ -2840,10 +2850,101 @@ ${grammarContext}
       return state.relationData?.relationships?.[characterId] || null;
     }
     
+    // ==================== 亲密度系统（5级） ====================
+    const INTIMACY_LEVELS = {
+      1: { name: '初识', nameEs: 'Conocidos', minChats: 0, hearts: 1 },
+      2: { name: '熟悉', nameEs: 'Familiarizados', minChats: 5, hearts: 2 },
+      3: { name: '亲密', nameEs: 'Cercanos', minChats: 15, hearts: 3 },
+      4: { name: '挚友', nameEs: 'Íntimos', minChats: 30, hearts: 4 },  // 恋人则显示"恋人"
+      5: { name: '灵魂伴侣', nameEs: 'Alma gemela', minChats: 50, hearts: 5 }
+    };
+    
     // 获取亲密度等级名称
-    function getIntimacyName(level) {
-      const names = { 1: '初识', 2: '熟悉', 3: '亲密' };
-      return names[level] || '初识';
+    function getIntimacyName(level, isRomantic = false) {
+      const lvl = INTIMACY_LEVELS[level] || INTIMACY_LEVELS[1];
+      if (isRomantic && level === 4) return '恋人';
+      return lvl.name;
+    }
+    
+    // 获取亲密度心形显示
+    function getIntimacyHearts(level) {
+      const maxHearts = 5;
+      const filled = Math.min(level, maxHearts);
+      return '❤️'.repeat(filled) + '🤍'.repeat(maxHearts - filled);
+    }
+    
+    // 获取下一级所需对话次数
+    function getNextLevelChats(currentLevel, currentChats) {
+      const nextLevel = Math.min(currentLevel + 1, 5);
+      if (nextLevel > 5 || currentLevel >= 5) return null;
+      const needed = INTIMACY_LEVELS[nextLevel].minChats - currentChats;
+      return needed > 0 ? needed : 0;
+    }
+    
+    // ==================== 称呼变化系统 ====================
+    const NICKNAMES = {
+      // 朋友类型
+      friend: {
+        carlos: {
+          1: { call: 'amigo', callZh: '朋友' },
+          2: { call: 'tío', callZh: '兄弟' },
+          3: { call: 'hermano', callZh: '好兄弟' },
+          4: { call: 'mi mejor amigo', callZh: '我最好的朋友' },
+          5: { call: '[nickname]', callZh: '专属昵称' }
+        },
+        sofia: {
+          1: { call: 'amiga', callZh: '朋友' },
+          2: { call: 'guapa', callZh: '美女' },
+          3: { call: 'mi querida amiga', callZh: '亲爱的朋友' },
+          4: { call: 'amiga del alma', callZh: '知心朋友' },
+          5: { call: '[nickname]', callZh: '专属昵称' }
+        }
+      },
+      // 男友类型
+      boyfriend: {
+        default: {
+          1: { call: 'hola', callZh: '你好' },
+          2: { call: 'cariño', callZh: '亲爱的' },
+          3: { call: 'mi amor', callZh: '我的爱' },
+          4: { call: 'mi vida', callZh: '我的生命' },
+          5: { call: 'mi cielo, mi todo', callZh: '我的天空，我的一切' }
+        }
+      },
+      // 女友类型
+      girlfriend: {
+        default: {
+          1: { call: 'hola', callZh: '你好' },
+          2: { call: 'cariño', callZh: '亲爱的' },
+          3: { call: 'mi amor', callZh: '我的爱' },
+          4: { call: 'mi vida', callZh: '我的生命' },
+          5: { call: 'mi cielo, mi todo', callZh: '我的天空，我的一切' }
+        }
+      }
+    };
+    
+    // 获取角色对用户的称呼
+    function getCharacterNickname(characterId, relation, intimacyLevel) {
+      const rel = getRelationship(characterId);
+      const userNickname = rel?.nickname;
+      
+      // 如果用户设置了昵称且亲密度>=4，使用用户昵称
+      if (userNickname && intimacyLevel >= 4) {
+        return { call: userNickname, callZh: userNickname };
+      }
+      
+      // 获取对应的称呼
+      let nickConfig;
+      if (relation === 'friend') {
+        nickConfig = NICKNAMES.friend[characterId] || NICKNAMES.friend.carlos;
+      } else if (relation === 'boyfriend') {
+        nickConfig = NICKNAMES.boyfriend.default;
+      } else if (relation === 'girlfriend') {
+        nickConfig = NICKNAMES.girlfriend.default;
+      } else {
+        return { call: '', callZh: '' };
+      }
+      
+      return nickConfig[intimacyLevel] || nickConfig[1];
     }
     
     // 更新关系数据（对话结束时调用）
@@ -2851,14 +2952,23 @@ ${grammarContext}
       const rel = state.relationData.relationships?.[characterId];
       if (!rel) return;
       
+      const oldIntimacy = rel.intimacy || 1;
+      
       // 增加对话次数
       rel.odometer = (rel.odometer || 0) + 1;
       
-      // 根据对话次数提升亲密度
-      if (rel.odometer >= 20 && rel.intimacy < 3) {
-        rel.intimacy = 3;
-      } else if (rel.odometer >= 5 && rel.intimacy < 2) {
-        rel.intimacy = 2;
+      // 根据对话次数提升亲密度（5级系统）
+      let newIntimacy = 1;
+      if (rel.odometer >= 50) newIntimacy = 5;
+      else if (rel.odometer >= 30) newIntimacy = 4;
+      else if (rel.odometer >= 15) newIntimacy = 3;
+      else if (rel.odometer >= 5) newIntimacy = 2;
+      
+      if (newIntimacy > rel.intimacy) {
+        rel.intimacy = newIntimacy;
+        rel.levelUpTime = new Date().toISOString();
+        // 标记需要显示升级提示
+        rel.showLevelUp = true;
       }
       
       // 添加记忆
@@ -2874,10 +2984,28 @@ ${grammarContext}
         }
       }
       
+      // 记录首次见面时间
+      if (!rel.firstMeet) {
+        rel.firstMeet = new Date().toISOString();
+      }
+      
       // 保存
       if (state.user) {
         Storage.setUserData(state.user.id, 'relationData', state.relationData);
       }
+      
+      return { leveledUp: newIntimacy > oldIntimacy, newLevel: newIntimacy };
+    }
+    
+    // 检查并显示升级提示
+    function checkAndShowLevelUp(characterId) {
+      const rel = state.relationData.relationships?.[characterId];
+      if (rel?.showLevelUp) {
+        rel.showLevelUp = false;
+        Storage.setUserData(state.user.id, 'relationData', state.relationData);
+        return rel.intimacy;
+      }
+      return null;
     }
     
     // 根据角色和场景生成开场白
@@ -2889,10 +3017,16 @@ ${grammarContext}
       // 构建关系上下文
       let relationContext = '';
       if (rel) {
-        const intimacyName = getIntimacyName(rel.intimacy);
+        const intimacyLevel = rel.intimacy || 1;
+        const isRomantic = tutor.relation === 'boyfriend' || tutor.relation === 'girlfriend';
+        const intimacyName = getIntimacyName(intimacyLevel, isRomantic);
+        const intimacyHearts = getIntimacyHearts(intimacyLevel);
         const daysSinceLastChat = rel.lastChat ? 
           Math.floor((new Date() - new Date(rel.lastChat)) / (1000 * 60 * 60 * 24)) : 0;
         const isFirstMeet = rel.odometer === 0;
+        
+        // 获取称呼
+        const nickname = getCharacterNickname(tutor.id, tutor.relation, intimacyLevel);
         
         // 获取最近记忆
         const recentMemories = (rel.memories || []).slice(0, 3).map(m => m.content).join('；');
@@ -2900,20 +3034,24 @@ ${grammarContext}
         relationContext = `
 【关系信息】
 - 你们的关系：${tutor.relationName}
-- 亲密程度：${intimacyName}（等级${rel.intimacy}/3）
+- 亲密程度：${intimacyName}（等级${intimacyLevel}/5）${intimacyHearts}
 - 这是第${rel.odometer + 1}次对话
 - ${isFirstMeet ? '这是你们第一次见面！' : `你们已经认识了，上次聊天是${daysSinceLastChat}天前`}
 ${recentMemories ? `- 你记得的事情：${recentMemories}` : ''}
 
+【称呼要求】
+- 你对用户的称呼：${nickname.call}（${nickname.callZh}）
+- 必须在对话中使用这个称呼来称呼用户
+- 随着亲密度提高，称呼会更加亲密
+
 【问候要求】
 ${isFirstMeet ? 
   '- 这是第一次见面，自我介绍，表达认识的喜悦' :
-  daysSinceLastChat > 3 ?
-    '- 好几天没见了，表达想念' :
+  daysSinceLastChat >= 3 ?
+    `- 好几天没见了（${daysSinceLastChat}天），表达想念，问用户去哪了` :
     '- 像老朋友/恋人一样自然打招呼'
 }
-- 根据亲密度调整称呼的亲密程度
-- ${tutor.relation === 'boyfriend' || tutor.relation === 'girlfriend' ? '可以适当表达爱意和关心' : '像好朋友一样亲切'}`;
+- ${isRomantic ? '表达爱意和关心，可以撒娇或表达想念' : '像好朋友一样亲切自然'}`;
       }
       
       // 语法课特殊处理
@@ -3302,7 +3440,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       // 获取用户的伴侣/朋友及关系数据
       const myCompanion = state.relationData?.currentCompanion ? CHARACTERS[state.relationData.currentCompanion] : null;
       const myRel = myCompanion ? getRelationship(myCompanion.id) : null;
-      const myHearts = myRel ? '❤️'.repeat(myRel.intimacy || 1) + '🤍'.repeat(3 - (myRel.intimacy || 1)) : '';
+      const myHearts = myRel ? getIntimacyHearts(myRel.intimacy || 1) : '';
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
@@ -3567,7 +3705,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const rel = getRelationship(c.id);
       const isCurrent = state.relationData?.currentCompanion === c.id;
       const intimacyLevel = rel?.intimacy || 0;
-      const hearts = intimacyLevel > 0 ? '❤️'.repeat(intimacyLevel) + '🤍'.repeat(3 - intimacyLevel) : '';
+      const hearts = intimacyLevel > 0 ? getIntimacyHearts(intimacyLevel) : '';
       
       return `
         <button onclick="selectCompanion('${c.id}')" 
@@ -3645,8 +3783,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       // 获取关系数据
       const rel = getRelationship(c.id);
       const intimacyLevel = rel?.intimacy || 1;
-      const intimacyName = getIntimacyName(intimacyLevel);
-      const hearts = '❤️'.repeat(intimacyLevel) + '🤍'.repeat(3 - intimacyLevel);
+      const isRomantic = c.relation === 'boyfriend' || c.relation === 'girlfriend';
+      const intimacyName = getIntimacyName(intimacyLevel, isRomantic);
+      const hearts = getIntimacyHearts(intimacyLevel);
+      const nextLevelChats = getNextLevelChats(intimacyLevel, rel?.odometer || 0);
       
       // 按类别分组场景
       const dateScenes = COMPANION_SCENARIOS.filter(s => s.category === 'date');
@@ -3668,12 +3808,20 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 <div class="text-white/80">${c.relationName}</div>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-sm">${hearts}</span>
-                  <span class="text-white/60 text-xs">${intimacyName}</span>
+                  <span class="text-white/60 text-xs">Lv.${intimacyLevel} ${intimacyName}</span>
                 </div>
+                ${nextLevelChats !== null ? `
+                <div class="mt-1">
+                  <div class="text-white/50 text-xs">下一级还需 ${nextLevelChats} 次对话</div>
+                  <div class="w-full bg-white/20 rounded-full h-1.5 mt-1">
+                    <div class="bg-white rounded-full h-1.5 transition-all" style="width: ${Math.min(100, ((INTIMACY_LEVELS[intimacyLevel + 1]?.minChats - nextLevelChats) / INTIMACY_LEVELS[intimacyLevel + 1]?.minChats * 100) || 0)}%"></div>
+                  </div>
+                </div>
+                ` : '<div class="text-white/50 text-xs mt-1">✨ 已达最高等级</div>'}
               </div>
               <div class="text-right text-white/60 text-xs">
                 <div>${rel?.odometer || 0}次对话</div>
-                ${rel?.firstMet ? `<div>认识${Math.floor((new Date() - new Date(rel.firstMet)) / (1000*60*60*24)) + 1}天</div>` : ''}
+                ${rel?.firstMeet ? `<div>认识${Math.floor((new Date() - new Date(rel.firstMeet)) / (1000*60*60*24)) + 1}天</div>` : ''}
               </div>
             </div>
           </div>
