@@ -3101,6 +3101,12 @@ REGLAS:
           lastStudyDate: null,
           totalDays: 0
         }) : { currentStreak: 0, longestStreak: 0, lastStudyDate: null, totalDays: 0 },
+        // 闯关进度
+        challengeProgress: currentUser ? Storage.getUserData(currentUser.id, 'challengeProgress', {
+          currentLevel: 1,
+          stars: {},  // { levelId: stars(1-3) }
+          totalStars: 0
+        }) : { currentLevel: 1, stars: {}, totalStars: 0 },
       };
     }
     
@@ -3129,6 +3135,7 @@ REGLAS:
       dailyWordStats: userData.dailyWordStats, // 每日学习统计
       learningHistory: userData.learningHistory, // 学习历史记录
       wordStreak: userData.wordStreak, // 学习打卡记录
+      challengeProgress: userData.challengeProgress, // 闯关进度
       wordSlash: {
         mode: 'home', // home, learning, result, wordlist, wrongbook, starred
         queue: [], // 当前学习队列
@@ -6015,6 +6022,12 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         return renderWordRoots();
       } else if (ws.mode === 'rootDetail') {
         return renderRootDetail();
+      } else if (ws.mode === 'challenge') {
+        return renderChallengeHome();
+      } else if (ws.mode === 'challengePlay') {
+        return renderChallengePlay();
+      } else if (ws.mode === 'challengeResult') {
+        return renderChallengeResult();
       } else {
         return renderWordHome();
       }
@@ -6631,6 +6644,448 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       `;
     }
     
+    // ==================== 🎮 闯关挑战模式 ====================
+    
+    // 关卡配置
+    const CHALLENGE_LEVELS = [
+      { id: 1, name: '初出茅庐', wordCount: 5, timeLimit: 60, difficulty: 'easy', requiredStars: 0 },
+      { id: 2, name: '小试牛刀', wordCount: 8, timeLimit: 80, difficulty: 'easy', requiredStars: 1 },
+      { id: 3, name: '渐入佳境', wordCount: 10, timeLimit: 90, difficulty: 'easy', requiredStars: 3 },
+      { id: 4, name: '驾轻就熟', wordCount: 10, timeLimit: 80, difficulty: 'medium', requiredStars: 6 },
+      { id: 5, name: '得心应手', wordCount: 12, timeLimit: 90, difficulty: 'medium', requiredStars: 9 },
+      { id: 6, name: '炉火纯青', wordCount: 12, timeLimit: 75, difficulty: 'medium', requiredStars: 12 },
+      { id: 7, name: '登峰造极', wordCount: 15, timeLimit: 90, difficulty: 'hard', requiredStars: 15 },
+      { id: 8, name: '出神入化', wordCount: 15, timeLimit: 75, difficulty: 'hard', requiredStars: 18 },
+      { id: 9, name: '独孤求败', wordCount: 18, timeLimit: 90, difficulty: 'hard', requiredStars: 21 },
+      { id: 10, name: '天下无敌', wordCount: 20, timeLimit: 100, difficulty: 'expert', requiredStars: 24 },
+    ];
+    
+    // 闯关首页
+    function renderChallengeHome() {
+      const progress = state.challengeProgress;
+      const totalStars = progress.totalStars || 0;
+      const maxStars = CHALLENGE_LEVELS.length * 3;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-amber-500 to-red-500 p-6 text-white">
+            <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">🎮 闯关挑战</h1>
+            <p class="text-white/80 text-sm">限时答题，赢取星星！</p>
+            <div class="mt-3 flex items-center gap-2">
+              <span class="text-2xl">⭐</span>
+              <span class="text-xl font-bold">${totalStars}</span>
+              <span class="text-white/60">/ ${maxStars}</span>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 关卡列表 -->
+            <div class="space-y-3">
+              ${CHALLENGE_LEVELS.map((level, idx) => {
+                const stars = progress.stars[level.id] || 0;
+                const isUnlocked = totalStars >= level.requiredStars;
+                const isCompleted = stars > 0;
+                
+                let bgClass, textClass;
+                if (!isUnlocked) {
+                  bgClass = 'bg-gray-200';
+                  textClass = 'text-gray-400';
+                } else if (stars === 3) {
+                  bgClass = 'bg-gradient-to-r from-amber-100 to-yellow-100 border-2 border-amber-300';
+                  textClass = 'text-amber-800';
+                } else if (isCompleted) {
+                  bgClass = 'bg-green-50 border border-green-200';
+                  textClass = 'text-green-800';
+                } else {
+                  bgClass = 'bg-white border border-gray-200';
+                  textClass = 'text-gray-800';
+                }
+                
+                return `
+                  <button onclick="${isUnlocked ? `startChallenge(${level.id})` : ''}" 
+                    class="w-full p-4 rounded-2xl ${bgClass} ${isUnlocked ? 'hover:shadow-md active:scale-98' : 'cursor-not-allowed'} transition-all text-left">
+                    <div class="flex items-center gap-4">
+                      <div class="w-12 h-12 rounded-xl ${isUnlocked ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-gray-300'} flex items-center justify-center text-white font-bold text-xl">
+                        ${isUnlocked ? level.id : '🔒'}
+                      </div>
+                      <div class="flex-1">
+                        <div class="font-bold ${textClass}">${level.name}</div>
+                        <div class="text-sm text-gray-500">
+                          ${level.wordCount}词 · ${level.timeLimit}秒 · 
+                          ${level.difficulty === 'easy' ? '简单' : level.difficulty === 'medium' ? '中等' : level.difficulty === 'hard' ? '困难' : '专家'}
+                        </div>
+                      </div>
+                      <div class="flex gap-1">
+                        ${[1, 2, 3].map(s => `
+                          <span class="text-xl ${stars >= s ? 'text-amber-400' : 'text-gray-300'}">★</span>
+                        `).join('')}
+                      </div>
+                    </div>
+                    ${!isUnlocked ? `
+                      <div class="mt-2 text-xs text-gray-400 text-center">需要 ${level.requiredStars} ⭐ 解锁</div>
+                    ` : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- 说明 -->
+            <div class="mt-6 bg-white rounded-2xl shadow-sm p-4">
+              <h3 class="font-bold text-gray-800 mb-2">🏆 星级评价</h3>
+              <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-400">★★★</span>
+                  <span>全部正确且用时 ≤50%</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-400">★★</span><span class="text-gray-300">★</span>
+                  <span>正确率 ≥90%</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-400">★</span><span class="text-gray-300">★★</span>
+                  <span>正确率 ≥70%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 开始挑战
+    function startChallenge(levelId) {
+      const level = CHALLENGE_LEVELS.find(l => l.id === levelId);
+      if (!level) return;
+      
+      // 根据难度选择词库
+      let wordPool = [];
+      if (level.difficulty === 'easy') {
+        wordPool = [...A1_WORDS];
+      } else if (level.difficulty === 'medium') {
+        wordPool = [...A1_WORDS, ...A2_WORDS];
+      } else if (level.difficulty === 'hard') {
+        wordPool = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS];
+      } else {
+        wordPool = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      }
+      
+      // 随机选择单词
+      const queue = wordPool
+        .sort(() => Math.random() - 0.5)
+        .slice(0, level.wordCount);
+      
+      state.wordSlash.challengeData = {
+        level: level,
+        queue: queue,
+        currentIndex: 0,
+        options: generateOptions(queue[0]),
+        answered: false,
+        correct: null,
+        results: [],
+        timeLimit: level.timeLimit,
+        timeRemaining: level.timeLimit,
+        startTime: Date.now(),
+        timerId: null,
+      };
+      
+      state.wordSlash.mode = 'challengePlay';
+      render();
+      
+      // 启动计时器
+      startChallengeTimer();
+    }
+    
+    // 启动计时器
+    function startChallengeTimer() {
+      const cd = state.wordSlash.challengeData;
+      if (cd.timerId) clearInterval(cd.timerId);
+      
+      cd.timerId = setInterval(() => {
+        cd.timeRemaining = Math.max(0, cd.timeLimit - Math.floor((Date.now() - cd.startTime) / 1000));
+        
+        // 更新时间显示
+        const timerEl = document.getElementById('challengeTimer');
+        if (timerEl) {
+          timerEl.textContent = cd.timeRemaining;
+          if (cd.timeRemaining <= 10) {
+            timerEl.classList.add('text-red-500', 'animate-pulse');
+          }
+        }
+        
+        // 时间到
+        if (cd.timeRemaining <= 0) {
+          clearInterval(cd.timerId);
+          endChallenge();
+        }
+      }, 100);
+    }
+    
+    // 闯关答题页面
+    function renderChallengePlay() {
+      const cd = state.wordSlash.challengeData;
+      const currentWord = cd.queue[cd.currentIndex];
+      const progress = ((cd.currentIndex + 1) / cd.queue.length) * 100;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部状态栏 -->
+          <div class="bg-white border-b p-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="quitChallenge()" class="text-gray-500 text-sm">✕ 退出</button>
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">${cd.currentIndex + 1} / ${cd.queue.length}</span>
+                <div class="flex items-center gap-1 px-3 py-1 rounded-full ${cd.timeRemaining <= 10 ? 'bg-red-100' : 'bg-amber-100'}">
+                  <span class="text-lg">⏱️</span>
+                  <span id="challengeTimer" class="font-bold ${cd.timeRemaining <= 10 ? 'text-red-500' : 'text-amber-600'}">${cd.timeRemaining}</span>
+                  <span class="text-xs text-gray-500">秒</span>
+                </div>
+              </div>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          
+          <!-- 答题区域 -->
+          <div class="flex-1 flex flex-col items-center justify-center p-6">
+            <div class="text-center mb-8">
+              <div class="text-6xl mb-4">${currentWord.image}</div>
+              <div class="text-3xl font-bold text-gray-800">${currentWord.word}</div>
+              <button onclick="speak('${currentWord.word}')" class="text-primary-500 text-sm mt-2">🔊 发音</button>
+            </div>
+            
+            <!-- 选项 -->
+            <div class="w-full max-w-sm grid grid-cols-2 gap-3">
+              ${cd.options.map((opt, i) => {
+                let btnClass = 'bg-white border-2 border-gray-200 hover:border-primary-400 hover:shadow-md';
+                if (cd.answered) {
+                  if (opt.correct) {
+                    btnClass = 'bg-green-100 border-2 border-green-500 text-green-700';
+                  } else if (i === cd.selectedIndex && !opt.correct) {
+                    btnClass = 'bg-red-100 border-2 border-red-500 text-red-700';
+                  } else {
+                    btnClass = 'bg-gray-100 border-2 border-gray-200 text-gray-400';
+                  }
+                }
+                return `
+                  <button onclick="selectChallengeAnswer(${i})" 
+                    class="p-4 rounded-xl ${btnClass} font-medium transition-all ${cd.answered ? 'cursor-default' : 'active:scale-95'}">
+                    ${opt.meaning}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- 答案反馈 -->
+            ${cd.answered ? `
+              <div class="mt-6 w-full max-w-sm text-center">
+                <div class="text-3xl mb-2">${cd.correct ? '✅' : '❌'}</div>
+                <div class="text-gray-600 mb-4">
+                  <strong>${currentWord.word}</strong> = ${currentWord.meaning}
+                </div>
+                <button onclick="nextChallengeWord()" 
+                  class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold hover:shadow-lg active:scale-98 transition-all">
+                  ${cd.currentIndex >= cd.queue.length - 1 ? '查看结果 🏆' : '下一题 →'}
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+    
+    // 选择答案
+    function selectChallengeAnswer(index) {
+      const cd = state.wordSlash.challengeData;
+      if (cd.answered) return;
+      
+      const selected = cd.options[index];
+      const isCorrect = selected.correct;
+      
+      cd.answered = true;
+      cd.correct = isCorrect;
+      cd.selectedIndex = index;
+      
+      cd.results.push({
+        word: cd.queue[cd.currentIndex],
+        correct: isCorrect
+      });
+      
+      // 播放发音
+      speak(cd.queue[cd.currentIndex].word);
+      
+      render();
+    }
+    
+    // 下一题
+    function nextChallengeWord() {
+      const cd = state.wordSlash.challengeData;
+      
+      if (cd.currentIndex >= cd.queue.length - 1) {
+        endChallenge();
+        return;
+      }
+      
+      cd.currentIndex++;
+      cd.options = generateOptions(cd.queue[cd.currentIndex]);
+      cd.answered = false;
+      cd.correct = null;
+      cd.selectedIndex = null;
+      
+      render();
+    }
+    
+    // 结束挑战
+    function endChallenge() {
+      const cd = state.wordSlash.challengeData;
+      
+      // 停止计时器
+      if (cd.timerId) {
+        clearInterval(cd.timerId);
+        cd.timerId = null;
+      }
+      
+      // 计算结果
+      const correct = cd.results.filter(r => r.correct).length;
+      const total = cd.queue.length;
+      const accuracy = total > 0 ? correct / total : 0;
+      const timeUsed = cd.timeLimit - cd.timeRemaining;
+      const timeRatio = timeUsed / cd.timeLimit;
+      
+      // 计算星级
+      let stars = 0;
+      if (accuracy >= 0.7) stars = 1;
+      if (accuracy >= 0.9) stars = 2;
+      if (accuracy === 1 && timeRatio <= 0.5) stars = 3;
+      
+      cd.finalStars = stars;
+      cd.timeUsed = timeUsed;
+      cd.accuracy = accuracy;
+      cd.correctCount = correct;
+      
+      // 更新进度
+      const levelId = cd.level.id;
+      const oldStars = state.challengeProgress.stars[levelId] || 0;
+      if (stars > oldStars) {
+        state.challengeProgress.stars[levelId] = stars;
+        state.challengeProgress.totalStars = Object.values(state.challengeProgress.stars).reduce((a, b) => a + b, 0);
+        
+        if (state.user) {
+          Storage.setUserData(state.user.id, 'challengeProgress', state.challengeProgress);
+        }
+      }
+      
+      state.wordSlash.mode = 'challengeResult';
+      render();
+    }
+    
+    // 退出挑战
+    function quitChallenge() {
+      const cd = state.wordSlash.challengeData;
+      if (cd?.timerId) {
+        clearInterval(cd.timerId);
+      }
+      state.wordSlash.mode = 'challenge';
+      render();
+    }
+    
+    // 挑战结果页面
+    function renderChallengeResult() {
+      const cd = state.wordSlash.challengeData;
+      const stars = cd.finalStars;
+      const level = cd.level;
+      const isNewRecord = stars > (state.challengeProgress.stars[level.id] || 0) - stars + stars;
+      
+      let bgGradient, message;
+      if (stars === 3) {
+        bgGradient = 'from-amber-400 to-yellow-500';
+        message = '完美通关！你太棒了！';
+      } else if (stars === 2) {
+        bgGradient = 'from-green-400 to-emerald-500';
+        message = '表现出色！继续努力！';
+      } else if (stars === 1) {
+        bgGradient = 'from-blue-400 to-indigo-500';
+        message = '成功通关！还能更好！';
+      } else {
+        bgGradient = 'from-gray-400 to-gray-500';
+        message = '未能通关，再试一次！';
+      }
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r ${bgGradient} p-8 text-white text-center">
+            <div class="text-6xl mb-4">${stars === 3 ? '🏆' : stars === 2 ? '🎉' : stars === 1 ? '✅' : '💪'}</div>
+            <h1 class="text-2xl font-bold mb-2">${level.name}</h1>
+            <p class="text-white/80">${message}</p>
+            
+            <!-- 星星 -->
+            <div class="flex justify-center gap-2 mt-4">
+              ${[1, 2, 3].map(s => `
+                <span class="text-4xl ${stars >= s ? 'text-white animate-bounce' : 'text-white/30'}" style="animation-delay: ${s * 0.1}s">★</span>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 统计 -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-4">
+              <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div class="text-3xl font-bold text-green-600">${cd.correctCount}</div>
+                  <div class="text-sm text-gray-500">正确</div>
+                </div>
+                <div>
+                  <div class="text-3xl font-bold text-red-500">${cd.queue.length - cd.correctCount}</div>
+                  <div class="text-sm text-gray-500">错误</div>
+                </div>
+                <div>
+                  <div class="text-3xl font-bold text-blue-600">${cd.timeUsed}s</div>
+                  <div class="text-sm text-gray-500">用时</div>
+                </div>
+              </div>
+              <div class="mt-4 text-center">
+                <div class="text-2xl font-bold ${cd.accuracy >= 0.9 ? 'text-green-600' : cd.accuracy >= 0.7 ? 'text-amber-600' : 'text-red-500'}">${Math.round(cd.accuracy * 100)}%</div>
+                <div class="text-sm text-gray-500">正确率</div>
+              </div>
+            </div>
+            
+            <!-- 错词列表 -->
+            ${cd.results.filter(r => !r.correct).length > 0 ? `
+              <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <h3 class="font-bold text-gray-800 mb-3">❌ 需要复习</h3>
+                <div class="space-y-2">
+                  ${cd.results.filter(r => !r.correct).map(r => `
+                    <div class="flex items-center gap-3 p-2 bg-red-50 rounded-xl">
+                      <span class="text-2xl">${r.word.image}</span>
+                      <div>
+                        <div class="font-bold text-gray-800">${r.word.word}</div>
+                        <div class="text-sm text-gray-500">${r.word.meaning}</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            <!-- 操作按钮 -->
+            <div class="space-y-3">
+              <button onclick="startChallenge(${level.id})" 
+                class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold hover:shadow-lg active:scale-98 transition-all">
+                🔄 再挑战一次
+              </button>
+              <button onclick="state.wordSlash.mode='challenge';render()" 
+                class="w-full p-4 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 active:scale-98 transition-all">
+                ← 返回关卡列表
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
     // 单独练习某个单词
     function startSingleWordLearning(wordId) {
       const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
@@ -6933,6 +7388,16 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   <div class="flex-1 text-left">
                     <div class="font-bold">词根词缀</div>
                     <div class="text-white/80 text-sm">理解构词规律，举一反三</div>
+                  </div>
+                  <span class="text-2xl">→</span>
+                </button>
+                
+                <button onclick="state.wordSlash.mode='challenge';render()" 
+                  class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-500 to-red-500 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                  <span class="text-3xl">🎮</span>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold">闯关挑战</div>
+                    <div class="text-white/80 text-sm">限时挑战，赢取星星</div>
                   </div>
                   <span class="text-2xl">→</span>
                 </button>
