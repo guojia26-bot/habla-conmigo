@@ -5228,40 +5228,51 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     function renderUserSelect() {
       const users = state.users;
       return `
-        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 flex flex-col">
-          <div class="p-6 text-white text-center">
-            <div class="text-5xl mb-2">🇪🇸</div>
-            <h1 class="text-2xl font-bold">HablaConmigo</h1>
+        <div class="h-full flex flex-col relative overflow-hidden">
+          <!-- 背景渐变 -->
+          <div class="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700"></div>
+          <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-1/4 left-0 w-48 h-48 bg-white rounded-full -translate-x-1/2"></div>
+          </div>
+          
+          <div class="relative z-10 p-6 text-white text-center">
+            <div class="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border border-white/30 shadow-xl animate-float">
+              <span class="text-4xl">🇪🇸</span>
+            </div>
+            <h1 class="text-2xl font-bold font-display">HablaConmigo</h1>
             <p class="text-white/70 text-sm mt-1">选择用户或创建新用户</p>
           </div>
           
-          <div class="flex-1 overflow-auto p-4">
+          <div class="relative z-10 flex-1 overflow-auto p-4 custom-scrollbar">
             <div class="max-w-sm mx-auto space-y-3">
-              ${users.map(u => `
-                <div class="bg-white/10 backdrop-blur rounded-xl overflow-hidden">
+              ${users.map((u, idx) => `
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/20 shadow-lg fade-in-up" style="animation-delay: ${idx * 0.1}s; opacity: 0; animation-fill-mode: forwards;">
                   <button onclick="switchUser('${u.id}')" 
-                    class="w-full p-4 text-left hover:bg-white/10 transition-colors flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">
+                    class="w-full p-4 text-left hover:bg-white/10 transition-all flex items-center gap-4 btn-press">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center text-2xl font-bold text-white shadow-inner border border-white/20">
                       ${u.name.charAt(0).toUpperCase()}
                     </div>
                     <div class="flex-1">
-                      <div class="font-bold text-white">${u.name}</div>
-                      <div class="text-sm text-white/70">水平: ${u.level}</div>
+                      <div class="font-bold text-white text-lg">${u.name}</div>
+                      <div class="text-sm text-white/60 flex items-center gap-2">
+                        <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">${u.level}</span>
+                      </div>
                     </div>
-                    <div class="text-white/50 text-sm">→</div>
+                    <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white/60 hover:bg-white/20 transition-colors">→</div>
                   </button>
-                  <div class="border-t border-white/10 px-4 py-2 flex justify-end">
+                  <div class="border-t border-white/10 px-4 py-2 flex justify-end bg-black/10">
                     <button onclick="if(confirm('确定要删除用户 ${u.name} 吗？所有数据将被清除！'))deleteUser('${u.id}')" 
-                      class="text-xs text-white/50 hover:text-red-300">删除</button>
+                      class="text-xs text-white/40 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-500/20">删除</button>
                   </div>
                 </div>
               `).join('')}
               
               <!-- 添加新用户 -->
               <button onclick="state.view='setup';render()" 
-                class="w-full p-4 bg-white/20 backdrop-blur rounded-xl text-white hover:bg-white/30 transition-colors flex items-center justify-center gap-2">
-                <span class="text-2xl">+</span>
-                <span class="font-medium">添加新用户</span>
+                class="w-full p-5 bg-white/20 backdrop-blur-md rounded-2xl text-white hover:bg-white/30 transition-all flex items-center justify-center gap-3 border border-white/30 shadow-lg btn-press fade-in-up" style="animation-delay: ${users.length * 0.1}s; opacity: 0; animation-fill-mode: forwards;">
+                <span class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-2xl">+</span>
+                <span class="font-semibold">添加新用户</span>
               </button>
             </div>
           </div>
@@ -5272,30 +5283,40 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     function renderSetup() {
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
-            <h1 class="text-2xl font-bold">👋 欢迎！</h1>
-            <p class="text-white/80 text-sm mt-1">让我们先了解一下你</p>
+          <!-- 顶部渐变 -->
+          <div class="relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-600 to-purple-600"></div>
+            <div class="absolute inset-0 opacity-20">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            </div>
+            <div class="relative p-6 text-white">
+              <h1 class="text-2xl font-bold flex items-center gap-2">
+                <span class="text-3xl">👋</span>
+                欢迎！
+              </h1>
+              <p class="text-white/80 text-sm mt-1">让我们先了解一下你</p>
+            </div>
           </div>
           
-          <div class="flex-1 overflow-auto p-6">
-            <div class="max-w-md mx-auto space-y-6 fade-in">
+          <div class="flex-1 overflow-auto p-5 custom-scrollbar">
+            <div class="max-w-md mx-auto space-y-5">
               <!-- 姓名 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">你的名字</label>
+              <div class="fade-in-up" style="animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards;">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">👤 你的名字</label>
                 <input id="userName" type="text" placeholder="输入你的名字或昵称" 
-                  class="w-full p-4 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                  class="w-full p-4 rounded-2xl border-2 border-gray-200 focus:border-primary-500 outline-none transition-all text-lg"
                   value="${state.user?.name || ''}">
               </div>
               
               <!-- 水平 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">你的西语水平</label>
+              <div class="fade-in-up" style="animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards;">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">📊 你的西语水平</label>
                 <div class="grid grid-cols-2 gap-3">
                   ${LEVELS.map(l => `
-                    <button onclick="document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50');document.getElementById('selectedLevel').value='${l.id}'"
-                      class="level-btn p-4 rounded-xl border border-gray-200 text-left hover:border-primary-300 transition-all ${state.user?.level === l.id ? 'ring-2 ring-primary-500 bg-primary-50' : ''}">
-                      <div class="font-bold text-gray-800">${l.id}</div>
-                      <div class="text-sm text-gray-500">${l.name}</div>
+                    <button onclick="document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50','border-primary-300'));this.classList.add('ring-2','ring-primary-500','bg-primary-50','border-primary-300');document.getElementById('selectedLevel').value='${l.id}'"
+                      class="level-btn p-4 rounded-2xl border-2 border-gray-200 text-left hover:border-primary-300 transition-all btn-press ${state.user?.level === l.id ? 'ring-2 ring-primary-500 bg-primary-50 border-primary-300' : ''}">
+                      <div class="font-bold text-gray-800 text-lg">${l.id}</div>
+                      <div class="text-sm text-gray-600 font-medium">${l.name}</div>
                       <div class="text-xs text-gray-400 mt-1">${l.desc}</div>
                     </button>
                   `).join('')}
@@ -5304,32 +5325,32 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               </div>
               
               <!-- 偏好 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">学习偏好</label>
+              <div class="fade-in-up" style="animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards;">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">⚙️ 学习偏好</label>
                 <div class="space-y-3">
-                  <label class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300">
+                  <label class="flex items-center justify-between p-4 rounded-2xl border-2 border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-gray-50 transition-all">
                     <div>
-                      <div class="font-medium text-gray-800">显示中文翻译</div>
+                      <div class="font-semibold text-gray-800">显示中文翻译</div>
                       <div class="text-xs text-gray-500">AI回复时自动显示翻译</div>
                     </div>
-                    <input id="autoTranslate" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${state.user?.autoTranslate ? 'checked' : ''}>
+                    <input id="autoTranslate" type="checkbox" class="w-6 h-6 text-primary-600 rounded-lg" ${state.user?.autoTranslate ? 'checked' : ''}>
                   </label>
                   
-                  <label class="flex items-center justify-between p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300">
+                  <label class="flex items-center justify-between p-4 rounded-2xl border-2 border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-gray-50 transition-all">
                     <div>
-                      <div class="font-medium text-gray-800">严格纠错模式</div>
+                      <div class="font-semibold text-gray-800">严格纠错模式</div>
                       <div class="text-xs text-gray-500">纠正所有语法错误，适合认真学习</div>
                     </div>
-                    <input id="strictMode" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${state.user?.strictMode ? 'checked' : ''}>
+                    <input id="strictMode" type="checkbox" class="w-6 h-6 text-primary-600 rounded-lg" ${state.user?.strictMode ? 'checked' : ''}>
                   </label>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="p-6 safe-bottom">
+          <div class="p-5 safe-bottom bg-white border-t border-gray-100">
             <button onclick="submitSetup()" 
-              class="w-full py-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-lg hover:shadow-xl active:scale-98 transition-all">
+              class="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-lg hover:shadow-xl active:scale-[0.98] transition-all text-lg btn-press">
               开始学习 🚀
             </button>
           </div>
@@ -9412,40 +9433,40 @@ ${starText}
       const moodDisplay = isCompanion ? getMoodDisplay(state.currentMood) : null;
       
       return `
-        <div class="h-full bg-gray-100 flex flex-col">
-          <!-- 顶栏 -->
-          <div class="glass border-b p-3">
+        <div class="h-full bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
+          <!-- 顶栏 - 毛玻璃效果 -->
+          <div class="glass border-b border-white/50 p-3 shadow-sm">
             <div class="flex items-center justify-between max-w-lg mx-auto">
-              <button onclick="endChat()" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-                <span>←</span>
-                <span class="text-sm">返回</span>
+              <button onclick="endChat()" class="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors btn-press">
+                <span class="text-lg">←</span>
+                <span class="text-sm font-medium">返回</span>
               </button>
               <div class="text-center">
                 <div class="flex items-center justify-center gap-2">
-                  <span class="text-xl">${t.avatar}</span>
+                  <div class="w-8 h-8 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center text-lg shadow-sm">${t.avatar}</div>
                   <span class="font-bold text-gray-800">${t.name}</span>
-                  ${moodDisplay ? `<span class="text-sm" title="${moodDisplay.name}">${moodDisplay.emoji}</span>` : ''}
+                  ${moodDisplay ? `<span class="text-lg animate-float" title="${moodDisplay.name}">${moodDisplay.emoji}</span>` : ''}
                 </div>
-                <div class="text-xs text-gray-500">${state.scenario?.name || '自由聊天'} · ${user.level}</div>
+                <div class="text-xs text-gray-500 mt-0.5">${state.scenario?.name || '自由聊天'} · ${user.level}</div>
               </div>
-              <button onclick="exitToHome()" class="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700" title="返回首页">
+              <button onclick="exitToHome()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-all btn-press" title="返回首页">
                 🏠
               </button>
             </div>
           </div>
           
           <!-- 消息列表 -->
-          <div id="messages" class="flex-1 overflow-auto p-4 no-scrollbar">
+          <div id="messages" class="flex-1 overflow-auto p-4 custom-scrollbar">
             <div class="max-w-lg mx-auto space-y-4">
               ${state.messages.map(msg => renderMessage(msg, t)).join('')}
               
               ${state.isLoading ? `
                 <div class="flex justify-start fade-in">
-                  <div class="bg-white p-4 rounded-2xl shadow-sm">
-                    <div class="flex gap-1.5">
-                      <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></div>
-                      <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
-                      <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+                  <div class="bg-white p-4 rounded-2xl shadow-soft">
+                    <div class="flex gap-2">
+                      <div class="w-2.5 h-2.5 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full animate-bounce"></div>
+                      <div class="w-2.5 h-2.5 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full animate-bounce" style="animation-delay:0.15s"></div>
+                      <div class="w-2.5 h-2.5 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full animate-bounce" style="animation-delay:0.3s"></div>
                     </div>
                   </div>
                 </div>
@@ -9455,34 +9476,37 @@ ${starText}
           
           <!-- 纠正统计 -->
           ${state.corrections > 0 ? `
-            <div class="bg-amber-50 border-t border-amber-100 py-2 text-center">
-              <span class="text-sm text-amber-700">📝 本次对话已纠正 <strong>${state.corrections}</strong> 处</span>
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-t border-amber-100 py-2.5 text-center">
+              <span class="text-sm text-amber-700 font-medium">✏️ 本次对话已纠正 <strong class="text-amber-800">${state.corrections}</strong> 处</span>
             </div>
           ` : ''}
           
           <!-- 智能建议面板 -->
           ${state.showSuggestions ? `
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-200 p-3 slide-up">
+            <div class="bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-t border-green-200 p-4 slide-up">
               <div class="max-w-lg mx-auto">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-green-800">💡 回复建议</span>
-                  <button onclick="hideSuggestions()" class="text-green-600 text-xs hover:text-green-800">收起 ✕</button>
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-sm font-semibold text-green-800 flex items-center gap-2">
+                    <span class="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">💡</span>
+                    回复建议
+                  </span>
+                  <button onclick="hideSuggestions()" class="text-green-600 text-xs hover:text-green-800 font-medium px-2 py-1 rounded-lg hover:bg-green-100 transition-colors">收起 ✕</button>
                 </div>
                 ${state.isLoadingSuggestions ? `
-                  <div class="flex items-center justify-center py-4">
-                    <div class="flex gap-1.5">
-                      <div class="w-2 h-2 bg-green-400 rounded-full animate-bounce"></div>
-                      <div class="w-2 h-2 bg-green-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
-                      <div class="w-2 h-2 bg-green-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+                  <div class="flex items-center justify-center py-6">
+                    <div class="flex gap-2">
+                      <div class="w-2.5 h-2.5 bg-green-400 rounded-full animate-bounce"></div>
+                      <div class="w-2.5 h-2.5 bg-green-400 rounded-full animate-bounce" style="animation-delay:0.15s"></div>
+                      <div class="w-2.5 h-2.5 bg-green-400 rounded-full animate-bounce" style="animation-delay:0.3s"></div>
                     </div>
-                    <span class="ml-2 text-sm text-green-600">正在生成建议...</span>
+                    <span class="ml-3 text-sm text-green-600 font-medium">正在生成建议...</span>
                   </div>
                 ` : `
                   <div class="space-y-2">
                     ${state.suggestions.map((s, i) => `
                       <button onclick="useSuggestion(${i})" 
-                        class="w-full text-left p-3 bg-white rounded-xl border border-green-200 text-sm hover:border-green-400 hover:shadow-sm active:scale-98 transition-all">
-                        <span class="text-gray-800">${s}</span>
+                        class="w-full text-left p-3.5 bg-white rounded-xl border border-green-200 text-sm hover:border-green-400 hover:shadow-md active:scale-[0.99] transition-all group">
+                        <span class="text-gray-800 group-hover:text-green-700">${s}</span>
                       </button>
                     `).join('')}
                   </div>
@@ -9493,51 +9517,51 @@ ${starText}
           
           <!-- 词汇收藏模态框 -->
           ${state.vocabModal.show ? `
-            <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onclick="closeVocabModal()">
-              <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl slide-up" onclick="event.stopPropagation()">
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="closeVocabModal()">
+              <div class="bg-white rounded-3xl w-full max-w-sm shadow-2xl scale-in" onclick="event.stopPropagation()">
                 <div class="p-5 border-b border-gray-100">
                   <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                      <span class="text-xl">📚</span>
+                    <h3 class="font-bold text-gray-800 flex items-center gap-3">
+                      <span class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-xl">📚</span>
                       <span>收藏到词汇本</span>
                     </h3>
-                    <button onclick="closeVocabModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+                    <button onclick="closeVocabModal()" class="w-9 h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">✕</button>
                   </div>
                 </div>
                 <div class="p-5 space-y-4">
                   <div>
-                    <label class="block text-sm text-gray-500 mb-1">西班牙语单词</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">西班牙语单词</label>
                     <input id="vocabModalWord" type="text" value="${state.vocabModal.word}" 
                       oninput="state.vocabModal.word=this.value"
-                      class="w-full p-3 rounded-xl border border-gray-200 focus:border-green-500 outline-none text-lg font-medium">
+                      class="w-full p-3.5 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none text-lg font-semibold transition-colors">
                   </div>
                   <div>
-                    <label class="block text-sm text-gray-500 mb-1">中文意思</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">中文意思</label>
                     <div class="relative">
                       <input id="vocabModalMeaning" type="text" value="${state.vocabModal.meaning}" 
                         oninput="state.vocabModal.meaning=this.value"
                         placeholder="${state.vocabModal.isLoading ? '正在翻译...' : '输入中文意思'}"
-                        class="w-full p-3 rounded-xl border border-gray-200 focus:border-green-500 outline-none ${state.vocabModal.isLoading ? 'bg-gray-50' : ''}">
+                        class="w-full p-3.5 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none transition-colors ${state.vocabModal.isLoading ? 'bg-gray-50' : ''}">
                       ${state.vocabModal.isLoading ? `
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2">
                           <div class="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                       ` : ''}
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm text-gray-500 mb-1">例句（可选）</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">例句（可选）</label>
                     <input id="vocabModalExample" type="text" value="${state.vocabModal.example}" 
                       oninput="state.vocabModal.example=this.value"
                       placeholder="可以输入一个例句"
-                      class="w-full p-3 rounded-xl border border-gray-200 focus:border-green-500 outline-none text-sm">
+                      class="w-full p-3.5 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none text-sm transition-colors">
                   </div>
                 </div>
                 <div class="p-5 border-t border-gray-100 flex gap-3">
                   <button onclick="closeVocabModal()" 
-                    class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50">取消</button>
+                    class="flex-1 py-3.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-colors btn-press">取消</button>
                   <button onclick="saveVocabFromModal()" 
-                    class="flex-1 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium hover:from-green-600 hover:to-emerald-600 shadow-lg">
+                    class="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold hover:from-green-600 hover:to-emerald-600 shadow-lg btn-press">
                     收藏
                   </button>
                 </div>
@@ -9546,11 +9570,11 @@ ${starText}
           ` : ''}
           
           <!-- 输入区 -->
-          <div class="glass border-t p-3 safe-bottom">
+          <div class="glass border-t border-white/50 p-3 safe-bottom shadow-lg">
             <div class="max-w-lg mx-auto">
-              <div class="flex gap-2 items-center">
+              <div class="flex gap-2.5 items-center">
                 <button onclick="toggleListening()" 
-                  class="relative w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.isListening ? 'bg-red-500 text-white mic-recording' : 'bg-gray-200 hover:bg-gray-300'}">
+                  class="relative w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all btn-press ${state.isListening ? 'bg-red-500 text-white mic-recording shadow-lg' : 'bg-gray-100 hover:bg-gray-200'}">
                   ${state.isListening ? '⏹' : '🎤'}
                 </button>
                 
@@ -9558,24 +9582,24 @@ ${starText}
                   placeholder="${state.isListening ? '🎙️ 正在听...' : '用西班牙语输入...'}"
                   oninput="state.inputText=this.value"
                   onkeydown="if(event.key==='Enter')sendMessage()"
-                  class="flex-1 p-3 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${state.isListening ? 'bg-red-50 border-2 border-red-200' : 'bg-white border border-gray-200'}">
+                  class="flex-1 p-3.5 rounded-xl text-sm focus:outline-none transition-all ${state.isListening ? 'bg-red-50 border-2 border-red-300 shadow-inner' : 'bg-white border-2 border-gray-200 focus:border-primary-400 shadow-sm'}">
                 
                 <button onclick="sendMessage()" 
-                  class="w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${state.inputText.trim() && !state.isLoading ? 'bg-primary-500 text-white shadow-lg' : 'bg-gray-200 text-gray-400'}">
+                  class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all btn-press ${state.inputText.trim() && !state.isLoading ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:shadow-xl' : 'bg-gray-100 text-gray-400'}">
                   ➤
                 </button>
               </div>
               
-              <div class="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+              <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar pb-1">
                 <!-- 智能建议按钮 -->
                 <button onclick="getSuggestions()" 
-                  class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs whitespace-nowrap hover:from-green-600 hover:to-emerald-600 shadow-sm flex items-center gap-1 ${state.isLoadingSuggestions ? 'opacity-50' : ''}">
+                  class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl text-xs whitespace-nowrap hover:from-green-600 hover:to-emerald-600 shadow-md flex items-center gap-1.5 font-medium btn-press ${state.isLoadingSuggestions ? 'opacity-50' : ''}">
                   <span>💡</span>
                   <span>不知道说什么？</span>
                 </button>
                 ${['No entiendo', '¿Puedes repetir?', 'Más despacio'].map(p => `
                   <button onclick="state.inputText='${p}';render()" 
-                    class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs whitespace-nowrap hover:border-primary-300 hover:text-primary-600">${p}</button>
+                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs whitespace-nowrap hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50 font-medium transition-all btn-press">${p}</button>
                 `).join('')}
               </div>
             </div>
@@ -9590,41 +9614,41 @@ ${starText}
       const translation = state.translationCache[msg.id];
       
       return `
-        <div class="flex ${isUser ? 'justify-end' : 'justify-start'} fade-in">
+        <div class="flex ${isUser ? 'justify-end' : 'justify-start'} fade-in-up">
           <div class="max-w-[85%]">
             ${!isUser ? `
-              <div class="flex items-center gap-2 mb-1">
-                <div class="w-7 h-7 rounded-full bg-gradient-to-br ${tutor.color} flex items-center justify-center text-sm">${tutor.avatar}</div>
-                <span class="text-xs text-gray-500">${tutor.name}</span>
+              <div class="flex items-center gap-2 mb-1.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br ${tutor.color} flex items-center justify-center text-base shadow-sm">${tutor.avatar}</div>
+                <span class="text-xs font-medium text-gray-500">${tutor.name}</span>
               </div>
             ` : ''}
             
-            <div class="relative">
+            <div class="relative group">
               <div id="msg-${msg.id}"
-                class="p-4 rounded-2xl text-sm select-text ${isUser 
-                  ? 'bg-primary-500 text-white rounded-br-sm' 
-                  : 'bg-white shadow-sm rounded-bl-sm'}">
+                class="p-4 rounded-2xl text-sm select-text shadow-sm transition-shadow hover:shadow-md ${isUser 
+                  ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-br-md' 
+                  : 'bg-white rounded-bl-md border border-gray-100'}">
                 ${msg.text}
               </div>
               
               ${!isUser && showTrans && translation ? `
-                <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 whitespace-pre-line">
+                <div class="mt-2 p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl text-sm text-blue-800 whitespace-pre-line fade-in">
                   ${translation}
                 </div>
               ` : ''}
               
               ${!isUser ? `
-                <div class="absolute -right-12 top-0 flex flex-col gap-1">
+                <div class="absolute -right-11 top-0 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onclick="handleSpeakClick(${msg.id})" 
-                    class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-gray-50" title="朗读">
+                    class="w-8 h-8 rounded-xl bg-white shadow-md flex items-center justify-center text-sm hover:bg-gray-50 hover:scale-110 transition-all" title="朗读">
                     🔊
                   </button>
                   <button onclick="handleTranslateClick(${msg.id})" 
-                    class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-blue-50 hover:text-blue-600 ${showTrans ? 'bg-blue-100 text-blue-600' : ''}" title="翻译">
+                    class="w-8 h-8 rounded-xl bg-white shadow-md flex items-center justify-center text-sm hover:bg-blue-50 hover:text-blue-600 hover:scale-110 transition-all ${showTrans ? 'bg-blue-100 text-blue-600' : ''}" title="翻译">
                     🌐
                   </button>
                   <button onclick="openVocabModalFromSelection(${msg.id})" 
-                    class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm hover:bg-green-50 hover:text-green-600" title="选中单词后收藏">
+                    class="w-8 h-8 rounded-xl bg-white shadow-md flex items-center justify-center text-sm hover:bg-green-50 hover:text-green-600 hover:scale-110 transition-all" title="选中单词后收藏">
                     📚
                   </button>
                 </div>
@@ -9964,25 +9988,29 @@ ${starText}
       const user = state.user;
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <div class="bg-white border-b p-4 flex items-center gap-3">
-            <button onclick="state.view='home';render()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center">←</button>
-            <h1 class="font-bold text-gray-800">设置</h1>
+          <!-- 顶栏 -->
+          <div class="bg-white border-b border-gray-100 p-4 flex items-center gap-3 shadow-sm">
+            <button onclick="state.view='home';render()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors btn-press">←</button>
+            <h1 class="font-bold text-gray-800 text-lg">⚙️ 设置</h1>
           </div>
           
-          <div class="flex-1 overflow-auto p-4">
-            <div class="max-w-md mx-auto space-y-6">
+          <div class="flex-1 overflow-auto p-4 custom-scrollbar">
+            <div class="max-w-md mx-auto space-y-5">
               <!-- 个人信息 -->
-              <div class="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 class="font-bold text-gray-800 mb-4">👤 个人信息</h3>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 fade-in-up" style="animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards;">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">👤</span>
+                  个人信息
+                </h3>
                 <div class="space-y-4">
                   <div>
-                    <label class="text-sm text-gray-500">名字</label>
+                    <label class="text-sm font-medium text-gray-600 mb-2 block">名字</label>
                     <input id="settingName" type="text" value="${user.name}" 
-                      class="w-full mt-1 p-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none">
+                      class="w-full p-3.5 rounded-xl border-2 border-gray-200 focus:border-primary-500 outline-none transition-colors">
                   </div>
                   <div>
-                    <label class="text-sm text-gray-500">西语水平</label>
-                    <select id="settingLevel" class="w-full mt-1 p-3 rounded-xl border border-gray-200 focus:border-primary-500 outline-none">
+                    <label class="text-sm font-medium text-gray-600 mb-2 block">西语水平</label>
+                    <select id="settingLevel" class="w-full p-3.5 rounded-xl border-2 border-gray-200 focus:border-primary-500 outline-none transition-colors">
                       ${LEVELS.map(l => `<option value="${l.id}" ${user.level === l.id ? 'selected' : ''}>${l.id} - ${l.name}</option>`).join('')}
                     </select>
                   </div>
@@ -9990,70 +10018,76 @@ ${starText}
               </div>
               
               <!-- 学习偏好 -->
-              <div class="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 class="font-bold text-gray-800 mb-4">📚 学习偏好</h3>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 fade-in-up" style="animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards;">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">📚</span>
+                  学习偏好
+                </h3>
                 <div class="space-y-4">
-                  <label class="flex items-center justify-between">
-                    <span class="text-gray-700">自动显示翻译</span>
-                    <input id="settingAutoTrans" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${user.autoTranslate ? 'checked' : ''}>
+                  <label class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                    <span class="text-gray-700 font-medium">自动显示翻译</span>
+                    <input id="settingAutoTrans" type="checkbox" class="w-5 h-5 text-primary-600 rounded-lg" ${user.autoTranslate ? 'checked' : ''}>
                   </label>
-                  <label class="flex items-center justify-between">
-                    <span class="text-gray-700">严格纠错模式</span>
-                    <input id="settingStrict" type="checkbox" class="w-5 h-5 text-primary-600 rounded" ${user.strictMode ? 'checked' : ''}>
+                  <label class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                    <span class="text-gray-700 font-medium">严格纠错模式</span>
+                    <input id="settingStrict" type="checkbox" class="w-5 h-5 text-primary-600 rounded-lg" ${user.strictMode ? 'checked' : ''}>
                   </label>
                   <div>
-                    <label class="text-gray-700">翻译语言</label>
-                    <div class="grid grid-cols-3 gap-2 mt-2">
+                    <label class="text-gray-700 font-medium block mb-2">翻译语言</label>
+                    <div class="grid grid-cols-3 gap-2">
                       <button type="button" onclick="document.getElementById('settingTransLang').value='zh';document.querySelectorAll('.trans-lang-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50')"
-                        class="trans-lang-btn p-3 rounded-xl border text-center text-sm ${(user.transLang || 'zh') === 'zh' ? 'ring-2 ring-primary-500 bg-primary-50' : 'border-gray-200'}">
+                        class="trans-lang-btn p-3 rounded-xl border-2 text-center text-sm font-medium transition-all btn-press ${(user.transLang || 'zh') === 'zh' ? 'ring-2 ring-primary-500 bg-primary-50 border-primary-200' : 'border-gray-200 hover:border-gray-300'}">
                         🇨🇳 中文
                       </button>
                       <button type="button" onclick="document.getElementById('settingTransLang').value='en';document.querySelectorAll('.trans-lang-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50')"
-                        class="trans-lang-btn p-3 rounded-xl border text-center text-sm ${user.transLang === 'en' ? 'ring-2 ring-primary-500 bg-primary-50' : 'border-gray-200'}">
+                        class="trans-lang-btn p-3 rounded-xl border-2 text-center text-sm font-medium transition-all btn-press ${user.transLang === 'en' ? 'ring-2 ring-primary-500 bg-primary-50 border-primary-200' : 'border-gray-200 hover:border-gray-300'}">
                         🇬🇧 英语
                       </button>
                       <button type="button" onclick="document.getElementById('settingTransLang').value='both';document.querySelectorAll('.trans-lang-btn').forEach(b=>b.classList.remove('ring-2','ring-primary-500','bg-primary-50'));this.classList.add('ring-2','ring-primary-500','bg-primary-50')"
-                        class="trans-lang-btn p-3 rounded-xl border text-center text-sm ${user.transLang === 'both' ? 'ring-2 ring-primary-500 bg-primary-50' : 'border-gray-200'}">
+                        class="trans-lang-btn p-3 rounded-xl border-2 text-center text-sm font-medium transition-all btn-press ${user.transLang === 'both' ? 'ring-2 ring-primary-500 bg-primary-50 border-primary-200' : 'border-gray-200 hover:border-gray-300'}">
                         🌐 双语
                       </button>
                     </div>
                     <input type="hidden" id="settingTransLang" value="${user.transLang || 'zh'}">
                   </div>
                   <div>
-                    <label class="text-gray-700">语音速度</label>
+                    <label class="text-gray-700 font-medium block mb-2">语音速度</label>
                     <input id="settingSpeechRate" type="range" min="0.5" max="1.2" step="0.05" value="${user.speechRate || 0.85}"
-                      class="w-full mt-2" oninput="document.getElementById('rateValue').textContent=this.value">
-                    <div class="flex justify-between text-xs text-gray-400">
-                      <span>慢</span>
-                      <span id="rateValue">${user.speechRate || 0.85}</span>
-                      <span>快</span>
+                      class="w-full mt-2 accent-primary-500" oninput="document.getElementById('rateValue').textContent=this.value">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>🐢 慢</span>
+                      <span id="rateValue" class="font-semibold text-primary-600">${user.speechRate || 0.85}</span>
+                      <span>快 🐰</span>
                     </div>
                   </div>
                   <div>
-                    <label class="text-gray-700">朗读音量</label>
+                    <label class="text-gray-700 font-medium block mb-2">朗读音量</label>
                     <input id="settingSpeechVolume" type="range" min="0" max="1" step="0.1" value="${user.speechVolume ?? 1.0}"
-                      class="w-full mt-2" oninput="document.getElementById('volumeValue').textContent=Math.round(this.value*100)+'%'">
-                    <div class="flex justify-between text-xs text-gray-400">
-                      <span>静音</span>
-                      <span id="volumeValue">${Math.round((user.speechVolume ?? 1.0) * 100)}%</span>
-                      <span>最大</span>
+                      class="w-full mt-2 accent-primary-500" oninput="document.getElementById('volumeValue').textContent=Math.round(this.value*100)+'%'">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>🔇 静音</span>
+                      <span id="volumeValue" class="font-semibold text-primary-600">${Math.round((user.speechVolume ?? 1.0) * 100)}%</span>
+                      <span>最大 🔊</span>
                     </div>
                   </div>
                 </div>
               </div>
               
               <!-- 外观设置 -->
-              <div class="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 class="font-bold text-gray-800 mb-4">🎨 外观设置</h3>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 fade-in-up" style="animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards;">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">🎨</span>
+                  外观设置
+                </h3>
                 <div class="space-y-4">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r ${state.darkMode ? 'from-indigo-50 to-purple-50' : 'from-amber-50 to-orange-50'}">
                     <div>
-                      <span class="text-gray-700">深色模式</span>
+                      <span class="text-gray-700 font-medium">深色模式</span>
                       <div class="text-xs text-gray-400">夜间护眼</div>
                     </div>
                     <button onclick="toggleDarkMode()" 
-                      class="w-14 h-8 rounded-full transition-colors ${state.darkMode ? 'bg-primary-500' : 'bg-gray-300'} relative">
-                      <div class="absolute top-1 ${state.darkMode ? 'right-1' : 'left-1'} w-6 h-6 bg-white rounded-full shadow transition-all flex items-center justify-center text-xs">
+                      class="w-16 h-9 rounded-full transition-all ${state.darkMode ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-gray-300'} relative shadow-inner">
+                      <div class="absolute top-1 ${state.darkMode ? 'right-1' : 'left-1'} w-7 h-7 bg-white rounded-full shadow-md transition-all flex items-center justify-center text-sm">
                         ${state.darkMode ? '🌙' : '☀️'}
                       </div>
                     </button>
@@ -10062,33 +10096,38 @@ ${starText}
               </div>
               
               <!-- 数据管理 -->
-              <div class="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 class="font-bold text-gray-800 mb-4">💾 数据管理</h3>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 fade-in-up" style="animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards;">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">💾</span>
+                  数据管理
+                </h3>
                 <div class="space-y-3">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">对话记录</span>
-                    <span class="text-gray-800 font-medium">${state.chatHistory.length} 条</span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">错题本</span>
-                    <span class="text-gray-800 font-medium">${state.mistakeBook.length} 条</span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">词汇本</span>
-                    <span class="text-gray-800 font-medium">${state.vocabulary.length} 个</span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">打卡记录</span>
-                    <span class="text-gray-800 font-medium">${state.checkinDays.length} 天</span>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-50 rounded-xl p-3 text-center">
+                      <div class="text-2xl font-bold text-gray-800">${state.chatHistory.length}</div>
+                      <div class="text-xs text-gray-500">对话记录</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 text-center">
+                      <div class="text-2xl font-bold text-gray-800">${state.mistakeBook.length}</div>
+                      <div class="text-xs text-gray-500">错题本</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 text-center">
+                      <div class="text-2xl font-bold text-gray-800">${state.vocabulary.length}</div>
+                      <div class="text-xs text-gray-500">词汇本</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 text-center">
+                      <div class="text-2xl font-bold text-gray-800">${state.checkinDays.length}</div>
+                      <div class="text-xs text-gray-500">打卡天数</div>
+                    </div>
                   </div>
                   
                   <div class="border-t border-gray-100 pt-4 mt-2 space-y-2">
                     <button onclick="exportUserData()" 
-                      class="w-full py-3 rounded-xl border border-primary-200 text-primary-600 hover:bg-primary-50 flex items-center justify-center gap-2">
+                      class="w-full py-3.5 rounded-xl border-2 border-primary-200 text-primary-600 hover:bg-primary-50 flex items-center justify-center gap-2 font-medium transition-colors btn-press">
                       <span>📤</span>
                       <span>导出数据备份</span>
                     </button>
-                    <label class="w-full py-3 rounded-xl border border-green-200 text-green-600 hover:bg-green-50 flex items-center justify-center gap-2 cursor-pointer">
+                    <label class="w-full py-3.5 rounded-xl border-2 border-green-200 text-green-600 hover:bg-green-50 flex items-center justify-center gap-2 cursor-pointer font-medium transition-colors btn-press">
                       <span>📥</span>
                       <span>导入数据</span>
                       <input type="file" accept=".json" onchange="importUserData(event)" class="hidden">
@@ -10097,7 +10136,7 @@ ${starText}
                   
                   <div class="border-t border-gray-100 pt-4 mt-2">
                     <button onclick="if(confirm('确定要清除所有对话记录吗？'))clearHistory()" 
-                      class="w-full py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50">
+                      class="w-full py-3.5 rounded-xl border-2 border-red-200 text-red-600 hover:bg-red-50 font-medium transition-colors btn-press">
                       清除对话记录
                     </button>
                   </div>
@@ -10105,71 +10144,77 @@ ${starText}
               </div>
               
               <!-- 应用设置 -->
-              <div class="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 class="font-bold text-gray-800 mb-4">📱 应用</h3>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 fade-in-up" style="animation-delay: 0.25s; opacity: 0; animation-fill-mode: forwards;">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">📱</span>
+                  应用
+                </h3>
                 <div class="space-y-3">
                   ${!isRunningAsPWA() ? `
                     <button onclick="installPWA()" 
-                      class="w-full py-3 rounded-xl bg-gradient-to-r from-primary-500 to-indigo-500 text-white font-medium flex items-center justify-center gap-2 hover:shadow-lg active:scale-98 transition-all">
+                      class="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary-500 to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 hover:shadow-lg active:scale-[0.98] transition-all btn-press">
                       <span>📲</span>
                       <span>安装到主屏幕</span>
                     </button>
                     <p class="text-xs text-gray-400 text-center">安装后可离线使用，体验更流畅</p>
                   ` : `
-                    <div class="py-3 text-center text-green-600 flex items-center justify-center gap-2">
+                    <div class="py-3 text-center bg-green-50 rounded-xl text-green-600 flex items-center justify-center gap-2 font-medium">
                       <span>✅</span>
                       <span>已安装为独立应用</span>
                     </div>
                   `}
                   
-                  <div class="border-t border-gray-100 pt-4 mt-2">
+                  <div class="grid grid-cols-2 gap-2 pt-2">
                     <button onclick="shareApp()" 
-                      class="w-full py-3 rounded-xl border border-primary-200 text-primary-600 hover:bg-primary-50 flex items-center justify-center gap-2">
+                      class="py-3 rounded-xl border-2 border-primary-200 text-primary-600 hover:bg-primary-50 flex items-center justify-center gap-2 font-medium transition-colors btn-press">
                       <span>🔗</span>
-                      <span>分享给朋友</span>
+                      <span>分享</span>
                     </button>
-                  </div>
-                  
-                  <div class="border-t border-gray-100 pt-4 mt-2">
                     <button onclick="shareLearningResult({
                       newWords: state.dailyWordStats?.newLearned || 0,
                       reviewed: state.dailyWordStats?.reviewed || 0,
                       streak: state.wordStreak?.currentStreak || 0,
                       accuracy: Math.round(((state.dailyWordStats?.totalCorrect || 0) / Math.max(1, (state.dailyWordStats?.totalCorrect || 0) + (state.dailyWordStats?.totalWrong || 0))) * 100)
                     })" 
-                      class="w-full py-3 rounded-xl border border-amber-200 text-amber-600 hover:bg-amber-50 flex items-center justify-center gap-2">
+                      class="py-3 rounded-xl border-2 border-amber-200 text-amber-600 hover:bg-amber-50 flex items-center justify-center gap-2 font-medium transition-colors btn-press">
                       <span>🏆</span>
-                      <span>分享学习成果</span>
+                      <span>成果</span>
                     </button>
                   </div>
                 </div>
               </div>
               
               <!-- 关于 -->
-              <div class="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 class="font-bold text-gray-800 mb-4">ℹ️ 关于</h3>
-                <div class="space-y-2 text-sm text-gray-600">
-                  <div class="flex justify-between">
-                    <span>版本</span>
-                    <span class="text-gray-800">2.0.0 (Phase 5)</span>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 fade-in-up" style="animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards;">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center">ℹ️</span>
+                  关于
+                </h3>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50">
+                    <span class="text-gray-600">版本</span>
+                    <span class="text-gray-800 font-semibold bg-primary-100 px-2 py-0.5 rounded-full text-xs">v2.1.0</span>
                   </div>
-                  <div class="flex justify-between">
-                    <span>词库</span>
-                    <span class="text-gray-800">1,953 词</span>
+                  <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50">
+                    <span class="text-gray-600">词库</span>
+                    <span class="text-gray-800 font-semibold">1,953 词</span>
                   </div>
-                  <div class="flex justify-between">
-                    <span>更新日期</span>
-                    <span class="text-gray-800">2025-12-23</span>
+                  <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50">
+                    <span class="text-gray-600">更新日期</span>
+                    <span class="text-gray-800 font-semibold">2025-12-24</span>
                   </div>
                 </div>
               </div>
+              
+              <!-- 底部留白 -->
+              <div class="h-4"></div>
             </div>
           </div>
           
-          <div class="p-4 safe-bottom">
+          <div class="p-4 safe-bottom bg-white border-t border-gray-100">
             <button onclick="saveSettings()" 
-              class="w-full py-4 rounded-xl bg-primary-500 text-white font-bold shadow-lg">
-              保存设置
+              class="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold shadow-lg hover:shadow-xl active:scale-[0.98] transition-all btn-press">
+              ✓ 保存设置
             </button>
           </div>
         </div>
@@ -11719,43 +11764,56 @@ ${starText}
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <!-- 顶部 -->
-          <div class="bg-gradient-to-r from-yellow-500 to-amber-500 p-6 text-white">
-            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
-            <div class="flex items-center justify-between">
-              <div>
-                <h1 class="text-2xl font-bold">🏆 我的成就</h1>
-                <p class="text-white/80 text-sm mt-1">已解锁 ${unlockedCount}/${totalCount} 个成就</p>
-              </div>
-              <div class="text-right">
-                <div class="text-3xl font-bold">${percentage}%</div>
-                <div class="text-white/70 text-xs">完成度</div>
-              </div>
+          <!-- 顶部 - 渐变背景 -->
+          <div class="relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500"></div>
+            <div class="absolute inset-0 opacity-20">
+              <div class="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+              <div class="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
             </div>
             
-            <!-- 进度条 -->
-            <div class="mt-4 h-3 bg-white/20 rounded-full overflow-hidden">
-              <div class="h-full bg-white rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
+            <div class="relative p-6 text-white">
+              <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-4 flex items-center gap-1 hover:text-white transition-colors btn-press">← 返回</button>
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <span class="text-3xl animate-float">🏆</span>
+                    我的成就
+                  </h1>
+                  <p class="text-white/80 text-sm mt-1">已解锁 ${unlockedCount}/${totalCount} 个成就</p>
+                </div>
+                <div class="text-right bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 border border-white/20">
+                  <div class="text-3xl font-bold">${percentage}%</div>
+                  <div class="text-white/70 text-xs">完成度</div>
+                </div>
+              </div>
+              
+              <!-- 进度条 -->
+              <div class="mt-5 h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+                <div class="h-full bg-gradient-to-r from-white to-yellow-200 rounded-full transition-all duration-700 shadow-lg" style="width: ${percentage}%"></div>
+              </div>
             </div>
           </div>
           
-          <div class="flex-1 overflow-auto p-4">
+          <div class="flex-1 overflow-auto p-4 custom-scrollbar">
             <div class="max-w-md mx-auto">
               <!-- 成就网格 -->
               <div class="grid grid-cols-2 gap-3">
-                ${ACHIEVEMENTS.map(a => {
+                ${ACHIEVEMENTS.map((a, idx) => {
                   const unlocked = state.achievements.includes(a.id);
                   return `
-                    <div class="bg-white rounded-2xl p-4 shadow-sm ${unlocked ? 'border-2 border-amber-400' : 'opacity-60'}">
-                      <div class="text-center">
-                        <div class="text-4xl mb-2 ${unlocked ? '' : 'grayscale'}">${a.icon}</div>
-                        <div class="font-bold text-gray-800 text-sm">${a.name}</div>
-                        <div class="text-xs text-gray-500 mt-1">${a.desc}</div>
-                        ${unlocked ? `
-                          <div class="mt-2 text-xs text-amber-600 font-medium">✅ 已解锁</div>
-                        ` : `
-                          <div class="mt-2 text-xs text-gray-400">🔒 未解锁</div>
-                        `}
+                    <div class="fade-in-up" style="animation-delay: ${idx * 0.03}s; opacity: 0; animation-fill-mode: forwards;">
+                      <div class="bg-white rounded-2xl p-4 shadow-sm transition-all hover:shadow-md ${unlocked ? 'border-2 border-amber-400 ring-2 ring-amber-100' : 'opacity-70 hover:opacity-90'}">
+                        <div class="text-center">
+                          <div class="text-4xl mb-2 ${unlocked ? 'animate-float' : 'grayscale'}">${a.icon}</div>
+                          <div class="font-bold text-gray-800 text-sm">${a.name}</div>
+                          <div class="text-xs text-gray-500 mt-1 line-clamp-2">${a.desc}</div>
+                          ${unlocked ? `
+                            <div class="mt-3 text-xs text-amber-600 font-semibold bg-amber-50 rounded-full py-1 px-3 inline-block">✅ 已解锁</div>
+                          ` : `
+                            <div class="mt-3 text-xs text-gray-400 bg-gray-100 rounded-full py-1 px-3 inline-block">🔒 未解锁</div>
+                          `}
+                        </div>
                       </div>
                     </div>
                   `;
@@ -11763,9 +11821,15 @@ ${starText}
               </div>
               
               <!-- 提示 -->
-              <div class="mt-6 text-center text-sm text-gray-400">
-                继续学习，解锁更多成就！
+              <div class="mt-8 text-center">
+                <div class="inline-flex items-center gap-2 text-sm text-gray-400 bg-white rounded-full px-4 py-2 shadow-sm">
+                  <span>✨</span>
+                  <span>继续学习，解锁更多成就！</span>
+                </div>
               </div>
+              
+              <!-- 底部留白 -->
+              <div class="h-4"></div>
             </div>
           </div>
         </div>
