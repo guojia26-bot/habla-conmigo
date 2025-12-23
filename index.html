@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="HablaConmigo">
-  <meta name="theme-color" content="#6366f1">
+  <meta name="theme-color" content="#e85d04">
   <meta name="description" content="AI驱动的西班牙语口语学习助手，包含词汇学习、对话练习、闯关挑战等功能">
   <meta name="keywords" content="西班牙语,学习,AI,词汇,口语,HablaConmigo">
   <title>HablaConmigo - AI西语口语助手</title>
@@ -18,106 +18,417 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇪🇸</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' width='100' height='100' rx='20'/><text y='.9em' x='50' text-anchor='middle' font-size='70'>🇪🇸</text></svg>">
   
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          fontFamily: { 
+            sans: ['Nunito', 'system-ui', 'sans-serif'],
+            display: ['Quicksand', 'Nunito', 'sans-serif']
+          },
           colors: {
-            primary: { 50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
-            accent: { 500: '#f97316', 600: '#ea580c' }
+            // 西班牙热情橙红色系
+            primary: { 
+              50: '#fff8f5', 100: '#ffede5', 200: '#ffd6c4', 300: '#ffb899',
+              400: '#ff8c5a', 500: '#e85d04', 600: '#d45003', 700: '#b94302',
+              800: '#9a3802', 900: '#7c2d02'
+            },
+            // 金黄阳光色系
+            accent: { 
+              50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d',
+              400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309'
+            },
+            // 深红强调色
+            spanish: {
+              red: '#c60b1e', gold: '#ffc400', dark: '#1a1a2e'
+            },
+            // 深色模式专用
+            dark: {
+              bg: '#0f172a', card: '#1e293b', border: '#334155', text: '#f8fafc'
+            }
+          },
+          boxShadow: {
+            'glow': '0 0 20px rgba(232, 93, 4, 0.25)',
+            'glow-lg': '0 0 40px rgba(232, 93, 4, 0.35)',
+            'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+            'card': '0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04)',
+            'card-hover': '0 12px 28px -8px rgba(232, 93, 4, 0.15), 0 8px 16px -8px rgba(0, 0, 0, 0.08)',
+            'inner-glow': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.1)'
+          },
+          animation: {
+            'gradient': 'gradient 8s ease infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'pulse-soft': 'pulse-soft 2s ease-in-out infinite'
           }
         }
       }
     }
   </script>
   <style>
+    /* ========== CSS变量 (主题系统) ========== */
+    :root {
+      --color-primary: #e85d04;
+      --color-primary-light: #ff8c5a;
+      --color-primary-dark: #b94302;
+      --color-accent: #f59e0b;
+      --color-spanish-red: #c60b1e;
+      --color-spanish-gold: #ffc400;
+      --gradient-warm: linear-gradient(135deg, #e85d04 0%, #f59e0b 50%, #fbbf24 100%);
+      --gradient-sunset: linear-gradient(135deg, #e85d04 0%, #c60b1e 100%);
+      --gradient-spanish: linear-gradient(180deg, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+    }
+    
+    /* ========== 基础重置 ========== */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; margin: 0; overflow: hidden; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; }
+    body { 
+      font-family: 'Nunito', system-ui, sans-serif; 
+      background: linear-gradient(145deg, #fffbf5 0%, #fff8f0 50%, #fef7ec 100%);
+      transition: background 0.4s ease, color 0.3s ease;
+    }
     
-    /* 动画 */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
-    @keyframes bounce { 0%, 100% { transform: translateY(-25%); } 50% { transform: translateY(0); } }
+    /* ========== 动画关键帧 ========== */
+    @keyframes fadeIn { 
+      from { opacity: 0; } 
+      to { opacity: 1; } 
+    }
+    @keyframes fadeInUp { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    @keyframes slideUp { 
+      from { opacity: 0; transform: translateY(100%); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    @keyframes scaleIn { 
+      from { opacity: 0; transform: scale(0.9); } 
+      to { opacity: 1; transform: scale(1); } 
+    }
+    @keyframes pulse-ring { 
+      0% { transform: scale(0.8); opacity: 1; } 
+      100% { transform: scale(1.8); opacity: 0; } 
+    }
+    @keyframes bounce { 
+      0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); } 
+      50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); } 
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    @keyframes sparkle {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+      50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+    }
+    @keyframes confetti {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
     
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    .slide-up { animation: slideUp 0.3s ease-out; }
+    /* ========== 动画类 ========== */
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    .fade-in-up { animation: fadeInUp 0.5s ease-out; }
+    .slide-up { animation: slideUp 0.4s ease-out; }
+    .scale-in { animation: scaleIn 0.3s ease-out; }
     .animate-bounce { animation: bounce 0.6s infinite; }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    .animate-wiggle { animation: wiggle 0.5s ease-in-out; }
+    .animate-sparkle { animation: sparkle 2s ease-in-out infinite; }
     
+    /* 交错动画 */
+    .stagger-1 { animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards; }
+    .stagger-2 { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
+    .stagger-3 { animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards; }
+    .stagger-4 { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; }
+    .stagger-5 { animation-delay: 0.25s; opacity: 0; animation-fill-mode: forwards; }
+    
+    /* ========== 微交互 ========== */
+    .btn-press { 
+      transition: all 0.15s ease; 
+    }
+    .btn-press:active { 
+      transform: scale(0.97); 
+    }
+    .btn-hover {
+      transition: all 0.2s ease;
+    }
+    .btn-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* 卡片交互 */
+    .card-interactive {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-interactive:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+    }
+    .card-interactive:active {
+      transform: translateY(-2px);
+    }
+    
+    /* ========== 录音动画 ========== */
     .mic-recording { position: relative; }
     .mic-recording::before { 
       content: ''; position: absolute; inset: -8px; border-radius: 50%; 
       background: rgba(239,68,68,0.3); animation: pulse-ring 1.5s ease-out infinite; 
     }
     
-    /* 滚动条 */
+    /* ========== 滚动条 ========== */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* 安全区域 */
+    /* 自定义滚动条 */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { 
+      background: rgba(232, 93, 4, 0.25); 
+      border-radius: 3px; 
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+      background: rgba(232, 93, 4, 0.4); 
+    }
+    
+    /* ========== 安全区域 ========== */
     .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+    .safe-top { padding-top: max(16px, env(safe-area-inset-top)); }
     
-    /* 输入框 */
+    /* ========== 输入框 ========== */
     input, button, textarea, select { font-size: 16px !important; }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.15);
+    }
     
-    /* 翻译提示 */
+    /* ========== 翻译提示 ========== */
     .translation-tooltip {
       position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-      background: #1e293b; color: white; padding: 8px 12px; border-radius: 8px;
-      font-size: 13px; white-space: nowrap; margin-bottom: 8px; z-index: 10;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white; padding: 10px 14px; border-radius: 12px;
+      font-size: 13px; white-space: nowrap; margin-bottom: 10px; z-index: 10;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      animation: fadeInUp 0.2s ease-out;
     }
     .translation-tooltip::after {
       content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-      border: 6px solid transparent; border-top-color: #1e293b;
+      border: 8px solid transparent; border-top-color: #1e293b;
     }
     
-    /* 纠正卡片 */
+    /* ========== 纠正卡片 ========== */
     .correction-card {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-      border-left: 4px solid #f59e0b;
-      border-radius: 0 12px 12px 0;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border-left: 4px solid #e85d04;
+      border-radius: 0 16px 16px 0;
+      box-shadow: 0 4px 15px rgba(232, 93, 4, 0.12);
     }
     
-    /* 玻璃效果 */
+    /* ========== 玻璃效果 ========== */
     .glass {
-      background: rgba(255,255,255,0.8);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    
+    /* ========== 渐变背景 ========== */
+    .bg-gradient-primary {
+      background: linear-gradient(135deg, #e85d04 0%, #f59e0b 50%, #fbbf24 100%);
+    }
+    .bg-gradient-warm {
+      background: linear-gradient(135deg, #e85d04 0%, #c60b1e 100%);
+    }
+    .bg-gradient-sunset {
+      background: linear-gradient(135deg, #ff8c5a 0%, #e85d04 50%, #b94302 100%);
+    }
+    .bg-gradient-mesh {
+      background: 
+        radial-gradient(at 40% 20%, rgba(232, 93, 4, 0.12) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(198, 11, 30, 0.06) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, rgba(251, 191, 36, 0.06) 0px, transparent 50%);
+    }
+    
+    /* ========== 骨架屏 ========== */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    
+    /* ========== 卡片翻转动画 ========== */
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+    
+    /* ========== 进度条 ========== */
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: #fef3c7;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(90deg, #e85d04 0%, #f59e0b 100%);
     }
     
     /* ========== 深色模式 ========== */
-    .dark body { background: #0f172a; }
+    .dark body { 
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      color: #f1f5f9;
+    }
+    
+    /* 深色模式 - CSS变量 */
+    .dark {
+      --color-primary: #ff8c5a;
+      --color-primary-light: #ffb899;
+      --color-primary-dark: #e85d04;
+    }
+    
+    /* 深色模式 - 背景 */
+    .dark .bg-white { background: #1e293b !important; }
     .dark .bg-gray-50 { background: #1e293b !important; }
     .dark .bg-gray-100 { background: #334155 !important; }
-    .dark .bg-white { background: #1e293b !important; }
+    .dark .bg-slate-50 { background: #1e293b !important; }
+    .dark .bg-slate-100 { background: #334155 !important; }
+    
+    /* 深色模式 - 文字 */
+    .dark .text-gray-900 { color: #f8fafc !important; }
     .dark .text-gray-800 { color: #f1f5f9 !important; }
     .dark .text-gray-700 { color: #e2e8f0 !important; }
     .dark .text-gray-600 { color: #cbd5e1 !important; }
     .dark .text-gray-500 { color: #94a3b8 !important; }
     .dark .text-gray-400 { color: #64748b !important; }
+    .dark .text-slate-900 { color: #f8fafc !important; }
+    .dark .text-slate-800 { color: #f1f5f9 !important; }
+    .dark .text-slate-700 { color: #e2e8f0 !important; }
+    .dark .text-slate-600 { color: #cbd5e1 !important; }
+    
+    /* 深色模式 - 边框 */
     .dark .border-gray-100 { border-color: #334155 !important; }
     .dark .border-gray-200 { border-color: #475569 !important; }
+    .dark .border-gray-300 { border-color: #475569 !important; }
+    .dark .border-slate-100 { border-color: #334155 !important; }
+    .dark .border-slate-200 { border-color: #475569 !important; }
+    .dark .divide-gray-100 > * + * { border-color: #334155 !important; }
     .dark .border-b { border-color: #334155 !important; }
-    .dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
-    .dark .hover\:bg-gray-100:hover { background: #334155 !important; }
+    
+    /* 深色模式 - 阴影 */
+    .dark .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
+    .dark .shadow { box-shadow: 0 4px 6px rgba(0,0,0,0.4) !important; }
+    .dark .shadow-lg { box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important; }
+    
+    /* 深色模式 - 悬停 */
     .dark .hover\:bg-gray-50:hover { background: #334155 !important; }
-    .dark input, .dark select { background: #334155 !important; color: #f1f5f9 !important; border-color: #475569 !important; }
-    .dark input::placeholder { color: #64748b !important; }
-    .dark .glass { background: rgba(30,41,59,0.9) !important; }
-    .dark .correction-card { background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important; }
-    .dark .bg-amber-50 { background: #78350f !important; }
-    .dark .bg-blue-50 { background: #1e3a5f !important; }
-    .dark .bg-green-50 { background: #14532d !important; }
-    .dark .bg-red-50 { background: #7f1d1d !important; }
+    .dark .hover\:bg-gray-100:hover { background: #475569 !important; }
+    .dark .hover\:bg-slate-50:hover { background: #334155 !important; }
+    
+    /* 深色模式 - 输入框 */
+    .dark input, .dark select, .dark textarea { 
+      background: #334155 !important; 
+      color: #f1f5f9 !important; 
+      border-color: #475569 !important; 
+    }
+    .dark input::placeholder, .dark textarea::placeholder { color: #64748b !important; }
+    .dark input:focus, .dark textarea:focus, .dark select:focus {
+      box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.25) !important;
+    }
+    
+    /* 深色模式 - 玻璃效果 */
+    .dark .glass { 
+      background: rgba(30,41,59,0.92) !important; 
+      border-color: rgba(71,85,105,0.5) !important;
+    }
+    
+    /* 深色模式 - 纠正卡片 */
+    .dark .correction-card { 
+      background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important; 
+      border-left-color: #fbbf24 !important;
+    }
+    
+    /* 深色模式 - 状态颜色背景 */
+    .dark .bg-amber-50 { background: #451a03 !important; }
+    .dark .bg-amber-100 { background: #78350f !important; }
+    .dark .bg-blue-50 { background: #172554 !important; }
+    .dark .bg-blue-100 { background: #1e3a5f !important; }
+    .dark .bg-green-50 { background: #052e16 !important; }
+    .dark .bg-green-100 { background: #14532d !important; }
+    .dark .bg-red-50 { background: #450a0a !important; }
+    .dark .bg-red-100 { background: #7f1d1d !important; }
+    .dark .bg-purple-50 { background: #2e1065 !important; }
+    .dark .bg-purple-100 { background: #3b0764 !important; }
+    .dark .bg-pink-50 { background: #500724 !important; }
+    .dark .bg-indigo-50 { background: #1e1b4b !important; }
+    .dark .bg-primary-50 { background: #1e1b4b !important; }
+    .dark .bg-primary-100 { background: #312e81 !important; }
+    
+    /* 深色模式 - 状态颜色文字 */
     .dark .text-amber-700, .dark .text-amber-800, .dark .text-amber-900 { color: #fcd34d !important; }
     .dark .text-blue-700, .dark .text-blue-800, .dark .text-blue-900 { color: #93c5fd !important; }
-    .dark .text-green-700, .dark .text-green-800 { color: #86efac !important; }
-    .dark .text-red-700 { color: #fca5a5 !important; }
+    .dark .text-green-700, .dark .text-green-800, .dark .text-green-900 { color: #86efac !important; }
+    .dark .text-red-700, .dark .text-red-800, .dark .text-red-900 { color: #fca5a5 !important; }
+    .dark .text-purple-700, .dark .text-purple-800 { color: #c4b5fd !important; }
+    .dark .text-pink-700, .dark .text-pink-800 { color: #f9a8d4 !important; }
+    .dark .text-indigo-700, .dark .text-indigo-800 { color: #a5b4fc !important; }
+    
+    /* 深色模式 - 骨架屏 */
+    .dark .skeleton {
+      background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+      background-size: 200% 100%;
+    }
+    
+    /* 深色模式 - 进度条 */
+    .dark .progress-bar {
+      background: #334155;
+    }
+    
+    /* 深色模式 - 滚动条 */
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { 
+      background: rgba(148, 163, 184, 0.3); 
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+      background: rgba(148, 163, 184, 0.5); 
+    }
+    
+    /* 深色模式 - 渐变网格背景 */
+    .dark .bg-gradient-mesh {
+      background: 
+        radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.2) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(249, 115, 22, 0.1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.1) 0px, transparent 50%);
+    }
+    
+    /* 深色模式 - ring */
+    .dark .ring-gray-100 { --tw-ring-color: #334155 !important; }
+    .dark .ring-gray-200 { --tw-ring-color: #475569 !important; }
     
     /* 卡片翻转动画 */
     .perspective-1000 { perspective: 1000px; }
@@ -4826,14 +5137,24 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
 
     function renderLoading() {
       return `
-        <div class="h-full flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700">
-          <div class="text-center text-white">
-            <div class="text-6xl mb-4">🇪🇸</div>
-            <div class="text-xl font-semibold">HablaConmigo</div>
-            <div class="mt-4 flex justify-center gap-1">
-              <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-              <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay:0.1s"></div>
-              <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay:0.2s"></div>
+        <div class="h-full flex items-center justify-center bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 relative overflow-hidden">
+          <!-- 装饰背景 -->
+          <div class="absolute inset-0">
+            <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-white/15 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-56 h-56 bg-accent-400/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/2 left-0 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+          </div>
+          
+          <div class="text-center text-white relative z-10 fade-in">
+            <div class="w-28 h-28 mx-auto mb-6 bg-white/20 backdrop-blur-md rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/30 animate-float">
+              <span class="text-6xl drop-shadow-lg">🇪🇸</span>
+            </div>
+            <div class="text-3xl font-bold mb-2 font-display tracking-wide">HablaConmigo</div>
+            <div class="text-white/80 text-sm mb-8 font-medium">AI西语口语助手</div>
+            <div class="flex justify-center gap-2.5">
+              <div class="w-3 h-3 bg-white rounded-full animate-bounce shadow-lg"></div>
+              <div class="w-3 h-3 bg-white rounded-full animate-bounce shadow-lg" style="animation-delay:0.15s"></div>
+              <div class="w-3 h-3 bg-white rounded-full animate-bounce shadow-lg" style="animation-delay:0.3s"></div>
             </div>
           </div>
         </div>
@@ -4842,29 +5163,62 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
 
     function renderWelcome() {
       return `
-        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700 flex flex-col items-center justify-center p-6 text-center">
-          <div class="fade-in">
-            <div class="text-7xl mb-4">🇪🇸</div>
-            <h1 class="text-4xl font-bold text-white mb-2">¡Hola!</h1>
-            <h2 class="text-xl text-white/90 mb-1">HablaConmigo</h2>
-            <p class="text-white/70 mb-8 max-w-xs text-sm">
+        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+          <!-- 装饰背景 -->
+          <div class="absolute inset-0">
+            <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl"></div>
+            <div class="absolute top-1/3 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div class="absolute bottom-1/3 right-1/4 w-24 h-24 bg-white/15 rounded-full blur-xl"></div>
+          </div>
+          
+          <div class="fade-in-up relative z-10">
+            <!-- Logo -->
+            <div class="w-32 h-32 mx-auto mb-6 bg-white/20 backdrop-blur-md rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/30 animate-float">
+              <span class="text-7xl drop-shadow-lg">🇪🇸</span>
+            </div>
+            
+            <h1 class="text-5xl font-bold text-white mb-3 font-display drop-shadow-md">¡Hola!</h1>
+            <h2 class="text-2xl text-white/95 mb-2 font-display font-semibold tracking-wide">HablaConmigo</h2>
+            <p class="text-white/80 mb-10 max-w-xs text-sm leading-relaxed">
               与AI伙伴真实对话<br>
               语音输入 · 智能纠错 · 即时翻译
             </p>
             
             <button onclick="state.view='setup';render()" 
-              class="bg-white text-primary-600 font-bold py-4 px-10 rounded-2xl text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all">
-              开始使用 →
+              class="bg-white text-primary-600 font-bold py-4 px-14 rounded-2xl text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all btn-press">
+              开始使用 <span class="ml-2 inline-block">→</span>
             </button>
             
-            <div class="mt-10 grid grid-cols-4 gap-4 text-white/80 text-xs">
-              <div class="text-center"><div class="text-2xl mb-1">🎤</div>语音</div>
-              <div class="text-center"><div class="text-2xl mb-1">🎭</div>角色</div>
-              <div class="text-center"><div class="text-2xl mb-1">✏️</div>纠错</div>
-              <div class="text-center"><div class="text-2xl mb-1">🌐</div>翻译</div>
+            <!-- 功能图标 -->
+            <div class="mt-12 grid grid-cols-4 gap-5 text-white/90 text-xs font-medium">
+              <div class="text-center group">
+                <div class="w-14 h-14 mx-auto bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-white/25 transition-all border border-white/20 shadow-lg">
+                  <span class="text-2xl">🎤</span>
+                </div>
+                <span>语音</span>
+              </div>
+              <div class="text-center group">
+                <div class="w-14 h-14 mx-auto bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-white/25 transition-all border border-white/20 shadow-lg">
+                  <span class="text-2xl">🎭</span>
+                </div>
+                <span>角色</span>
+              </div>
+              <div class="text-center group">
+                <div class="w-14 h-14 mx-auto bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-white/25 transition-all border border-white/20 shadow-lg">
+                  <span class="text-2xl">✏️</span>
+                </div>
+                <span>纠错</span>
+              </div>
+              <div class="text-center group">
+                <div class="w-14 h-14 mx-auto bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-white/25 transition-all border border-white/20 shadow-lg">
+                  <span class="text-2xl">🌐</span>
+                </div>
+                <span>翻译</span>
+              </div>
             </div>
             
-            <div class="mt-8 text-white/50 text-xs">完全免费 · 无需注册 · 数据存本地</div>
+            <div class="mt-10 text-white/50 text-xs font-medium">完全免费 · 无需注册 · 数据存本地</div>
           </div>
         </div>
       `;
@@ -4874,7 +5228,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     function renderUserSelect() {
       const users = state.users;
       return `
-        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700 flex flex-col">
+        <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 flex flex-col">
           <div class="p-6 text-white text-center">
             <div class="text-5xl mb-2">🇪🇸</div>
             <h1 class="text-2xl font-bold">HablaConmigo</h1>
@@ -5007,87 +5361,132 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const myRel = myCompanion ? getRelationship(myCompanion.id) : null;
       const myHearts = myRel ? getIntimacyHearts(myRel.intimacy || 1) : '';
       
+      // 获取时间问候语
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? '¡Buenos días!' : hour < 18 ? '¡Buenas tardes!' : '¡Buenas noches!';
+      const greetingEmoji = hour < 12 ? '🌅' : hour < 18 ? '☀️' : '🌙';
+      
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <!-- 顶部 -->
-          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
-            <div class="flex items-center justify-between mb-4">
-              <button onclick="state.view='userSelect';render()" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold">
-                  ${user.name.charAt(0).toUpperCase()}
-                </div>
-                <div class="text-left">
-                  <div class="text-sm text-white/70">¡Hola!</div>
-                  <div class="font-bold flex items-center gap-1">${user.name} <span class="text-xs text-white/50">▼</span></div>
-                </div>
-              </button>
-              <button onclick="state.view='settings';render()" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                ⚙️
-              </button>
+          <!-- 顶部区域 - 渐变背景 + 网格装饰 -->
+          <div class="relative overflow-hidden">
+            <!-- 背景渐变 -->
+            <div class="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500"></div>
+            <!-- 装饰性网格 -->
+            <div class="absolute inset-0">
+              <div class="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl"></div>
+              <div class="absolute bottom-0 left-0 w-36 h-36 bg-accent-400/15 rounded-full translate-y-1/2 -translate-x-1/2 blur-lg"></div>
+              <div class="absolute top-1/2 right-1/4 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
             </div>
-            <!-- 点击进入统计页面 -->
-            <div onclick="state.view='stats';render()" class="flex gap-3 text-sm cursor-pointer hover:opacity-90 transition-opacity">
-              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
-                <div class="text-white/70 text-xs">水平</div>
-                <div class="font-bold">${user.level}</div>
+            
+            <div class="relative p-5 pb-6 text-white">
+              <!-- 用户信息行 -->
+              <div class="flex items-center justify-between mb-5">
+                <button onclick="state.view='userSelect';render()" 
+                  class="flex items-center gap-3 hover:opacity-90 transition-all active:scale-98 btn-press">
+                  <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl font-bold shadow-lg border border-white/20">
+                    ${user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div class="text-left">
+                    <div class="text-sm text-white/75 flex items-center gap-1">${greetingEmoji} ${greeting}</div>
+                    <div class="font-bold text-lg flex items-center gap-1">${user.name} <span class="text-xs text-white/50">▼</span></div>
+                  </div>
+                </button>
+                <button onclick="state.view='settings';render()" 
+                  class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center hover:bg-white/25 transition-all active:scale-95 border border-white/10 shadow-lg">
+                  <span class="text-xl">⚙️</span>
+                </button>
               </div>
-              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
-                <div class="text-white/70 text-xs">对话</div>
-                <div class="font-bold">${state.chatHistory.length}</div>
-              </div>
-              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
-                <div class="text-white/70 text-xs">连续</div>
-                <div class="font-bold">${streak}天</div>
-              </div>
-              <div class="bg-white/20 rounded-lg px-2 py-2 flex-1 text-center">
-                <div class="text-white/70 text-xs">词汇</div>
-                <div class="font-bold">${state.vocabulary.length}</div>
+              
+              <!-- 数据卡片 -->
+              <div onclick="state.view='stats';render()" 
+                class="grid grid-cols-4 gap-2.5 cursor-pointer">
+                <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center hover:bg-white/22 transition-all border border-white/10 shadow-sm">
+                  <div class="text-2xl mb-1">📊</div>
+                  <div class="text-xl font-bold">${user.level}</div>
+                  <div class="text-xs text-white/65">水平</div>
+                </div>
+                <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center hover:bg-white/22 transition-all border border-white/10 shadow-sm">
+                  <div class="text-2xl mb-1">💬</div>
+                  <div class="text-xl font-bold">${state.chatHistory.length}</div>
+                  <div class="text-xs text-white/65">对话</div>
+                </div>
+                <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center hover:bg-white/22 transition-all border border-white/10 shadow-sm">
+                  <div class="text-2xl mb-1">🔥</div>
+                  <div class="text-xl font-bold">${streak}</div>
+                  <div class="text-xs text-white/65">连续天</div>
+                </div>
+                <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center hover:bg-white/22 transition-all border border-white/10 shadow-sm">
+                  <div class="text-2xl mb-1">📖</div>
+                  <div class="text-xl font-bold">${getMasteredCount()}</div>
+                  <div class="text-xs text-white/65">词汇</div>
+                </div>
               </div>
             </div>
           </div>
           
-          <div class="flex-1 overflow-auto p-4">
+          <!-- 内容区域 -->
+          <div class="flex-1 overflow-auto p-4 custom-scrollbar">
             <!-- 💕 关系模式 -->
-            <div class="mb-5">
+            <div class="mb-5 fade-in-up" style="animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards;">
               <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-gray-500">💕 我的伴侣/朋友</h3>
-                <button onclick="state.view='companion';render()" class="text-xs text-primary-600">更换 →</button>
+                <h3 class="text-sm font-semibold text-gray-500 flex items-center gap-2">
+                  <span class="w-6 h-6 bg-pink-100 rounded-lg flex items-center justify-center text-sm">💕</span>
+                  我的伴侣/朋友
+                </h3>
+                <button onclick="state.view='companion';render()" class="text-xs text-primary-600 font-medium hover:text-primary-700">更换 →</button>
               </div>
               ${myCompanion ? `
                 <button onclick="selectCompanion('${myCompanion.id}')" 
-                  class="w-full bg-gradient-to-r ${myCompanion.color} p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-98 transition-all">
-                  <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">${myCompanion.avatar}</div>
+                  class="w-full bg-gradient-to-r ${myCompanion.color} p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-[0.98] transition-all card-interactive">
+                  <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl backdrop-blur-sm border border-white/20">${myCompanion.avatar}</div>
                   <div class="flex-1 text-left">
                     <div class="font-bold text-lg">${myCompanion.name}</div>
                     <div class="text-white/80 text-sm">${myCompanion.relationName}</div>
                     <div class="text-sm mt-1">${myHearts} <span class="text-white/60 text-xs">${myRel?.odometer || 0}次对话</span></div>
                   </div>
-                  <div class="text-white/80 text-xl">💬</div>
+                  <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">💬</div>
                 </button>
               ` : `
                 <button onclick="state.view='companion';render()" 
-                  class="w-full bg-gradient-to-r from-pink-400 to-rose-500 p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-98 transition-all">
-                  <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">💕</div>
+                  class="w-full bg-gradient-to-r from-pink-400 via-rose-500 to-red-500 p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-[0.98] transition-all card-interactive">
+                  <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl animate-float backdrop-blur-sm border border-white/20">💕</div>
                   <div class="flex-1 text-left">
                     <div class="font-bold text-lg">选择你的伴侣/朋友</div>
                     <div class="text-white/80 text-sm">建立深度情感连接</div>
                   </div>
-                  <div class="text-white/80 text-xl">→</div>
+                  <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">→</div>
                 </button>
               `}
             </div>
             
+            <!-- ⚔️ 斩单词入口 -->
+            <div class="mb-5 fade-in-up" style="animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards;">
+              <button onclick="state.view='wordSlash';render()" 
+                class="w-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-[0.98] transition-all card-interactive">
+                <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl backdrop-blur-sm border border-white/20">⚔️</div>
+                <div class="flex-1 text-left">
+                  <div class="font-bold text-lg">斩单词</div>
+                  <div class="text-white/80 text-sm">已掌握 ${getMasteredCount()} 个 · ${getWordsToReview().length > 0 ? `${getWordsToReview().length}个待复习` : '今日已完成 ✓'}</div>
+                </div>
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">→</div>
+              </button>
+            </div>
+            
             <!-- 💼 快速练习 -->
-            <div class="mb-5">
+            <div class="mb-5 fade-in-up" style="animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards;">
               <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-gray-500">💼 快速练习</h3>
-                <button onclick="state.view='service';render()" class="text-xs text-primary-600">更多 →</button>
+                <h3 class="text-sm font-semibold text-gray-500 flex items-center gap-2">
+                  <span class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center text-sm">💼</span>
+                  快速练习
+                </h3>
+                <button onclick="state.view='service';render()" class="text-xs text-primary-600 font-medium hover:text-primary-700">更多 →</button>
               </div>
               <div class="grid grid-cols-4 gap-2">
-                ${SERVICE_SCENARIOS.slice(0, 4).map(s => `
+                ${SERVICE_SCENARIOS.slice(0, 4).map((s, idx) => `
                   <button onclick="startServiceScenario('${s.id}')" 
-                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-200 active:scale-95 transition-all">
-                    <div class="text-2xl mb-1">${s.icon}</div>
+                    class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-200 active:scale-95 transition-all group">
+                    <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">${s.icon}</div>
                     <div class="text-xs font-medium text-gray-700">${s.name}</div>
                   </button>
                 `).join('')}
@@ -5095,13 +5494,16 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
             </div>
             
             <!-- 👨‍🏫 学习中心 -->
-            <div class="mb-5">
-              <h3 class="text-sm font-medium text-gray-500 mb-3">👨‍🏫 学习中心</h3>
+            <div class="mb-5 fade-in-up" style="animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards;">
+              <h3 class="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+                <span class="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-sm">👨‍🏫</span>
+                学习中心
+              </h3>
               <div class="grid grid-cols-2 gap-3">
                 <button onclick="selectTeacher('profesor')" 
-                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-300 active:scale-98 transition-all">
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-300 active:scale-[0.98] transition-all group">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-xl">👨🏻‍🏫</div>
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition-transform">👨🏻‍🏫</div>
                     <div class="text-left">
                       <div class="font-bold text-gray-800 text-sm">Prof. García</div>
                       <div class="text-xs text-gray-500">严格教学</div>
@@ -5109,9 +5511,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   </div>
                 </button>
                 <button onclick="selectTeacher('isabel')" 
-                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-teal-300 active:scale-98 transition-all">
+                  class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-teal-300 active:scale-[0.98] transition-all group">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-xl">👩🏻‍🏫</div>
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-2xl shadow-md group-hover:scale-105 transition-transform">👩🏻‍🏫</div>
                     <div class="text-left">
                       <div class="font-bold text-gray-800 text-sm">Maestra Isabel</div>
                       <div class="text-xs text-gray-500">温柔鼓励</div>
@@ -5121,49 +5523,39 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               </div>
             </div>
             
-            <!-- ⚔️ 斩单词入口 -->
-            <div class="mb-5">
-              <button onclick="state.view='wordSlash';render()" 
-                class="w-full bg-gradient-to-r from-amber-400 to-orange-500 p-4 rounded-2xl shadow-lg text-white flex items-center gap-4 hover:shadow-xl active:scale-98 transition-all">
-                <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">⚔️</div>
-                <div class="flex-1 text-left">
-                  <div class="font-bold text-lg">斩单词</div>
-                  <div class="text-white/80 text-sm">已掌握 ${getMasteredCount()} 个 · ${getWordsToReview().length > 0 ? `${getWordsToReview().length}个待复习` : '今日已完成'}</div>
-                </div>
-                <div class="text-white/80 text-xl">→</div>
-              </button>
-            </div>
-            
             <!-- 🛠️ 学习工具 -->
-            <div class="mb-5">
-              <h3 class="text-sm font-medium text-gray-500 mb-3">🛠️ 学习工具</h3>
+            <div class="mb-5 fade-in-up" style="animation-delay: 0.25s; opacity: 0; animation-fill-mode: forwards;">
+              <h3 class="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+                <span class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center text-sm">🛠️</span>
+                学习工具
+              </h3>
               <div class="grid grid-cols-4 gap-2">
-                <button onclick="state.view='mistakes';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                <button onclick="state.view='mistakes';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all group">
                   <div class="flex flex-col items-center">
-                    <div class="text-xl mb-1">📝</div>
-                    <div class="text-xs text-gray-700">错题本</div>
-                    <div class="text-xs text-gray-400">${state.mistakeBook.length}</div>
+                    <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">📝</div>
+                    <div class="text-xs font-medium text-gray-700">错题本</div>
+                    <div class="text-xs text-primary-500 font-semibold">${state.mistakeBook.length}</div>
                   </div>
                 </button>
-                <button onclick="state.view='vocabulary';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                <button onclick="state.view='vocabulary';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all group">
                   <div class="flex flex-col items-center">
-                    <div class="text-xl mb-1">📚</div>
-                    <div class="text-xs text-gray-700">词汇本</div>
-                    <div class="text-xs text-gray-400">${state.vocabulary.length}</div>
+                    <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">📚</div>
+                    <div class="text-xs font-medium text-gray-700">词汇本</div>
+                    <div class="text-xs text-primary-500 font-semibold">${state.vocabulary.length}</div>
                   </div>
                 </button>
-                <button onclick="state.view='calendar';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                <button onclick="state.view='calendar';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all group">
                   <div class="flex flex-col items-center">
-                    <div class="text-xl mb-1">${checkedToday ? '✅' : '📅'}</div>
-                    <div class="text-xs text-gray-700">打卡</div>
-                    <div class="text-xs text-gray-400">${streak}天</div>
+                    <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">${checkedToday ? '✅' : '📅'}</div>
+                    <div class="text-xs font-medium text-gray-700">打卡</div>
+                    <div class="text-xs ${checkedToday ? 'text-green-500' : 'text-primary-500'} font-semibold">${streak}天</div>
                   </div>
                 </button>
-                <button onclick="state.view='achievements';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all">
+                <button onclick="state.view='achievements';render()" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all group">
                   <div class="flex flex-col items-center">
-                    <div class="text-xl mb-1">🏆</div>
-                    <div class="text-xs text-gray-700">成就</div>
-                    <div class="text-xs text-gray-400">${state.achievements.length}/${ACHIEVEMENTS.length}</div>
+                    <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🏆</div>
+                    <div class="text-xs font-medium text-gray-700">成就</div>
+                    <div class="text-xs text-primary-500 font-semibold">${state.achievements.length}/${ACHIEVEMENTS.length}</div>
                   </div>
                 </button>
               </div>
@@ -5171,10 +5563,13 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
             
             <!-- 最近对话 -->
             ${recentChats.length > 0 ? `
-              <div>
+              <div class="fade-in-up" style="animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards;">
                 <div class="flex items-center justify-between mb-3">
-                  <h3 class="text-sm font-medium text-gray-500">📜 最近对话</h3>
-                  <button onclick="state.view='history';render()" class="text-xs text-primary-600">查看全部 →</button>
+                  <h3 class="text-sm font-semibold text-gray-500 flex items-center gap-2">
+                    <span class="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center text-sm">📜</span>
+                    最近对话
+                  </h3>
+                  <button onclick="state.view='history';render()" class="text-xs text-primary-600 font-medium hover:text-primary-700">查看全部 →</button>
                 </div>
                 <div class="space-y-2">
                   ${recentChats.map((chat, index) => {
@@ -5182,14 +5577,14 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                     const scenario = SCENARIOS.find(s => s.id === chat.scenario);
                     const date = new Date(chat.date);
                     return `
-                      <div onclick="loadHistoryChat(${index})" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md active:scale-98 transition-all">
+                      <div onclick="loadHistoryChat(${index})" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md active:scale-[0.99] transition-all">
                         <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${character?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-lg">${character?.avatar || '👤'}</div>
+                          <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${character?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-xl shadow-sm">${character?.avatar || '👤'}</div>
                           <div class="flex-1 min-w-0">
-                            <div class="font-medium text-gray-800 text-sm">${character?.name || '未知'} · ${scenario?.name || '自由聊天'}</div>
+                            <div class="font-semibold text-gray-800 text-sm">${character?.name || '未知'} · ${scenario?.name || '自由聊天'}</div>
                             <div class="text-xs text-gray-400">${date.toLocaleDateString()}</div>
                           </div>
-                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">${chat.corrections}</div>` : ''}
+                          ${chat.corrections > 0 ? `<div class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full font-medium">${chat.corrections}</div>` : ''}
                         </div>
                       </div>
                     `;
@@ -5197,6 +5592,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 </div>
               </div>
             ` : ''}
+            
+            <!-- 底部留白 -->
+            <div class="h-4"></div>
           </div>
         </div>
       `;
@@ -5501,7 +5899,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     function renderServiceSelect() {
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
             <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
             <h1 class="text-xl font-bold">💼 实用场景练习</h1>
             <p class="text-white/80 text-sm mt-1">直接进入场景，和专业NPC对话练习</p>
@@ -6446,7 +6844,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       return `
         <div class="h-full bg-gray-50 flex flex-col">
           <!-- 顶部 -->
-          <div class="bg-gradient-to-r from-primary-500 to-indigo-600 p-6 text-white">
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
             <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-4 flex items-center gap-1">← 返回</button>
             <div class="text-center">
               <div class="text-6xl mb-3">${word.image}</div>
@@ -6719,7 +7117,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
             </div>
             
             <!-- 学习建议 -->
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-sm p-4 text-white">
+            <div class="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl shadow-sm p-4 text-white">
               <h3 class="font-bold mb-2">💡 学习建议</h3>
               ${getStudyAdvice(mastered, learning, newCount, accuracy, streak.currentStreak)}
             </div>
@@ -6955,7 +7353,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       if (rootId.startsWith('pre_')) {
         type = '前缀';
         color = 'blue';
-        bgColor = 'from-blue-500 to-indigo-600';
+        bgColor = 'from-primary-500 to-primary-600';
       } else if (rootId.startsWith('suf_')) {
         type = '后缀';
         color = 'green';
@@ -7571,298 +7969,356 @@ ${starText}
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <!-- 顶部 -->
-          <div class="bg-gradient-to-r ${book.color} p-6 text-white">
-            <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="text-5xl">${book.icon}</div>
-                <div>
-                  <h1 class="text-xl font-bold">⚔️ 斩单词</h1>
-                  <p class="text-white/80 text-sm">${book.name}</p>
+          <!-- 顶部区域 - 带装饰的渐变背景 -->
+          <div class="relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br ${book.color}"></div>
+            <div class="absolute inset-0 opacity-10">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+              <div class="absolute bottom-0 left-1/4 w-24 h-24 bg-white rounded-full translate-y-1/2"></div>
+            </div>
+            
+            <div class="relative p-5 text-white">
+              <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1 hover:text-white transition-colors">
+                <span>←</span> 返回
+              </button>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl border border-white/20 shadow-lg">
+                    ${book.icon}
+                  </div>
+                  <div>
+                    <h1 class="text-2xl font-bold flex items-center gap-2">⚔️ 斩单词</h1>
+                    <p class="text-white/80">${book.name}</p>
+                  </div>
                 </div>
-              </div>
-              <!-- 连续打卡 -->
-              <div class="text-center bg-white/20 rounded-xl px-4 py-2">
-                <div class="text-2xl font-bold">🔥 ${streak.currentStreak}</div>
-                <div class="text-xs text-white/80">连续打卡</div>
+                <!-- 连续打卡徽章 -->
+                <div class="text-center bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/20">
+                  <div class="text-3xl font-bold flex items-center justify-center gap-1">
+                    <span class="animate-pulse">🔥</span> ${streak.currentStreak}
+                  </div>
+                  <div class="text-xs text-white/80">连续打卡</div>
+                </div>
               </div>
             </div>
           </div>
           
-          <div class="flex-1 overflow-auto p-4">
-            <!-- 今日目标 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 ${todayComplete ? 'ring-2 ring-green-400' : ''}">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold text-gray-800">📅 今日目标</h3>
-                ${todayComplete ? '<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">✅ 已完成</span>' : ''}
+          <div class="flex-1 overflow-auto p-4 custom-scrollbar">
+            <!-- 今日目标卡片 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up ${todayComplete ? 'ring-2 ring-green-400 ring-offset-2' : ''}" style="animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards;">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">📅</span>
+                  今日目标
+                </h3>
+                ${todayComplete ? '<span class="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium animate-bounce-soft">🎉 已完成</span>' : ''}
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <!-- 新词进度 -->
-                <div class="relative">
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="text-gray-600">新词</span>
+                <div class="relative bg-gradient-to-br from-primary-50 to-blue-50 rounded-xl p-3">
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600 font-medium">🆕 新词</span>
                     <span class="font-bold ${dailyStats.newLearned >= settings.dailyNew ? 'text-green-600' : 'text-primary-600'}">${dailyStats.newLearned}/${settings.dailyNew}</span>
                   </div>
-                  <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full ${dailyStats.newLearned >= settings.dailyNew ? 'bg-green-500' : 'bg-primary-500'} rounded-full transition-all" style="width: ${newProgress}%"></div>
+                  <div class="h-3 bg-white/80 rounded-full overflow-hidden shadow-inner">
+                    <div class="h-full ${dailyStats.newLearned >= settings.dailyNew ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-primary-400 to-primary-600'} rounded-full transition-all duration-500" style="width: ${newProgress}%"></div>
                   </div>
-                  ${dailyStats.newLearned >= settings.dailyNew ? '<div class="absolute -top-1 -right-1 text-lg">✅</div>' : ''}
+                  ${dailyStats.newLearned >= settings.dailyNew ? '<div class="absolute -top-2 -right-2 text-xl">✅</div>' : ''}
                 </div>
                 <!-- 复习进度 -->
-                <div class="relative">
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="text-gray-600">复习</span>
+                <div class="relative bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3">
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600 font-medium">🔄 复习</span>
                     <span class="font-bold ${dailyStats.reviewed >= settings.dailyReview ? 'text-green-600' : 'text-amber-600'}">${dailyStats.reviewed}/${settings.dailyReview}</span>
                   </div>
-                  <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full ${dailyStats.reviewed >= settings.dailyReview ? 'bg-green-500' : 'bg-amber-500'} rounded-full transition-all" style="width: ${reviewProgress}%"></div>
+                  <div class="h-3 bg-white/80 rounded-full overflow-hidden shadow-inner">
+                    <div class="h-full ${dailyStats.reviewed >= settings.dailyReview ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gradient-to-r from-amber-400 to-orange-500'} rounded-full transition-all duration-500" style="width: ${reviewProgress}%"></div>
                   </div>
-                  ${dailyStats.reviewed >= settings.dailyReview ? '<div class="absolute -top-1 -right-1 text-lg">✅</div>' : ''}
+                  ${dailyStats.reviewed >= settings.dailyReview ? '<div class="absolute -top-2 -right-2 text-xl">✅</div>' : ''}
                 </div>
               </div>
               <!-- 今日正确率 -->
               ${(dailyStats.totalCorrect + dailyStats.totalWrong) > 0 ? `
-                <div class="mt-3 pt-3 border-t flex items-center justify-between text-sm">
+                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
                   <span class="text-gray-500">今日正确率</span>
-                  <span class="font-bold ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100) >= 80 ? 'text-green-600' : 'text-amber-600'}">
-                    ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100)}% 
-                    <span class="text-gray-400 font-normal">(${dailyStats.totalCorrect}✓ ${dailyStats.totalWrong}✗)</span>
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <div class="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div class="h-full ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100) >= 80 ? 'bg-green-500' : 'bg-amber-500'} rounded-full" 
+                        style="width: ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100)}%"></div>
+                    </div>
+                    <span class="font-bold ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100) >= 80 ? 'text-green-600' : 'text-amber-600'}">
+                      ${Math.round((dailyStats.totalCorrect / (dailyStats.totalCorrect + dailyStats.totalWrong)) * 100)}%
+                    </span>
+                  </div>
                 </div>
               ` : ''}
             </div>
             
-            <!-- 学习进度 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold text-gray-800">📊 学习进度</h3>
-                <button onclick="showWordList('all')" class="text-xs text-primary-500 hover:underline">查看全部 →</button>
+            <!-- 学习进度卡片 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up" style="animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards;">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                  <span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">📊</span>
+                  学习进度
+                </h3>
+                <button onclick="showWordList('all')" class="text-xs text-primary-500 hover:text-primary-700 font-medium">查看全部 →</button>
               </div>
-              <div class="mb-3">
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-600">已掌握 ${mastered}/${totalWords}</span>
-                  <span class="text-primary-600 font-bold">${progress}%</span>
+              
+              <!-- 环形进度指示 -->
+              <div class="flex items-center gap-4 mb-4">
+                <div class="relative w-20 h-20">
+                  <svg class="w-20 h-20 transform -rotate-90">
+                    <circle cx="40" cy="40" r="34" stroke="#e5e7eb" stroke-width="6" fill="none"/>
+                    <circle cx="40" cy="40" r="34" stroke="url(#progressGradient)" stroke-width="6" fill="none"
+                      stroke-dasharray="${2 * Math.PI * 34}" 
+                      stroke-dashoffset="${2 * Math.PI * 34 * (1 - progress / 100)}"
+                      stroke-linecap="round"/>
+                    <defs>
+                      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#6366f1"/>
+                        <stop offset="100%" style="stop-color:#a855f7"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xl font-bold text-primary-600">${progress}%</span>
+                  </div>
                 </div>
-                <div class="h-3 bg-gray-200 rounded-full overflow-hidden cursor-pointer" onclick="showWordList('all')">
-                  <div class="h-full bg-gradient-to-r ${book.color} rounded-full transition-all duration-500" style="width: ${progress}%"></div>
-                </div>
-                <!-- 掌握规则提示 -->
-                <div class="text-xs text-gray-400 mt-2 text-center">
-                  💡 答对5次即可掌握单词
+                <div class="flex-1">
+                  <div class="text-2xl font-bold text-gray-800">${mastered} <span class="text-sm font-normal text-gray-500">/ ${totalWords}</span></div>
+                  <div class="text-sm text-gray-500">已掌握单词</div>
+                  <div class="text-xs text-gray-400 mt-1">💡 答对5次即可掌握</div>
                 </div>
               </div>
-              <div class="grid grid-cols-3 gap-2 text-center">
-                <button onclick="showWordList('mastered')" class="bg-green-50 rounded-xl p-2 hover:bg-green-100 active:scale-95 transition-all">
-                  <div class="text-xl font-bold text-green-600">${mastered}</div>
-                  <div class="text-xs text-gray-500">已掌握 ✅</div>
+              
+              <!-- 状态统计 -->
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="showWordList('mastered')" class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 hover:shadow-md active:scale-95 transition-all group">
+                  <div class="text-2xl font-bold text-green-600 group-hover:scale-110 transition-transform">${mastered}</div>
+                  <div class="text-xs text-gray-500 flex items-center justify-center gap-1">✅ 已掌握</div>
                 </button>
-                <button onclick="showWordList('learning')" class="bg-amber-50 rounded-xl p-2 hover:bg-amber-100 active:scale-95 transition-all">
-                  <div class="text-xl font-bold text-amber-600">${learning}</div>
-                  <div class="text-xs text-gray-500">学习中 📖</div>
+                <button onclick="showWordList('learning')" class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 hover:shadow-md active:scale-95 transition-all group">
+                  <div class="text-2xl font-bold text-amber-600 group-hover:scale-110 transition-transform">${learning}</div>
+                  <div class="text-xs text-gray-500 flex items-center justify-center gap-1">📖 学习中</div>
                 </button>
-                <button onclick="showWordList('new')" class="bg-gray-50 rounded-xl p-2 hover:bg-gray-100 active:scale-95 transition-all">
-                  <div class="text-xl font-bold text-gray-600">${newCount}</div>
-                  <div class="text-xs text-gray-500">待学习 🆕</div>
+                <button onclick="showWordList('new')" class="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-3 hover:shadow-md active:scale-95 transition-all group">
+                  <div class="text-2xl font-bold text-gray-600 group-hover:scale-110 transition-transform">${newCount}</div>
+                  <div class="text-xs text-gray-500 flex items-center justify-center gap-1">🆕 待学习</div>
                 </button>
               </div>
             </div>
             
             <!-- 错题集 & 重点词汇 -->
-            <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="grid grid-cols-2 gap-3 mb-4 fade-in-up" style="animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards;">
               <button onclick="state.wordSlash.mode='wrongbook';render()" 
-                class="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-98 transition-all text-left">
+                class="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-[0.98] transition-all text-left group">
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="text-2xl">❌</span>
+                  <span class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">❌</span>
                   <span class="font-bold text-gray-800">错题集</span>
                 </div>
-                <div class="text-2xl font-bold text-red-500">${state.wrongWordBook.length}</div>
+                <div class="text-3xl font-bold text-red-500">${state.wrongWordBook.length}</div>
                 <div class="text-xs text-gray-500">需要强化的单词</div>
               </button>
               <button onclick="state.wordSlash.mode='starred';render()" 
-                class="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-98 transition-all text-left">
+                class="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-[0.98] transition-all text-left group">
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="text-2xl">⭐</span>
+                  <span class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⭐</span>
                   <span class="font-bold text-gray-800">重点词汇</span>
                 </div>
-                <div class="text-2xl font-bold text-amber-500">${state.starredWords.length}</div>
+                <div class="text-3xl font-bold text-amber-500">${state.starredWords.length}</div>
                 <div class="text-xs text-gray-500">你标记的重点词</div>
               </button>
             </div>
             
-            <!-- 困难模式快捷开关 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <div class="flex items-center justify-between">
+            <!-- 模式设置区 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up" style="animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards;">
+              <!-- 困难模式 -->
+              <div class="flex items-center justify-between pb-4 border-b border-gray-100">
                 <div class="flex items-center gap-3">
-                  <span class="text-2xl">🔥</span>
+                  <span class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-xl">🔥</span>
                   <div>
                     <span class="font-bold text-gray-800">困难模式</span>
-                    <div class="text-xs text-gray-400">隐藏emoji图片提示，增加难度</div>
+                    <div class="text-xs text-gray-400">隐藏emoji提示</div>
                   </div>
                 </div>
                 <button onclick="toggleHideEmoji()" 
-                  class="w-14 h-8 rounded-full ${state.wordSettings.hideEmoji ? 'bg-red-500' : 'bg-gray-300'} flex items-center transition-all">
+                  class="w-14 h-8 rounded-full ${state.wordSettings.hideEmoji ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gray-300'} flex items-center transition-all shadow-inner">
                   <div class="w-6 h-6 rounded-full bg-white shadow-md transform transition-all ${state.wordSettings.hideEmoji ? 'translate-x-7' : 'translate-x-1'}"></div>
                 </button>
               </div>
-              ${state.wordSettings.hideEmoji ? '<div class="mt-2 text-xs text-red-500 text-center">🔥 困难模式已开启</div>' : ''}
+              
+              <!-- 答题模式选择 -->
+              <div class="pt-4">
+                <div class="flex items-center gap-3 mb-3">
+                  <span class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-xl">✏️</span>
+                  <span class="font-bold text-gray-800">答题模式</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button onclick="setQuizType('choice')" 
+                    class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'choice' ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                    <div class="text-2xl mb-1">🔘</div>
+                    <div class="text-xs font-medium">选择题</div>
+                  </button>
+                  <button onclick="setQuizType('spelling')" 
+                    class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'spelling' ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                    <div class="text-2xl mb-1">⌨️</div>
+                    <div class="text-xs font-medium">拼写题</div>
+                  </button>
+                  <button onclick="setQuizType('mixed')" 
+                    class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'mixed' ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                    <div class="text-2xl mb-1">🔀</div>
+                    <div class="text-xs font-medium">混合</div>
+                  </button>
+                </div>
+              </div>
             </div>
             
-            <!-- 答题模式选择 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <div class="flex items-center gap-3 mb-3">
-                <span class="text-2xl">✏️</span>
-                <span class="font-bold text-gray-800">答题模式</span>
-              </div>
-              <div class="grid grid-cols-3 gap-2">
-                <button onclick="setQuizType('choice')" 
-                  class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'choice' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                  <div class="text-xl mb-1">🔘</div>
-                  <div class="text-xs font-medium">选择题</div>
-                </button>
-                <button onclick="setQuizType('spelling')" 
-                  class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'spelling' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                  <div class="text-xl mb-1">⌨️</div>
-                  <div class="text-xs font-medium">拼写题</div>
-                </button>
-                <button onclick="setQuizType('mixed')" 
-                  class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'mixed' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                  <div class="text-xl mb-1">🔀</div>
-                  <div class="text-xs font-medium">混合模式</div>
-                </button>
-              </div>
-              <div class="mt-2 text-xs text-gray-400 text-center">
-                ${state.wordSettings.quizType === 'choice' ? '看单词选中文释义' : 
-                  state.wordSettings.quizType === 'spelling' ? '看中文释义拼写单词' : '随机切换两种模式'}
-              </div>
-            </div>
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <h3 class="font-bold text-gray-800 mb-3">🎯 今日任务</h3>
+            <!-- 今日任务 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up" style="animation-delay: 0.25s; opacity: 0; animation-fill-mode: forwards;">
+              <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">🎯</span>
+                开始学习
+              </h3>
               <div class="space-y-3">
                 ${reviewCount > 0 ? `
                   <button onclick="startWordLearning('review')" 
-                    class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                    <span class="text-3xl">🔄</span>
+                    class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white flex items-center gap-4 hover:shadow-lg active:scale-[0.98] transition-all group">
+                    <span class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur-sm group-hover:scale-110 transition-transform">🔄</span>
                     <div class="flex-1 text-left">
-                      <div class="font-bold">复习单词</div>
+                      <div class="font-bold text-lg">复习单词</div>
                       <div class="text-white/80 text-sm">${reviewCount} 个单词待复习</div>
                     </div>
-                    <span class="text-2xl">→</span>
+                    <span class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">→</span>
                   </button>
                 ` : `
-                  <div class="p-4 rounded-xl bg-gray-100 text-gray-500 text-center">
-                    ✅ 今日复习已完成
+                  <div class="p-4 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 text-gray-500 text-center flex items-center justify-center gap-2">
+                    <span class="text-xl">✅</span> 今日复习已完成
                   </div>
                 `}
                 
                 ${canLearnNew ? `
                   <button onclick="startWordLearning('new')" 
-                    class="w-full p-4 rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                    <span class="text-3xl">🆕</span>
+                    class="w-full p-4 rounded-xl bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 text-white flex items-center gap-4 hover:shadow-lg active:scale-[0.98] transition-all group">
+                    <span class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur-sm group-hover:scale-110 transition-transform">🆕</span>
                     <div class="flex-1 text-left">
-                      <div class="font-bold">学习新词</div>
+                      <div class="font-bold text-lg">学习新词</div>
                       <div class="text-white/80 text-sm">今日目标 ${state.wordSettings.dailyNew} 个</div>
                     </div>
-                    <span class="text-2xl">→</span>
+                    <span class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">→</span>
                   </button>
                 ` : `
-                  <div class="p-4 rounded-xl bg-gray-100 text-gray-500 text-center">
-                    🎉 所有单词已学完！
+                  <div class="p-4 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 text-gray-500 text-center flex items-center justify-center gap-2">
+                    <span class="text-xl">🎉</span> 所有单词已学完！
                   </div>
                 `}
                 
                 <button onclick="startWordLearning('mixed')" 
-                  class="w-full p-4 rounded-xl bg-gradient-to-r ${book.color} text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                  <span class="text-3xl">⚔️</span>
+                  class="w-full p-4 rounded-xl bg-gradient-to-r ${book.color} text-white flex items-center gap-4 hover:shadow-lg active:scale-[0.98] transition-all group">
+                  <span class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur-sm group-hover:scale-110 transition-transform">⚔️</span>
                   <div class="flex-1 text-left">
-                    <div class="font-bold">开始斩词</div>
+                    <div class="font-bold text-lg">开始斩词</div>
                     <div class="text-white/80 text-sm">复习 + 新词混合模式</div>
                   </div>
-                  <span class="text-2xl">→</span>
+                  <span class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">→</span>
                 </button>
-                
+              </div>
+            </div>
+            
+            <!-- 更多功能 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up" style="animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards;">
+              <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">🚀</span>
+                更多功能
+              </h3>
+              <div class="grid grid-cols-2 gap-3">
                 <button onclick="startDictation()" 
-                  class="w-full p-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                  <span class="text-3xl">✍️</span>
-                  <div class="flex-1 text-left">
-                    <div class="font-bold">听写模式</div>
-                    <div class="text-white/80 text-sm">听音拼写，强化记忆</div>
-                  </div>
-                  <span class="text-2xl">→</span>
+                  class="p-4 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 text-white hover:shadow-lg active:scale-[0.98] transition-all group">
+                  <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">✍️</div>
+                  <div class="font-bold">听写模式</div>
+                  <div class="text-white/70 text-xs">听音拼写</div>
                 </button>
-                
                 <button onclick="state.wordSlash.mode='report';render()" 
-                  class="w-full p-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                  <span class="text-3xl">📊</span>
-                  <div class="flex-1 text-left">
-                    <div class="font-bold">学习报告</div>
-                    <div class="text-white/80 text-sm">查看学习数据与趋势</div>
-                  </div>
-                  <span class="text-2xl">→</span>
+                  class="p-4 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white hover:shadow-lg active:scale-[0.98] transition-all group">
+                  <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">📊</div>
+                  <div class="font-bold">学习报告</div>
+                  <div class="text-white/70 text-xs">数据趋势</div>
                 </button>
-                
                 <button onclick="state.wordSlash.mode='roots';render()" 
-                  class="w-full p-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                  <span class="text-3xl">🔤</span>
-                  <div class="flex-1 text-left">
-                    <div class="font-bold">词根词缀</div>
-                    <div class="text-white/80 text-sm">理解构词规律，举一反三</div>
-                  </div>
-                  <span class="text-2xl">→</span>
+                  class="p-4 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white hover:shadow-lg active:scale-[0.98] transition-all group">
+                  <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🔤</div>
+                  <div class="font-bold">词根词缀</div>
+                  <div class="text-white/70 text-xs">构词规律</div>
                 </button>
-                
                 <button onclick="state.wordSlash.mode='challenge';render()" 
-                  class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-500 to-red-500 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
-                  <span class="text-3xl">🎮</span>
-                  <div class="flex-1 text-left">
-                    <div class="font-bold">闯关挑战</div>
-                    <div class="text-white/80 text-sm">限时挑战，赢取星星</div>
-                  </div>
-                  <span class="text-2xl">→</span>
+                  class="p-4 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 text-white hover:shadow-lg active:scale-[0.98] transition-all group">
+                  <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🎮</div>
+                  <div class="font-bold">闯关挑战</div>
+                  <div class="text-white/70 text-xs">限时挑战</div>
                 </button>
               </div>
             </div>
             
             <!-- 选择词库 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <h3 class="font-bold text-gray-800 mb-3">📚 选择词库</h3>
-              <div class="grid grid-cols-2 gap-2">
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up" style="animation-delay: 0.35s; opacity: 0; animation-fill-mode: forwards;">
+              <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">📚</span>
+                选择词库
+              </h3>
+              <div class="grid grid-cols-2 gap-3">
                 ${Object.values(WORD_BOOKS).map(b => `
                   <button onclick="state.wordSettings.currentBook='${b.id}';Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" 
-                    class="p-3 rounded-xl border-2 ${state.wordSettings.currentBook === b.id ? 'border-primary-500 bg-primary-50' : 'border-gray-100'} hover:border-primary-300 transition-all text-left">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="text-xl">${b.icon}</span>
-                      <span class="font-bold text-gray-800 text-sm">${b.name}</span>
+                    class="p-4 rounded-xl border-2 ${state.wordSettings.currentBook === b.id ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-indigo-50 shadow-md' : 'border-gray-100 hover:border-primary-200'} transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                      <span class="text-2xl group-hover:scale-110 transition-transform">${b.icon}</span>
+                      <div>
+                        <span class="font-bold text-gray-800">${b.name}</span>
+                        ${state.wordSettings.currentBook === b.id ? '<span class="ml-1 text-primary-500">✓</span>' : ''}
+                      </div>
                     </div>
-                    <div class="text-xs text-gray-500 mb-1">${b.desc}</div>
-                    <div class="text-xs text-primary-600 font-medium">${b.count} 词</div>
+                    <div class="text-xs text-gray-500 mb-2">${b.desc}</div>
+                    <div class="text-sm text-primary-600 font-bold">${b.count} 词</div>
                   </button>
                 `).join('')}
               </div>
             </div>
             
             <!-- 学习设置 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4">
-              <h3 class="font-bold text-gray-800 mb-3">⚙️ 学习设置</h3>
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-600">每日新词</span>
-                  <div class="flex items-center gap-2">
-                    <button onclick="updateDailySetting('dailyNew', -5, 5, 50)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">-</button>
-                    <span class="w-12 text-center font-bold">${state.wordSettings.dailyNew}</span>
-                    <button onclick="updateDailySetting('dailyNew', 5, 5, 50)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">+</button>
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 fade-in-up" style="animation-delay: 0.4s; opacity: 0; animation-fill-mode: forwards;">
+              <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">⚙️</span>
+                学习设置
+              </h3>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <span class="text-gray-700 font-medium">每日新词</span>
+                    <div class="text-xs text-gray-400">每天学习的新单词数量</div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button onclick="updateDailySetting('dailyNew', -5, 5, 50)" 
+                      class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-lg font-bold text-gray-600">−</button>
+                    <span class="w-10 text-center font-bold text-xl text-primary-600">${state.wordSettings.dailyNew}</span>
+                    <button onclick="updateDailySetting('dailyNew', 5, 5, 50)" 
+                      class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-lg font-bold text-gray-600">+</button>
                   </div>
                 </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-600">每日复习</span>
-                  <div class="flex items-center gap-2">
-                    <button onclick="updateDailySetting('dailyReview', -10, 10, 100)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">-</button>
-                    <span class="w-12 text-center font-bold">${state.wordSettings.dailyReview}</span>
-                    <button onclick="updateDailySetting('dailyReview', 10, 10, 100)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">+</button>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <span class="text-gray-700 font-medium">每日复习</span>
+                    <div class="text-xs text-gray-400">每天复习的单词数量</div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button onclick="updateDailySetting('dailyReview', -10, 10, 100)" 
+                      class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-lg font-bold text-gray-600">−</button>
+                    <span class="w-10 text-center font-bold text-xl text-primary-600">${state.wordSettings.dailyReview}</span>
+                    <button onclick="updateDailySetting('dailyReview', 10, 10, 100)" 
+                      class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-lg font-bold text-gray-600">+</button>
                   </div>
                 </div>
               </div>
             </div>
+            
+            <!-- 底部留白 -->
+            <div class="h-4"></div>
           </div>
         </div>
       `;
@@ -8056,7 +8512,7 @@ ${starText}
       return `
         <div class="h-full bg-gray-50 flex flex-col">
           <!-- 顶部 -->
-          <div class="bg-gradient-to-r ${accuracy >= 80 ? 'from-green-500 to-emerald-600' : accuracy >= 60 ? 'from-primary-500 to-indigo-600' : 'from-amber-500 to-orange-600'} p-6 text-white text-center">
+          <div class="bg-gradient-to-r ${accuracy >= 80 ? 'from-green-500 to-emerald-600' : accuracy >= 60 ? 'from-primary-500 to-primary-600' : 'from-amber-500 to-orange-600'} p-6 text-white text-center">
             <div class="text-6xl mb-2 animate-bounce">${emoji}</div>
             <h1 class="text-2xl font-bold">${title}</h1>
             <p class="text-white/80">${subtitle}</p>
@@ -8795,7 +9251,7 @@ ${starText}
               
               <!-- 播放按钮 -->
               <button onclick="speak('${currentWord.word}')" 
-                class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white text-4xl flex items-center justify-center mx-auto hover:shadow-xl active:scale-95 transition-all shadow-lg animate-pulse">
+                class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 text-white text-4xl flex items-center justify-center mx-auto hover:shadow-xl active:scale-95 transition-all shadow-lg animate-pulse">
                 🔊
               </button>
               <p class="text-gray-500 mt-3">点击播放，听音写词</p>
@@ -10023,7 +10479,7 @@ ${starText}
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
-          <div class="bg-gradient-to-r from-primary-500 to-indigo-600 p-6 text-white">
+          <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
             <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
             <h1 class="text-2xl font-bold">📊 学习统计</h1>
             <p class="text-white/70 text-sm mt-1">${user.name} 的西语学习数据一览</p>
@@ -10556,7 +11012,7 @@ ${starText}
         const wrongCards = fc.results.filter(r => !r.correct);
         
         return `
-          <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-purple-700 flex flex-col">
+          <div class="h-full bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 flex flex-col">
             <div class="p-4">
               <button onclick="exitFlashcard()" class="text-white/80 text-sm flex items-center gap-1">← 返回词汇本</button>
             </div>
@@ -11054,7 +11510,7 @@ ${starText}
       return `
         <div class="h-full bg-gray-50 flex flex-col">
           <!-- 顶部 -->
-          <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 text-white">
+          <div class="bg-gradient-to-r from-primary-500 to-accent-500 p-6 text-white">
             <button onclick="state.view='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
             <div class="flex items-center justify-between mb-4">
               <div>
@@ -11171,7 +11627,7 @@ ${starText}
                 </div>
               ` : `
                 <button onclick="doCheckin()" 
-                  class="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-lg shadow-lg hover:shadow-xl active:scale-98 transition-all flex items-center justify-center gap-2">
+                  class="w-full py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-accent-500 text-white font-bold text-lg shadow-lg hover:shadow-xl active:scale-98 transition-all flex items-center justify-center gap-2">
                   <span>✅</span>
                   <span>打卡</span>
                 </button>
