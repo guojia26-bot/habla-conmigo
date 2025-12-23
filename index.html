@@ -934,6 +934,64 @@ REGLAS:
       { id: 'chat_100_single', icon: '💝', name: '专一之心', desc: '与同一角色对话100次', condition: (s) => getMaxChatCount() >= 100 },
     ];
 
+    // ==================== 📖 词根词缀数据库 ====================
+    const WORD_ROOTS = {
+      // 常用前缀
+      prefixes: [
+        { id: 'pre_des', root: 'des-', meaning: '否定/相反/去除', examples: ['descansar', 'deshacer', 'desaparecer'], relatedWords: ['不-', '相反的动作'] },
+        { id: 'pre_in', root: 'in-/im-', meaning: '否定/不', examples: ['imposible', 'incómodo', 'inseguro'], relatedWords: ['不可能', '不舒服'] },
+        { id: 'pre_re', root: 're-', meaning: '再次/重新', examples: ['repetir', 'rehacer', 'revisar'], relatedWords: ['重复', '重做'] },
+        { id: 'pre_pre', root: 'pre-', meaning: '之前/预先', examples: ['prevenir', 'preparar', 'predecir'], relatedWords: ['预防', '准备'] },
+        { id: 'pre_en', root: 'en-/em-', meaning: '使成为/进入', examples: ['encontrar', 'empezar', 'enamorar'], relatedWords: ['找到', '开始'] },
+        { id: 'pre_con', root: 'con-/com-', meaning: '共同/一起', examples: ['conocer', 'comprar', 'compartir'], relatedWords: ['认识', '购买'] },
+        { id: 'pre_sub', root: 'sub-', meaning: '下面/次级', examples: ['subir', 'subway', 'submarino'], relatedWords: ['上升', '地铁'] },
+        { id: 'pre_sobre', root: 'sobre-', meaning: '超过/在上', examples: ['sobrevivir', 'sobresalir', 'sobrepasar'], relatedWords: ['幸存', '突出'] },
+        { id: 'pre_anti', root: 'anti-', meaning: '反对/抗', examples: ['antibiótico', 'antiguo', 'antipático'], relatedWords: ['抗生素', '古老的'] },
+        { id: 'pre_auto', root: 'auto-', meaning: '自己', examples: ['automático', 'autobús', 'autonomía'], relatedWords: ['自动的', '公交车'] },
+        { id: 'pre_bi', root: 'bi-', meaning: '二/双', examples: ['bilingüe', 'bicicleta', 'bisabuelo'], relatedWords: ['双语的', '自行车'] },
+        { id: 'pre_multi', root: 'multi-', meaning: '多', examples: ['multinacional', 'multimedia', 'múltiple'], relatedWords: ['跨国的', '多媒体'] },
+        { id: 'pre_inter', root: 'inter-', meaning: '之间/相互', examples: ['internacional', 'interesante', 'internet'], relatedWords: ['国际的', '有趣的'] },
+        { id: 'pre_extra', root: 'extra-', meaning: '额外/超出', examples: ['extraordinario', 'extranjero', 'extraño'], relatedWords: ['非凡的', '外国的'] },
+        { id: 'pre_super', root: 'super-', meaning: '超级/之上', examples: ['supermercado', 'superior', 'superficie'], relatedWords: ['超市', '上级的'] },
+      ],
+      // 常用后缀
+      suffixes: [
+        { id: 'suf_cion', root: '-ción/-sión', meaning: '动作/结果(名词)', examples: ['información', 'decisión', 'educación'], relatedWords: ['信息', '决定'] },
+        { id: 'suf_mente', root: '-mente', meaning: '...地(副词)', examples: ['rápidamente', 'fácilmente', 'completamente'], relatedWords: ['快速地', '容易地'] },
+        { id: 'suf_ador', root: '-ador/-edor/-idor', meaning: '做...的人', examples: ['trabajador', 'vendedor', 'escritor'], relatedWords: ['工人', '销售员'] },
+        { id: 'suf_ero', root: '-ero/-era', meaning: '从事...的人/与...相关', examples: ['cocinero', 'enfermera', 'carnicero'], relatedWords: ['厨师', '护士'] },
+        { id: 'suf_ista', root: '-ista', meaning: '...主义者/从业者', examples: ['artista', 'dentista', 'periodista'], relatedWords: ['艺术家', '牙医'] },
+        { id: 'suf_dad', root: '-dad/-tad', meaning: '...性质(名词)', examples: ['ciudad', 'libertad', 'felicidad'], relatedWords: ['城市', '自由'] },
+        { id: 'suf_miento', root: '-miento', meaning: '动作过程(名词)', examples: ['conocimiento', 'sentimiento', 'pensamiento'], relatedWords: ['知识', '感情'] },
+        { id: 'suf_oso', root: '-oso/-osa', meaning: '充满...的(形容词)', examples: ['hermoso', 'famoso', 'peligroso'], relatedWords: ['美丽的', '著名的'] },
+        { id: 'suf_able', root: '-able/-ible', meaning: '可以...的(形容词)', examples: ['posible', 'probable', 'increíble'], relatedWords: ['可能的', '难以置信的'] },
+        { id: 'suf_eza', root: '-eza', meaning: '...性质(名词)', examples: ['belleza', 'riqueza', 'naturaleza'], relatedWords: ['美丽', '财富'] },
+        { id: 'suf_ura', root: '-ura', meaning: '...状态(名词)', examples: ['cultura', 'aventura', 'pintura'], relatedWords: ['文化', '冒险'] },
+        { id: 'suf_ivo', root: '-ivo/-iva', meaning: '具有...性质的', examples: ['activo', 'positivo', 'negativo'], relatedWords: ['活跃的', '积极的'] },
+        { id: 'suf_ando', root: '-ando/-iendo', meaning: '正在...(现在分词)', examples: ['hablando', 'comiendo', 'viviendo'], relatedWords: ['说着', '吃着'] },
+        { id: 'suf_ado', root: '-ado/-ido', meaning: '已...(过去分词)', examples: ['terminado', 'conocido', 'querido'], relatedWords: ['完成的', '已知的'] },
+        { id: 'suf_ito', root: '-ito/-ita', meaning: '小/可爱(指小词)', examples: ['gatito', 'casita', 'momentito'], relatedWords: ['小猫', '小房子'] },
+      ],
+      // 常用词根
+      roots: [
+        { id: 'root_hab', root: 'hab-/hab-', meaning: '拥有/居住', examples: ['hablar', 'habitar', 'habitación'], relatedWords: ['说', '居住'] },
+        { id: 'root_ven', root: 'ven-/vent-', meaning: '来', examples: ['venir', 'aventura', 'convento'], relatedWords: ['来', '冒险'] },
+        { id: 'root_ten', root: 'ten-/tener', meaning: '持有/保持', examples: ['tener', 'mantener', 'contener'], relatedWords: ['有', '维持'] },
+        { id: 'root_pon', root: 'pon-/poner', meaning: '放置', examples: ['poner', 'componer', 'proponer'], relatedWords: ['放', '组成'] },
+        { id: 'root_duc', root: 'duc-/ducir', meaning: '引导', examples: ['producir', 'conducir', 'traducir'], relatedWords: ['生产', '驾驶'] },
+        { id: 'root_scrib', root: 'scrib-/script-', meaning: '写', examples: ['escribir', 'describir', 'inscribir'], relatedWords: ['写', '描述'] },
+        { id: 'root_vid', root: 'vid-/ver', meaning: '看', examples: ['ver', 'video', 'evidente'], relatedWords: ['看', '视频'] },
+        { id: 'root_port', root: 'port-', meaning: '携带/门', examples: ['importar', 'exportar', 'transportar'], relatedWords: ['进口', '出口'] },
+        { id: 'root_mov', root: 'mov-/mot-', meaning: '移动', examples: ['mover', 'motivo', 'automóvil'], relatedWords: ['移动', '动机'] },
+        { id: 'root_form', root: 'form-', meaning: '形状/形式', examples: ['formar', 'información', 'transformar'], relatedWords: ['形成', '转变'] },
+        { id: 'root_fac', root: 'fac-/hacer', meaning: '做/制造', examples: ['hacer', 'fácil', 'satisfacer'], relatedWords: ['做', '容易的'] },
+        { id: 'root_sent', root: 'sent-/sens-', meaning: '感觉', examples: ['sentir', 'sensible', 'sentimiento'], relatedWords: ['感觉', '敏感的'] },
+        { id: 'root_viv', root: 'viv-/vit-', meaning: '生活/生命', examples: ['vivir', 'vida', 'sobrevivir'], relatedWords: ['活', '生活'] },
+        { id: 'root_dec', root: 'dec-/decir', meaning: '说', examples: ['decir', 'decidir', 'diccionario'], relatedWords: ['说', '决定'] },
+        { id: 'root_jug', root: 'jug-/jugar', meaning: '玩/游戏', examples: ['jugar', 'juego', 'jugador'], relatedWords: ['玩', '游戏'] },
+      ]
+    };
+
     // ==================== 📚 斩单词词库 ====================
     const WORD_BOOKS = {
       A1: {
@@ -3019,8 +3077,9 @@ REGLAS:
           currentBook: 'A1', 
           dailyNew: 20, 
           dailyReview: 30,
-          hideEmoji: false // 无图片模式
-        }) : { currentBook: 'A1', dailyNew: 20, dailyReview: 30, hideEmoji: false },
+          hideEmoji: false, // 无图片模式
+          quizType: 'choice' // choice, spelling, mixed
+        }) : { currentBook: 'A1', dailyNew: 20, dailyReview: 30, hideEmoji: false, quizType: 'choice' },
         // 错题集 - 存储答错的单词ID
         wrongWordBook: currentUser ? Storage.getUserData(currentUser.id, 'wrongWordBook', []) : [],
         // 重点词汇 - 存储用户标记的单词ID
@@ -3033,6 +3092,8 @@ REGLAS:
           totalCorrect: 0,
           totalWrong: 0
         }) : { date: null, newLearned: 0, reviewed: 0, totalCorrect: 0, totalWrong: 0 },
+        // 学习历史记录（最近30天）
+        learningHistory: currentUser ? Storage.getUserData(currentUser.id, 'learningHistory', []) : [],
         // 学习打卡记录
         wordStreak: currentUser ? Storage.getUserData(currentUser.id, 'wordStreak', {
           currentStreak: 0,
@@ -3066,6 +3127,7 @@ REGLAS:
       wrongWordBook: userData.wrongWordBook, // 错题集
       starredWords: userData.starredWords, // 重点词汇
       dailyWordStats: userData.dailyWordStats, // 每日学习统计
+      learningHistory: userData.learningHistory, // 学习历史记录
       wordStreak: userData.wordStreak, // 学习打卡记录
       wordSlash: {
         mode: 'home', // home, learning, result, wordlist, wrongbook, starred
@@ -5457,6 +5519,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         return;
       }
       
+      // 决定当前题目类型
+      const quizType = state.wordSettings.quizType;
+      const currentQuizType = quizType === 'mixed' ? (Math.random() > 0.5 ? 'choice' : 'spelling') : quizType;
+      
       state.wordSlash = {
         mode: 'learning',
         queue: queue.sort(() => Math.random() - 0.5),
@@ -5468,6 +5534,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         results: [],
         todayNew: 0,
         todayReview: 0,
+        // 拼写模式相关
+        currentQuizType: currentQuizType, // 'choice' 或 'spelling'
+        spellingInput: '', // 用户输入的拼写
+        spellingHint: 0, // 提示次数
       };
       render();
     }
@@ -5483,6 +5553,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     function initDailyStats() {
       const today = getTodayStr();
       if (state.dailyWordStats.date !== today) {
+        // 如果之前有数据，保存到历史记录
+        if (state.dailyWordStats.date && (state.dailyWordStats.newLearned > 0 || state.dailyWordStats.reviewed > 0)) {
+          saveDailyToHistory(state.dailyWordStats);
+        }
+        
         state.dailyWordStats = {
           date: today,
           newLearned: 0,
@@ -5494,6 +5569,31 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           Storage.setUserData(state.user.id, 'dailyWordStats', state.dailyWordStats);
         }
       }
+    }
+    
+    // 保存每日数据到历史记录
+    function saveDailyToHistory(dailyData) {
+      if (!state.user) return;
+      
+      // 确保learningHistory存在
+      if (!state.learningHistory) {
+        state.learningHistory = [];
+      }
+      
+      // 检查是否已存在该日期的记录
+      const existingIndex = state.learningHistory.findIndex(h => h.date === dailyData.date);
+      if (existingIndex >= 0) {
+        state.learningHistory[existingIndex] = { ...dailyData };
+      } else {
+        state.learningHistory.push({ ...dailyData });
+      }
+      
+      // 只保留最近30天的数据
+      if (state.learningHistory.length > 30) {
+        state.learningHistory = state.learningHistory.slice(-30);
+      }
+      
+      Storage.setUserData(state.user.id, 'learningHistory', state.learningHistory);
     }
     
     // 更新今日统计
@@ -5617,20 +5717,78 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     }
 
     // 选择答案
-    function selectWordAnswer(optionIndex) {
-      if (state.wordSlash.answered) return;
-      
+    // ==================== 拼写模式相关函数 ====================
+    
+    // 更新拼写输入
+    function updateSpellingInput(value) {
+      state.wordSlash.spellingInput = value;
+    }
+    
+    // 获取拼写提示（根据提示次数显示不同程度的提示）
+    function getSpellingHint(word, hintLevel) {
+      if (hintLevel === 0) return '';
+      const chars = word.split('');
+      if (hintLevel === 1) {
+        // 提示1：显示首字母和长度
+        return chars[0] + ' _ '.repeat(chars.length - 1).trim() + ` (${chars.length}字母)`;
+      } else if (hintLevel === 2) {
+        // 提示2：显示首尾字母和中间部分下划线
+        if (chars.length <= 2) return word;
+        return chars[0] + ' _ '.repeat(chars.length - 2).trim() + ' ' + chars[chars.length - 1];
+      } else {
+        // 提示3：显示一半字母
+        return chars.map((c, i) => i % 2 === 0 ? c : '_').join(' ');
+      }
+    }
+    
+    // 显示拼写提示
+    function showSpellingHint() {
       const ws = state.wordSlash;
+      if (ws.spellingHint < 3) {
+        ws.spellingHint++;
+        render();
+        // 重新聚焦输入框
+        setTimeout(() => {
+          const input = document.getElementById('spellingInput');
+          if (input) input.focus();
+        }, 50);
+      }
+    }
+    
+    // 检查拼写
+    function checkSpelling() {
+      const ws = state.wordSlash;
+      if (ws.answered) return;
+      
       const currentWord = ws.queue[ws.currentIndex];
-      const selected = ws.options[optionIndex];
-      const isCorrect = selected.correct;
-      const isRetry = currentWord.isRetry; // 是否是重做的题
+      const userInput = (ws.spellingInput || '').trim().toLowerCase();
+      const correctWord = currentWord.word.toLowerCase();
+      
+      // 判断是否正确（忽略重音符号的宽松匹配）
+      const normalize = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const isCorrect = userInput === correctWord || normalize(userInput) === normalize(correctWord);
       
       ws.answered = true;
       ws.correct = isCorrect;
-      ws.selectedIndex = optionIndex; // 记录用户选择的选项索引
       
-      // 只有第一次答题才记录结果（避免循环时重复记录）
+      // 复用选择题的进度更新逻辑
+      processAnswerResult(currentWord, isCorrect);
+      
+      // 播放单词发音
+      speak(currentWord.word);
+      
+      render();
+      
+      // 检查成就
+      checkAchievements();
+    }
+    
+    // 处理答题结果（共用逻辑）
+    function processAnswerResult(currentWord, isCorrect) {
+      const ws = state.wordSlash;
+      const isRetry = currentWord.isRetry;
+      
+      // 只有第一次答题才记录结果
       const alreadyRecorded = ws.results.find(r => r.word.id === currentWord.id);
       if (!alreadyRecorded) {
         ws.results.push({ 
@@ -5649,7 +5807,6 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         nextReview: null
       };
       
-      // 判断是新词还是复习词
       const isNewWord = !state.wordProgress[currentWord.id] || state.wordProgress[currentWord.id].status === 'new';
       
       progress.lastSeen = new Date().toISOString();
@@ -5658,11 +5815,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         progress.correctCount = (progress.correctCount || 0) + 1;
         progress.wrongCount = progress.wrongCount || 0;
         
-        // 检查是否掌握
         if (progress.correctCount >= 5) {
           progress.status = 'mastered';
           progress.nextReview = null;
-          // 答对5次后从错题集移除
           removeFromWrongBook(currentWord.id);
         } else {
           progress.status = progress.status === 'new' ? 'learning' : 'reviewing';
@@ -5672,20 +5827,17 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         progress.wrongCount = (progress.wrongCount || 0) + 1;
         progress.correctCount = Math.max(0, (progress.correctCount || 0) - 1);
         progress.status = 'learning';
-        progress.nextReview = getNextReviewTime(0); // 重置复习间隔
+        progress.nextReview = getNextReviewTime(0);
         
-        // 添加到错题集
         addToWrongBook(currentWord.id);
         
-        // 将错题放回队列后面的随机位置（实现错题循环）
+        // 将错题放回队列
         const remainingCount = ws.queue.length - ws.currentIndex - 1;
         if (remainingCount > 0) {
-          // 在当前位置之后的随机位置插入
           const insertPosition = ws.currentIndex + 1 + Math.floor(Math.random() * Math.min(remainingCount, 5)) + 1;
           const insertIndex = Math.min(insertPosition, ws.queue.length);
           ws.queue.splice(insertIndex, 0, { ...currentWord, isRetry: true });
         } else {
-          // 如果已经是最后一题，直接加到末尾
           ws.queue.push({ ...currentWord, isRetry: true });
         }
       }
@@ -5697,10 +5849,26 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         Storage.setUserData(state.user.id, 'wordProgress', state.wordProgress);
       }
       
-      // 更新今日学习统计（只有第一次答题且非重做才计入）
-      if (!alreadyRecorded && !isRetry) {
+      // 更新今日统计
+      if (!isRetry) {
         updateDailyStats(isNewWord, isCorrect);
       }
+    }
+    
+    function selectWordAnswer(optionIndex) {
+      if (state.wordSlash.answered) return;
+      
+      const ws = state.wordSlash;
+      const currentWord = ws.queue[ws.currentIndex];
+      const selected = ws.options[optionIndex];
+      const isCorrect = selected.correct;
+      
+      ws.answered = true;
+      ws.correct = isCorrect;
+      ws.selectedIndex = optionIndex;
+      
+      // 使用共用逻辑处理答题结果
+      processAnswerResult(currentWord, isCorrect);
       
       // 播放单词发音
       speak(currentWord.word);
@@ -5755,6 +5923,15 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       render();
     }
     
+    // 设置答题模式
+    function setQuizType(type) {
+      state.wordSettings.quizType = type;
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'wordSettings', state.wordSettings);
+      }
+      render();
+    }
+    
     // 下一个单词
     function nextWord() {
       const ws = state.wordSlash;
@@ -5771,6 +5948,12 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       ws.answered = false;
       ws.correct = null;
       ws.selectedIndex = null;
+      // 拼写模式：重置输入和提示
+      ws.spellingInput = '';
+      ws.spellingHint = 0;
+      // 混合模式：随机决定下一题类型
+      const quizType = state.wordSettings.quizType;
+      ws.currentQuizType = quizType === 'mixed' ? (Math.random() > 0.5 ? 'choice' : 'spelling') : quizType;
       render();
     }
     
@@ -5794,6 +5977,12 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         return renderWordSettings();
       } else if (ws.mode === 'detail') {
         return renderWordDetail();
+      } else if (ws.mode === 'report') {
+        return renderLearningReport();
+      } else if (ws.mode === 'roots') {
+        return renderWordRoots();
+      } else if (ws.mode === 'rootDetail') {
+        return renderRootDetail();
       } else {
         return renderWordHome();
       }
@@ -5944,6 +6133,472 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       `;
     }
     
+    // ==================== 学习报告页面 ====================
+    function renderLearningReport() {
+      const words = getWordBook(state.wordSettings.currentBook);
+      const progress = state.wordProgress;
+      const history = state.learningHistory || [];
+      const streak = state.wordStreak;
+      const today = state.dailyWordStats;
+      
+      // 计算词汇掌握分布
+      let mastered = 0, learning = 0, newCount = 0;
+      words.forEach(w => {
+        const p = progress[w.id];
+        if (p?.status === 'mastered') mastered++;
+        else if (p?.status === 'learning' || p?.status === 'reviewing') learning++;
+        else newCount++;
+      });
+      
+      // 计算总正确率
+      let totalCorrect = 0, totalWrong = 0;
+      history.forEach(h => {
+        totalCorrect += h.totalCorrect || 0;
+        totalWrong += h.totalWrong || 0;
+      });
+      totalCorrect += today.totalCorrect || 0;
+      totalWrong += today.totalWrong || 0;
+      const accuracy = totalCorrect + totalWrong > 0 
+        ? Math.round(totalCorrect / (totalCorrect + totalWrong) * 100) 
+        : 0;
+      
+      // 获取最近7天数据
+      const last7Days = getLast7DaysData();
+      const maxValue = Math.max(...last7Days.map(d => d.total), 1);
+      
+      // 计算累计学习
+      let totalNewLearned = 0, totalReviewed = 0;
+      history.forEach(h => {
+        totalNewLearned += h.newLearned || 0;
+        totalReviewed += h.reviewed || 0;
+      });
+      totalNewLearned += today.newLearned || 0;
+      totalReviewed += today.reviewed || 0;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-6 text-white">
+            <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">📊 学习报告</h1>
+            <p class="text-white/80 text-sm">数据驱动，高效学习</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 核心数据卡片 -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-white rounded-2xl shadow-sm p-4 text-center">
+                <div class="text-3xl font-bold text-orange-500">${streak.currentStreak}</div>
+                <div class="text-sm text-gray-500">连续学习天数</div>
+                <div class="text-xs text-gray-400 mt-1">最长 ${streak.longestStreak} 天</div>
+              </div>
+              <div class="bg-white rounded-2xl shadow-sm p-4 text-center">
+                <div class="text-3xl font-bold ${accuracy >= 80 ? 'text-green-500' : accuracy >= 60 ? 'text-amber-500' : 'text-red-500'}">${accuracy}%</div>
+                <div class="text-sm text-gray-500">整体正确率</div>
+                <div class="text-xs text-gray-400 mt-1">${totalCorrect}对 / ${totalWrong}错</div>
+              </div>
+            </div>
+            
+            <!-- 词汇掌握分布 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📚 词汇掌握分布</h3>
+              <div class="flex h-4 rounded-full overflow-hidden bg-gray-200 mb-3">
+                ${mastered > 0 ? `<div class="bg-green-500 transition-all" style="width: ${mastered/words.length*100}%"></div>` : ''}
+                ${learning > 0 ? `<div class="bg-amber-500 transition-all" style="width: ${learning/words.length*100}%"></div>` : ''}
+                ${newCount > 0 ? `<div class="bg-gray-400 transition-all" style="width: ${newCount/words.length*100}%"></div>` : ''}
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                <div>
+                  <div class="flex items-center justify-center gap-1">
+                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span class="font-bold text-green-600">${mastered}</span>
+                  </div>
+                  <div class="text-xs text-gray-500">已掌握</div>
+                </div>
+                <div>
+                  <div class="flex items-center justify-center gap-1">
+                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                    <span class="font-bold text-amber-600">${learning}</span>
+                  </div>
+                  <div class="text-xs text-gray-500">学习中</div>
+                </div>
+                <div>
+                  <div class="flex items-center justify-center gap-1">
+                    <span class="w-3 h-3 rounded-full bg-gray-400"></span>
+                    <span class="font-bold text-gray-600">${newCount}</span>
+                  </div>
+                  <div class="text-xs text-gray-500">待学习</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 近7天学习趋势 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📈 近7天学习趋势</h3>
+              <div class="flex items-end justify-between h-32 gap-2">
+                ${last7Days.map(d => `
+                  <div class="flex-1 flex flex-col items-center">
+                    <div class="w-full bg-gray-100 rounded-t-lg flex flex-col justify-end" style="height: 100px">
+                      ${d.total > 0 ? `
+                        <div class="bg-primary-500 rounded-t-lg transition-all" style="height: ${d.total/maxValue*100}%">
+                          <div class="text-xs text-white text-center font-bold pt-1">${d.total}</div>
+                        </div>
+                      ` : '<div class="h-0"></div>'}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">${d.label}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 累计统计 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">🏆 累计统计</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="text-center p-3 bg-green-50 rounded-xl">
+                  <div class="text-2xl font-bold text-green-600">${totalNewLearned}</div>
+                  <div class="text-sm text-gray-500">新词学习</div>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-xl">
+                  <div class="text-2xl font-bold text-blue-600">${totalReviewed}</div>
+                  <div class="text-sm text-gray-500">复习次数</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-xl">
+                  <div class="text-2xl font-bold text-purple-600">${streak.totalDays || 0}</div>
+                  <div class="text-sm text-gray-500">总学习天数</div>
+                </div>
+                <div class="text-center p-3 bg-amber-50 rounded-xl">
+                  <div class="text-2xl font-bold text-amber-600">${state.wrongWordBook.length}</div>
+                  <div class="text-sm text-gray-500">待强化词汇</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 今日数据 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📅 今日学习</h3>
+              <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="p-2 bg-green-50 rounded-xl">
+                  <div class="text-lg font-bold text-green-600">${today.newLearned || 0}</div>
+                  <div class="text-xs text-gray-500">新词</div>
+                </div>
+                <div class="p-2 bg-blue-50 rounded-xl">
+                  <div class="text-lg font-bold text-blue-600">${today.reviewed || 0}</div>
+                  <div class="text-xs text-gray-500">复习</div>
+                </div>
+                <div class="p-2 bg-emerald-50 rounded-xl">
+                  <div class="text-lg font-bold text-emerald-600">${today.totalCorrect || 0}</div>
+                  <div class="text-xs text-gray-500">正确</div>
+                </div>
+                <div class="p-2 bg-red-50 rounded-xl">
+                  <div class="text-lg font-bold text-red-600">${today.totalWrong || 0}</div>
+                  <div class="text-xs text-gray-500">错误</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 学习建议 -->
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-sm p-4 text-white">
+              <h3 class="font-bold mb-2">💡 学习建议</h3>
+              ${getStudyAdvice(mastered, learning, newCount, accuracy, streak.currentStreak)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 获取最近7天数据
+    function getLast7DaysData() {
+      const result = [];
+      const dayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toDateString();
+        const dayLabel = dayLabels[date.getDay()];
+        
+        // 查找历史记录
+        const historyItem = (state.learningHistory || []).find(h => h.date === dateStr);
+        
+        // 如果是今天，用当前数据
+        if (i === 0) {
+          result.push({
+            label: '今',
+            total: (state.dailyWordStats.newLearned || 0) + (state.dailyWordStats.reviewed || 0)
+          });
+        } else if (historyItem) {
+          result.push({
+            label: dayLabel,
+            total: (historyItem.newLearned || 0) + (historyItem.reviewed || 0)
+          });
+        } else {
+          result.push({ label: dayLabel, total: 0 });
+        }
+      }
+      
+      return result;
+    }
+    
+    // 获取学习建议
+    function getStudyAdvice(mastered, learning, newCount, accuracy, streak) {
+      const total = mastered + learning + newCount;
+      const masteredRate = total > 0 ? mastered / total : 0;
+      
+      if (streak === 0) {
+        return '<p class="text-white/90 text-sm">开始你的学习之旅吧！每天坚持学习，养成好习惯。</p>';
+      }
+      
+      if (accuracy < 60) {
+        return '<p class="text-white/90 text-sm">正确率较低，建议减少每日新词数量，多花时间复习错题集中的单词。</p>';
+      }
+      
+      if (masteredRate < 0.3 && learning > 50) {
+        return '<p class="text-white/90 text-sm">学习中的词汇较多，建议专注复习，减少新词学习，确保已学词汇掌握扎实。</p>';
+      }
+      
+      if (streak >= 7) {
+        return '<p class="text-white/90 text-sm">🎉 太棒了！你已经连续学习 ' + streak + ' 天了！保持这个节奏，词汇量会稳步提升。</p>';
+      }
+      
+      if (accuracy >= 80) {
+        return '<p class="text-white/90 text-sm">正确率不错！可以适当增加每日新词数量，加快学习进度。</p>';
+      }
+      
+      return '<p class="text-white/90 text-sm">继续保持，每天进步一点点。建议在记忆最好的时段学习，效果更佳。</p>';
+    }
+    
+    // ==================== 词根词缀学习页面 ====================
+    function renderWordRoots() {
+      const prefixes = WORD_ROOTS.prefixes;
+      const suffixes = WORD_ROOTS.suffixes;
+      const roots = WORD_ROOTS.roots;
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r from-rose-500 to-pink-600 p-6 text-white">
+            <button onclick="state.wordSlash.mode='home';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <h1 class="text-xl font-bold">🔤 词根词缀</h1>
+            <p class="text-white/80 text-sm">掌握构词规律，轻松扩展词汇</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 学习提示 -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 mb-4">
+              <div class="flex items-start gap-3">
+                <span class="text-2xl">💡</span>
+                <div>
+                  <div class="font-bold text-amber-800 mb-1">为什么学词根词缀？</div>
+                  <p class="text-sm text-amber-700">西班牙语单词大多由词根+词缀构成。掌握常用词根词缀，可以快速推断生词含义，大幅提升词汇量！</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 前缀 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">前</span>
+                常用前缀 (${prefixes.length}个)
+              </h3>
+              <div class="grid grid-cols-2 gap-2">
+                ${prefixes.slice(0, 6).map(p => `
+                  <button onclick="showRootDetail('${p.id}')" 
+                    class="p-3 rounded-xl bg-blue-50 hover:bg-blue-100 active:scale-98 transition-all text-left">
+                    <div class="font-bold text-blue-700">${p.root}</div>
+                    <div class="text-sm text-gray-600">${p.meaning}</div>
+                  </button>
+                `).join('')}
+              </div>
+              ${prefixes.length > 6 ? `
+                <button onclick="state.wordSlash.rootCategory='prefixes';state.wordSlash.mode='rootList';render()" 
+                  class="w-full mt-3 p-2 text-center text-blue-600 text-sm font-medium hover:bg-blue-50 rounded-xl transition-all">
+                  查看全部 ${prefixes.length} 个前缀 →
+                </button>
+              ` : ''}
+            </div>
+            
+            <!-- 后缀 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">后</span>
+                常用后缀 (${suffixes.length}个)
+              </h3>
+              <div class="grid grid-cols-2 gap-2">
+                ${suffixes.slice(0, 6).map(s => `
+                  <button onclick="showRootDetail('${s.id}')" 
+                    class="p-3 rounded-xl bg-green-50 hover:bg-green-100 active:scale-98 transition-all text-left">
+                    <div class="font-bold text-green-700">${s.root}</div>
+                    <div class="text-sm text-gray-600">${s.meaning}</div>
+                  </button>
+                `).join('')}
+              </div>
+              ${suffixes.length > 6 ? `
+                <button onclick="state.wordSlash.rootCategory='suffixes';state.wordSlash.mode='rootList';render()" 
+                  class="w-full mt-3 p-2 text-center text-green-600 text-sm font-medium hover:bg-green-50 rounded-xl transition-all">
+                  查看全部 ${suffixes.length} 个后缀 →
+                </button>
+              ` : ''}
+            </div>
+            
+            <!-- 词根 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">根</span>
+                常用词根 (${roots.length}个)
+              </h3>
+              <div class="grid grid-cols-2 gap-2">
+                ${roots.slice(0, 6).map(r => `
+                  <button onclick="showRootDetail('${r.id}')" 
+                    class="p-3 rounded-xl bg-purple-50 hover:bg-purple-100 active:scale-98 transition-all text-left">
+                    <div class="font-bold text-purple-700">${r.root}</div>
+                    <div class="text-sm text-gray-600">${r.meaning}</div>
+                  </button>
+                `).join('')}
+              </div>
+              ${roots.length > 6 ? `
+                <button onclick="state.wordSlash.rootCategory='roots';state.wordSlash.mode='rootList';render()" 
+                  class="w-full mt-3 p-2 text-center text-purple-600 text-sm font-medium hover:bg-purple-50 rounded-xl transition-all">
+                  查看全部 ${roots.length} 个词根 →
+                </button>
+              ` : ''}
+            </div>
+            
+            <!-- 学习技巧 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4">
+              <h3 class="font-bold text-gray-800 mb-3">📝 学习技巧</h3>
+              <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex items-start gap-2">
+                  <span class="text-primary-500">1.</span>
+                  <span>遇到生词时，先尝试分解词根词缀，推测含义</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="text-primary-500">2.</span>
+                  <span>记住一个词根，就能认识一串相关单词</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="text-primary-500">3.</span>
+                  <span>注意词缀可能会根据词性变化（如 -ción 变 -ciones）</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 显示词根详情
+    function showRootDetail(rootId) {
+      state.wordSlash.currentRootId = rootId;
+      state.wordSlash.mode = 'rootDetail';
+      render();
+    }
+    
+    // 查找词根数据
+    function findRootById(rootId) {
+      const all = [...WORD_ROOTS.prefixes, ...WORD_ROOTS.suffixes, ...WORD_ROOTS.roots];
+      return all.find(r => r.id === rootId);
+    }
+    
+    // 词根详情页面
+    function renderRootDetail() {
+      const rootId = state.wordSlash.currentRootId;
+      const rootData = findRootById(rootId);
+      
+      if (!rootData) {
+        return `
+          <div class="h-full flex items-center justify-center">
+            <div class="text-center text-gray-500">
+              <div class="text-4xl mb-2">😕</div>
+              <div>未找到该词根</div>
+              <button onclick="state.wordSlash.mode='roots';render()" class="mt-4 text-primary-500">返回</button>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 确定类型和颜色
+      let type, color, bgColor;
+      if (rootId.startsWith('pre_')) {
+        type = '前缀';
+        color = 'blue';
+        bgColor = 'from-blue-500 to-indigo-600';
+      } else if (rootId.startsWith('suf_')) {
+        type = '后缀';
+        color = 'green';
+        bgColor = 'from-green-500 to-emerald-600';
+      } else {
+        type = '词根';
+        color = 'purple';
+        bgColor = 'from-purple-500 to-pink-600';
+      }
+      
+      // 查找词库中包含此词根的单词
+      const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
+      const relatedWords = allWords.filter(w => {
+        const rootPattern = rootData.root.replace(/[-\/]/g, '').toLowerCase();
+        return w.word.toLowerCase().includes(rootPattern.slice(0, 3));
+      }).slice(0, 10);
+      
+      return `
+        <div class="h-full bg-gray-50 flex flex-col">
+          <!-- 顶部 -->
+          <div class="bg-gradient-to-r ${bgColor} p-6 text-white">
+            <button onclick="state.wordSlash.mode='roots';render()" class="text-white/80 text-sm mb-3 flex items-center gap-1">← 返回</button>
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 bg-white/20 rounded-full text-sm">${type}</span>
+            </div>
+            <h1 class="text-3xl font-bold mt-2">${rootData.root}</h1>
+            <p class="text-white/90 text-lg mt-1">${rootData.meaning}</p>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-4">
+            <!-- 例词展示 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <h3 class="font-bold text-gray-800 mb-3">📚 常见例词</h3>
+              <div class="space-y-3">
+                ${rootData.examples.map(ex => `
+                  <div class="p-3 bg-${color}-50 rounded-xl">
+                    <div class="font-bold text-${color}-700 text-lg">${ex}</div>
+                    <button onclick="speak('${ex}')" class="text-sm text-${color}-500 mt-1">🔊 播放发音</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- 词库中的相关单词 -->
+            ${relatedWords.length > 0 ? `
+              <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <h3 class="font-bold text-gray-800 mb-3">📖 词库中的相关单词</h3>
+                <div class="space-y-2">
+                  ${relatedWords.map(w => `
+                    <button onclick="showWordDetail('${w.id}')" 
+                      class="w-full p-3 bg-gray-50 rounded-xl flex items-center gap-3 hover:bg-gray-100 active:scale-98 transition-all text-left">
+                      <span class="text-2xl">${w.image}</span>
+                      <div class="flex-1">
+                        <div class="font-bold text-gray-800">${w.word}</div>
+                        <div class="text-sm text-gray-500">${w.meaning}</div>
+                      </div>
+                      <span class="text-gray-400">→</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            <!-- 记忆技巧 -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4">
+              <h3 class="font-bold text-amber-800 mb-2">💡 记忆技巧</h3>
+              <p class="text-sm text-amber-700">
+                看到 <strong>${rootData.root}</strong> 就联想到 "<strong>${rootData.meaning}</strong>"。
+                通过这个${type}，你可以快速理解很多相关单词的含义！
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
     // 单独练习某个单词
     function startSingleWordLearning(wordId) {
       const allWords = [...A1_WORDS, ...A2_WORDS, ...B1_WORDS, ...CITIZENSHIP_WORDS];
@@ -5953,6 +6608,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       
       // 创建包含这个单词的学习队列（重复5次以强化记忆）
       const queue = [word, word, word, word, word];
+      
+      // 决定当前题目类型
+      const quizType = state.wordSettings.quizType;
+      const currentQuizType = quizType === 'mixed' ? (Math.random() > 0.5 ? 'choice' : 'spelling') : quizType;
       
       state.wordSlash = {
         ...state.wordSlash,
@@ -5964,6 +6623,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         correct: null,
         selectedIndex: null,
         results: [],
+        currentQuizType: currentQuizType,
+        spellingInput: '',
+        spellingHint: 0,
       };
       
       render();
@@ -6140,7 +6802,34 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               ${state.wordSettings.hideEmoji ? '<div class="mt-2 text-xs text-red-500 text-center">🔥 困难模式已开启</div>' : ''}
             </div>
             
-            <!-- 今日任务 -->
+            <!-- 答题模式选择 -->
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="text-2xl">✏️</span>
+                <span class="font-bold text-gray-800">答题模式</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="setQuizType('choice')" 
+                  class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'choice' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                  <div class="text-xl mb-1">🔘</div>
+                  <div class="text-xs font-medium">选择题</div>
+                </button>
+                <button onclick="setQuizType('spelling')" 
+                  class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'spelling' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                  <div class="text-xl mb-1">⌨️</div>
+                  <div class="text-xs font-medium">拼写题</div>
+                </button>
+                <button onclick="setQuizType('mixed')" 
+                  class="p-3 rounded-xl text-center transition-all ${state.wordSettings.quizType === 'mixed' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                  <div class="text-xl mb-1">🔀</div>
+                  <div class="text-xs font-medium">混合模式</div>
+                </button>
+              </div>
+              <div class="mt-2 text-xs text-gray-400 text-center">
+                ${state.wordSettings.quizType === 'choice' ? '看单词选中文释义' : 
+                  state.wordSettings.quizType === 'spelling' ? '看中文释义拼写单词' : '随机切换两种模式'}
+              </div>
+            </div>
             <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
               <h3 class="font-bold text-gray-800 mb-3">🎯 今日任务</h3>
               <div class="space-y-3">
@@ -6192,6 +6881,26 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                   <div class="flex-1 text-left">
                     <div class="font-bold">听写模式</div>
                     <div class="text-white/80 text-sm">听音拼写，强化记忆</div>
+                  </div>
+                  <span class="text-2xl">→</span>
+                </button>
+                
+                <button onclick="state.wordSlash.mode='report';render()" 
+                  class="w-full p-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                  <span class="text-3xl">📊</span>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold">学习报告</div>
+                    <div class="text-white/80 text-sm">查看学习数据与趋势</div>
+                  </div>
+                  <span class="text-2xl">→</span>
+                </button>
+                
+                <button onclick="state.wordSlash.mode='roots';render()" 
+                  class="w-full p-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white flex items-center gap-3 hover:shadow-lg active:scale-98 transition-all">
+                  <span class="text-3xl">🔤</span>
+                  <div class="flex-1 text-left">
+                    <div class="font-bold">词根词缀</div>
+                    <div class="text-white/80 text-sm">理解构词规律，举一反三</div>
                   </div>
                   <span class="text-2xl">→</span>
                 </button>
@@ -6252,6 +6961,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const isStarred = state.starredWords.includes(currentWord.id);
       const correctCount = progress?.correctCount || 0;
       const isRetry = currentWord.isRetry;
+      const isSpelling = ws.currentQuizType === 'spelling';
       
       return `
         <div class="h-full bg-gray-50 flex flex-col">
@@ -6261,6 +6971,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               <button onclick="state.wordSlash.mode='home';render()" class="text-gray-500">✕ 退出</button>
               <div class="flex items-center gap-2">
                 ${isRetry ? '<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">重做</span>' : ''}
+                <span class="px-2 py-1 ${isSpelling ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'} text-xs rounded-full">
+                  ${isSpelling ? '⌨️ 拼写' : '🔘 选择'}
+                </span>
                 <span class="text-sm text-gray-500">${ws.currentIndex + 1} / ${ws.queue.length}</span>
               </div>
             </div>
@@ -6279,36 +6992,92 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">${correctCount}/5 ✓</span>
               </div>
               ${state.wordSettings.hideEmoji ? '' : `<div class="text-6xl mb-4">${currentWord.image}</div>`}
-              <div class="text-3xl font-bold text-gray-800 mb-2">${currentWord.word}</div>
+              
+              ${isSpelling ? `
+                <!-- 拼写模式：显示中文释义 -->
+                <div class="text-2xl font-bold text-gray-800 mb-2">${currentWord.meaning}</div>
+                <div class="text-sm text-gray-500 mb-2">请拼写这个单词</div>
+              ` : `
+                <!-- 选择模式：显示单词 -->
+                <div class="text-3xl font-bold text-gray-800 mb-2">${currentWord.word}</div>
+              `}
+              
               <div class="flex items-center justify-center gap-3">
-                <button onclick="speak('${currentWord.word}')" class="text-primary-500 text-sm">🔊 播放发音</button>
+                ${!isSpelling || ws.answered ? `
+                  <button onclick="speak('${currentWord.word}')" class="text-primary-500 text-sm">🔊 播放发音</button>
+                ` : ''}
                 <button onclick="toggleStarWord('${currentWord.id}')" class="text-sm ${isStarred ? 'text-amber-500' : 'text-gray-400'}">
                   ${isStarred ? '⭐ 已标记' : '☆ 标记重点'}
                 </button>
               </div>
             </div>
             
-            <!-- 选项 -->
-            <div class="w-full max-w-sm grid grid-cols-2 gap-3">
-              ${ws.options.map((opt, i) => {
-                let btnClass = 'bg-white border-2 border-gray-200 hover:border-primary-400';
-                if (ws.answered) {
-                  if (opt.correct) {
-                    btnClass = 'bg-green-100 border-2 border-green-500 text-green-700';
-                  } else if (i === ws.selectedIndex && !opt.correct) {
-                    btnClass = 'bg-red-100 border-2 border-red-500 text-red-700';
-                  } else {
-                    btnClass = 'bg-gray-100 border-2 border-gray-200 text-gray-400';
-                  }
-                }
-                return `
-                  <button onclick="selectWordAnswer(${i})" 
-                    class="p-4 rounded-xl ${btnClass} font-medium transition-all ${ws.answered ? 'cursor-default' : 'active:scale-95'}">
-                    ${opt.meaning}
+            ${isSpelling ? `
+              <!-- 拼写输入区域 -->
+              <div class="w-full max-w-sm">
+                ${!ws.answered ? `
+                  <div class="relative mb-4">
+                    <input type="text" 
+                      id="spellingInput"
+                      value="${ws.spellingInput || ''}"
+                      oninput="updateSpellingInput(this.value)"
+                      onkeypress="if(event.key==='Enter')checkSpelling()"
+                      placeholder="输入单词..."
+                      autocomplete="off"
+                      autocapitalize="off"
+                      class="w-full p-4 text-xl text-center border-2 border-gray-300 rounded-xl focus:border-primary-500 focus:outline-none"
+                      ${ws.answered ? 'disabled' : ''}
+                    />
+                  </div>
+                  
+                  <!-- 提示按钮 -->
+                  <div class="flex gap-2 mb-4">
+                    <button onclick="showSpellingHint()" 
+                      class="flex-1 p-3 rounded-xl bg-amber-100 text-amber-700 font-medium hover:bg-amber-200 transition-all">
+                      💡 提示 (${ws.spellingHint}/3)
+                    </button>
+                    <button onclick="speak('${currentWord.word}')" 
+                      class="flex-1 p-3 rounded-xl bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition-all">
+                      🔊 听发音
+                    </button>
+                  </div>
+                  
+                  <!-- 提示显示 -->
+                  ${ws.spellingHint > 0 ? `
+                    <div class="mb-4 p-3 bg-amber-50 rounded-xl text-center">
+                      <span class="text-lg font-mono tracking-widest">${getSpellingHint(currentWord.word, ws.spellingHint)}</span>
+                    </div>
+                  ` : ''}
+                  
+                  <button onclick="checkSpelling()" 
+                    class="w-full p-4 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 active:scale-98 transition-all">
+                    确认 ✓
                   </button>
-                `;
-              }).join('')}
-            </div>
+                ` : ''}
+              </div>
+            ` : `
+              <!-- 选择题选项 -->
+              <div class="w-full max-w-sm grid grid-cols-2 gap-3">
+                ${ws.options.map((opt, i) => {
+                  let btnClass = 'bg-white border-2 border-gray-200 hover:border-primary-400';
+                  if (ws.answered) {
+                    if (opt.correct) {
+                      btnClass = 'bg-green-100 border-2 border-green-500 text-green-700';
+                    } else if (i === ws.selectedIndex && !opt.correct) {
+                      btnClass = 'bg-red-100 border-2 border-red-500 text-red-700';
+                    } else {
+                      btnClass = 'bg-gray-100 border-2 border-gray-200 text-gray-400';
+                    }
+                  }
+                  return `
+                    <button onclick="selectWordAnswer(${i})" 
+                      class="p-4 rounded-xl ${btnClass} font-medium transition-all ${ws.answered ? 'cursor-default' : 'active:scale-95'}">
+                      ${opt.meaning}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            `}
             
             <!-- 答案反馈 -->
             ${ws.answered ? `
@@ -6324,6 +7093,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                     <span class="text-2xl mr-2">${currentWord.image}</span>
                     <span class="font-bold">${currentWord.word}</span> = ${currentWord.meaning}
                   </div>
+                  ${isSpelling && !ws.correct ? `
+                    <div class="text-sm text-red-600 mb-2">
+                      你的答案: <span class="font-mono">${ws.spellingInput || '(空)'}</span>
+                    </div>
+                  ` : ''}
                   <div class="text-sm text-gray-600">
                     <div class="italic">"${currentWord.example}"</div>
                     <div class="text-gray-500">${currentWord.exampleZh}</div>
@@ -6610,6 +7384,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       // 打乱顺序
       const shuffled = wrongWords.sort(() => Math.random() - 0.5);
       
+      // 决定当前题目类型
+      const quizType = state.wordSettings.quizType;
+      const currentQuizType = quizType === 'mixed' ? (Math.random() > 0.5 ? 'choice' : 'spelling') : quizType;
+      
       state.wordSlash = {
         ...state.wordSlash,
         mode: 'learning',
@@ -6620,6 +7398,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         correct: null,
         selectedIndex: null,
         results: [],
+        currentQuizType: currentQuizType,
+        spellingInput: '',
+        spellingHint: 0,
       };
       
       render();
@@ -6805,6 +7586,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       
       const queue = wrongWords.sort(() => Math.random() - 0.5).slice(0, 20);
       
+      // 决定当前题目类型
+      const quizType = state.wordSettings.quizType;
+      const currentQuizType = quizType === 'mixed' ? (Math.random() > 0.5 ? 'choice' : 'spelling') : quizType;
+      
       state.wordSlash = {
         ...state.wordSlash,
         mode: 'learning',
@@ -6815,6 +7600,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         correct: null,
         selectedIndex: null,
         results: [],
+        currentQuizType: currentQuizType,
+        spellingInput: '',
+        spellingHint: 0,
       };
       
       render();
@@ -6896,6 +7684,10 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       
       const queue = starredWords.sort(() => Math.random() - 0.5).slice(0, 20);
       
+      // 决定当前题目类型
+      const quizType = state.wordSettings.quizType;
+      const currentQuizType = quizType === 'mixed' ? (Math.random() > 0.5 ? 'choice' : 'spelling') : quizType;
+      
       state.wordSlash = {
         ...state.wordSlash,
         mode: 'learning',
@@ -6906,6 +7698,9 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         correct: null,
         selectedIndex: null,
         results: [],
+        currentQuizType: currentQuizType,
+        spellingInput: '',
+        spellingHint: 0,
       };
       
       render();
