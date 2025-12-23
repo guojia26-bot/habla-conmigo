@@ -5666,53 +5666,6 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               </div>
             </div>
             
-            <!-- 艾宾浩斯复习计划 -->
-            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold text-gray-800">🧠 艾宾浩斯复习计划</h3>
-                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">智能复习</span>
-              </div>
-              <div class="text-xs text-gray-500 mb-3">
-                根据遗忘曲线，系统会在最佳时间提醒你复习：1天→2天→4天→7天→15天
-              </div>
-              <div class="grid grid-cols-5 gap-1 text-center">
-                ${(() => {
-                  const now = new Date();
-                  const days = [0, 1, 2, 3, 4]; // 今天和未来4天
-                  return days.map(d => {
-                    const date = new Date(now);
-                    date.setDate(date.getDate() + d);
-                    const dayStart = new Date(date.setHours(0,0,0,0));
-                    const dayEnd = new Date(date.setHours(23,59,59,999));
-                    
-                    // 计算这一天需要复习的单词数
-                    let count = 0;
-                    Object.entries(state.wordProgress).forEach(([id, p]) => {
-                      if (p.status !== 'mastered' && p.nextReview) {
-                        const reviewDate = new Date(p.nextReview);
-                        if (d === 0) {
-                          // 今天：包括过期的
-                          if (reviewDate <= dayEnd) count++;
-                        } else {
-                          // 未来几天
-                          if (reviewDate > dayStart && reviewDate <= dayEnd) count++;
-                        }
-                      }
-                    });
-                    
-                    const label = d === 0 ? '今天' : d === 1 ? '明天' : d === 2 ? '后天' : '+' + d + '天';
-                    const isToday = d === 0;
-                    return \`
-                      <div class="p-2 rounded-lg \${isToday ? 'bg-amber-100' : 'bg-gray-50'}">
-                        <div class="text-xs text-gray-500">\${label}</div>
-                        <div class="font-bold \${isToday ? 'text-amber-600' : count > 0 ? 'text-blue-600' : 'text-gray-400'}">\${count}</div>
-                      </div>
-                    \`;
-                  }).join('');
-                })()}
-              </div>
-            </div>
-            
             <!-- 学习设置 -->
             <div class="bg-white rounded-2xl shadow-sm p-4">
               <h3 class="font-bold text-gray-800 mb-3">⚙️ 学习设置</h3>
