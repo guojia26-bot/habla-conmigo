@@ -2627,8 +2627,10 @@ REGLAS:
       
       const u = new SpeechSynthesisUtterance(clean);
       
-      // 获取用户设置的语速基准
+      // 获取用户设置的语速和音量
       const userRate = state.user?.speechRate || 0.85;
+      const userVolume = state.user?.speechVolume ?? 1.0;
+      u.volume = userVolume;
       
       // 根据角色设置不同参数
       if (state.tutor && state.tutor.voice) {
@@ -4014,7 +4016,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const strictMode = document.getElementById('strictMode').checked;
       
       // 创建新用户
-      saveUser({ name, level, autoTranslate, strictMode, speechRate: 0.85 }, true);
+      saveUser({ name, level, autoTranslate, strictMode, speechRate: 0.85, speechVolume: 1.0 }, true);
       state.view = 'home';
       render();
     }
@@ -7345,6 +7347,16 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                       <span>快</span>
                     </div>
                   </div>
+                  <div>
+                    <label class="text-gray-700">朗读音量</label>
+                    <input id="settingSpeechVolume" type="range" min="0" max="1" step="0.1" value="${user.speechVolume ?? 1.0}"
+                      class="w-full mt-2" oninput="document.getElementById('volumeValue').textContent=Math.round(this.value*100)+'%'">
+                    <div class="flex justify-between text-xs text-gray-400">
+                      <span>静音</span>
+                      <span id="volumeValue">${Math.round((user.speechVolume ?? 1.0) * 100)}%</span>
+                      <span>最大</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -7428,10 +7440,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       const autoTranslate = document.getElementById('settingAutoTrans').checked;
       const strictMode = document.getElementById('settingStrict').checked;
       const speechRate = parseFloat(document.getElementById('settingSpeechRate').value);
+      const speechVolume = parseFloat(document.getElementById('settingSpeechVolume').value);
       const transLang = document.getElementById('settingTransLang').value;
       
       // 更新现有用户，不是创建新用户
-      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate, transLang }, false);
+      saveUser({ ...state.user, name, level, autoTranslate, strictMode, speechRate, speechVolume, transLang }, false);
       state.view = 'home';
       render();
     }
@@ -7449,7 +7462,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
           transLang: state.user.transLang,
           autoTranslate: state.user.autoTranslate,
           strictMode: state.user.strictMode,
-          speechRate: state.user.speechRate
+          speechRate: state.user.speechRate,
+          speechVolume: state.user.speechVolume
         },
         chatHistory: state.chatHistory,
         mistakeBook: state.mistakeBook,
