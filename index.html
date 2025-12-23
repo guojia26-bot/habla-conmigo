@@ -3012,19 +3012,38 @@ ${grammarContext}
     }
 
     async function getTranslation(msgId, text) {
+      // 保存当前滚动位置
+      const container = document.getElementById('messages');
+      const scrollPos = container ? container.scrollTop : 0;
+      
       if (state.translationCache[msgId]) {
         state.showTranslation[msgId] = !state.showTranslation[msgId];
         render();
+        // 恢复滚动位置
+        setTimeout(() => {
+          const c = document.getElementById('messages');
+          if (c) c.scrollTop = scrollPos;
+        }, 50);
         return;
       }
       
       state.showTranslation[msgId] = true;
       state.translationCache[msgId] = '翻译中...';
       render();
+      // 恢复滚动位置
+      setTimeout(() => {
+        const c = document.getElementById('messages');
+        if (c) c.scrollTop = scrollPos;
+      }, 50);
       
       const translation = await callAPI(text, true);
       state.translationCache[msgId] = translation;
       render();
+      // 恢复滚动位置
+      setTimeout(() => {
+        const c = document.getElementById('messages');
+        if (c) c.scrollTop = scrollPos;
+      }, 50);
     }
 
     function saveChatHistory() {
@@ -7105,10 +7124,18 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     
     // 处理纠正卡片翻译
     async function handleCorrectionTranslate(msgId) {
+      // 保存滚动位置
+      const container = document.getElementById('messages');
+      const scrollPos = container ? container.scrollTop : 0;
+      
       // 如果已有缓存，切换显示状态
       if (state.correctionTransCache[msgId]) {
         state.showCorrectionTrans[msgId] = !state.showCorrectionTrans[msgId];
         render();
+        setTimeout(() => {
+          const c = document.getElementById('messages');
+          if (c) c.scrollTop = scrollPos;
+        }, 50);
         return;
       }
       
@@ -7118,18 +7145,34 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       state.showCorrectionTrans[msgId] = true;
       state.correctionTransCache[msgId] = '翻译中...';
       render();
+      setTimeout(() => {
+        const c = document.getElementById('messages');
+        if (c) c.scrollTop = scrollPos;
+      }, 50);
       
       const translation = await callAPI(msg.correction, true);
       state.correctionTransCache[msgId] = translation;
       render();
+      setTimeout(() => {
+        const c = document.getElementById('messages');
+        if (c) c.scrollTop = scrollPos;
+      }, 50);
     }
     
     // 处理语法卡片翻译
     async function handleGrammarTranslate(msgId) {
+      // 保存滚动位置
+      const container = document.getElementById('messages');
+      const scrollPos = container ? container.scrollTop : 0;
+      
       // 如果已有缓存，切换显示状态
       if (state.grammarTransCache[msgId]) {
         state.showGrammarTrans[msgId] = !state.showGrammarTrans[msgId];
         render();
+        setTimeout(() => {
+          const c = document.getElementById('messages');
+          if (c) c.scrollTop = scrollPos;
+        }, 50);
         return;
       }
       
@@ -7139,10 +7182,18 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       state.showGrammarTrans[msgId] = true;
       state.grammarTransCache[msgId] = '翻译中...';
       render();
+      setTimeout(() => {
+        const c = document.getElementById('messages');
+        if (c) c.scrollTop = scrollPos;
+      }, 50);
       
       const translation = await callAPI(msg.grammar, true);
       state.grammarTransCache[msgId] = translation;
       render();
+      setTimeout(() => {
+        const c = document.getElementById('messages');
+        if (c) c.scrollTop = scrollPos;
+      }, 50);
     }
 
     function endChat() {
