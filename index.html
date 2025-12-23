@@ -5929,7 +5929,39 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       if (state.user) {
         Storage.setUserData(state.user.id, 'wordSettings', state.wordSettings);
       }
+      renderWithScroll();
+    }
+    
+    // 更新每日设置（保持滚动位置）
+    function updateDailySetting(field, delta, min, max) {
+      const current = state.wordSettings[field] || 0;
+      state.wordSettings[field] = Math.max(min, Math.min(max, current + delta));
+      if (state.user) {
+        Storage.setUserData(state.user.id, 'wordSettings', state.wordSettings);
+      }
+      renderWithScroll();
+    }
+    
+    // 渲染并保持滚动位置
+    function renderWithScroll() {
+      // 查找当前页面的滚动容器
+      const containers = document.querySelectorAll('.overflow-auto, .overflow-y-auto');
+      const scrollPositions = [];
+      containers.forEach(c => {
+        scrollPositions.push({ el: c.className, top: c.scrollTop });
+      });
+      
       render();
+      
+      // 恢复滚动位置
+      requestAnimationFrame(() => {
+        const newContainers = document.querySelectorAll('.overflow-auto, .overflow-y-auto');
+        newContainers.forEach((c, i) => {
+          if (scrollPositions[i]) {
+            c.scrollTop = scrollPositions[i].top;
+          }
+        });
+      });
     }
     
     // 下一个单词
@@ -6932,17 +6964,17 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
                 <div class="flex items-center justify-between">
                   <span class="text-gray-600">每日新词</span>
                   <div class="flex items-center gap-2">
-                    <button onclick="state.wordSettings.dailyNew=Math.max(5,state.wordSettings.dailyNew-5);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">-</button>
+                    <button onclick="updateDailySetting('dailyNew', -5, 5, 50)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">-</button>
                     <span class="w-12 text-center font-bold">${state.wordSettings.dailyNew}</span>
-                    <button onclick="state.wordSettings.dailyNew=Math.min(50,state.wordSettings.dailyNew+5);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
+                    <button onclick="updateDailySetting('dailyNew', 5, 5, 50)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">+</button>
                   </div>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-gray-600">每日复习</span>
                   <div class="flex items-center gap-2">
-                    <button onclick="state.wordSettings.dailyReview=Math.max(10,state.wordSettings.dailyReview-10);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">-</button>
+                    <button onclick="updateDailySetting('dailyReview', -10, 10, 100)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">-</button>
                     <span class="w-12 text-center font-bold">${state.wordSettings.dailyReview}</span>
-                    <button onclick="state.wordSettings.dailyReview=Math.min(100,state.wordSettings.dailyReview+10);Storage.setUserData(state.user.id,'wordSettings',state.wordSettings);render()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
+                    <button onclick="updateDailySetting('dailyReview', 10, 10, 100)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all">+</button>
                   </div>
                 </div>
               </div>
