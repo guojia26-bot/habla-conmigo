@@ -885,15 +885,15 @@ REGLAS:
 
     // 实用模式场景（服务型NPC专属场景）
     const SERVICE_SCENARIOS = [
-      { id: 'hospital', icon: '🏥', name: '医院', nameEs: 'En el hospital', desc: '描述症状、理解医嘱', npc: 'doctora' },
-      { id: 'rent', icon: '🏠', name: '租房', nameEs: 'Alquilar piso', desc: '看房、谈价、签合同', npc: 'pablo' },
-      { id: 'haircut', icon: '💇', name: '理发店', nameEs: 'En la peluquería', desc: '剪发、染发、沟通发型', npc: 'luna' },
-      { id: 'restaurant', icon: '🍽️', name: '餐厅', nameEs: 'En el restaurante', desc: '点餐、推荐、结账', npc: 'marco' },
-      { id: 'cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería', desc: '点咖啡、甜点', npc: 'marco' },
+      { id: 'svc_hospital', icon: '🏥', name: '医院', nameEs: 'En el hospital', desc: '描述症状、理解医嘱', npc: 'doctora' },
+      { id: 'svc_rent', icon: '🏠', name: '租房', nameEs: 'Alquilar piso', desc: '看房、谈价、签合同', npc: 'pablo' },
+      { id: 'svc_haircut', icon: '💇', name: '理发店', nameEs: 'En la peluquería', desc: '剪发、染发、沟通发型', npc: 'luna' },
+      { id: 'svc_restaurant', icon: '🍽️', name: '餐厅', nameEs: 'En el restaurante', desc: '点餐、推荐、结账', npc: 'marco' },
+      { id: 'svc_cafe', icon: '☕', name: '咖啡馆', nameEs: 'En la cafetería', desc: '点咖啡、甜点', npc: 'marco' },
       { id: 'bank', icon: '🏦', name: '银行', nameEs: 'En el banco', desc: '开户、转账、咨询', npc: 'daniel' },
       { id: 'airport', icon: '✈️', name: '机场', nameEs: 'En el aeropuerto', desc: '值机、登机、问询', npc: 'carmen' },
-      { id: 'transport', icon: '🚇', name: '城市交通', nameEs: 'Transporte urbano', desc: '买票、问路、乘车', npc: 'carmen' },
-      { id: 'train', icon: '🚆', name: '火车站', nameEs: 'Estación de tren', desc: '买票、改签、问站台', npc: 'carmen' },
+      { id: 'svc_transport', icon: '🚇', name: '城市交通', nameEs: 'Transporte urbano', desc: '买票、问路、乘车', npc: 'carmen' },
+      { id: 'svc_train', icon: '🚆', name: '火车站', nameEs: 'Estación de tren', desc: '买票、改签、问站台', npc: 'carmen' },
       { id: 'hotel', icon: '🏨', name: '酒店', nameEs: 'En el hotel', desc: '入住、退房、服务', npc: 'carmen' },
     ];
 
@@ -2601,7 +2601,7 @@ REGLAS:
       { id: 'estrategia', word: 'estrategia', meaning: '策略', image: '♟️', example: 'Necesitamos una estrategia.', exampleZh: '我们需要一个策略。', tags: ['商务'] },
       { id: 'inversin', word: 'inversión', meaning: '投资', image: '📈', example: 'Es una buena inversión.', exampleZh: '这是一个好投资。', tags: ['商务'] },
       { id: 'beneficio', word: 'beneficio', meaning: '利润/好处', image: '💵', example: 'Los beneficios son altos.', exampleZh: '利润很高。', tags: ['商务'] },
-      { id: 'contrato', word: 'contrato', meaning: '合同', image: '📝', example: 'Firmé el contrato.', exampleZh: '我签了合同。', tags: ['商务'] },
+      { id: 'b1_contrato', word: 'contrato', meaning: '合同', image: '📝', example: 'Firmé el contrato.', exampleZh: '我签了合同。', tags: ['商务'] },
       { id: 'entrevista', word: 'entrevista', meaning: '面试/采访', image: '🎤', example: 'Tengo una entrevista de trabajo.', exampleZh: '我有一个工作面试。', tags: ['商务'] },
       
       // 科技与现代生活
@@ -2628,10 +2628,10 @@ REGLAS:
       
       // 社会与生活
       { id: 'sociedad', word: 'sociedad', meaning: '社会', image: '👥', example: 'Vivimos en sociedad.', exampleZh: '我们生活在社会中。', tags: ['社会'] },
-      { id: 'comunidad', word: 'comunidad', meaning: '社区', image: '🏘️', example: 'Nuestra comunidad es unida.', exampleZh: '我们的社区很团结。', tags: ['社会'] },
+      { id: 'b1_comunidad', word: 'comunidad', meaning: '社区', image: '🏘️', example: 'Nuestra comunidad es unida.', exampleZh: '我们的社区很团结。', tags: ['社会'] },
       { id: 'generacion', word: 'generación', meaning: '一代人', image: '👨‍👩‍👧‍👦', example: 'La nueva generación.', exampleZh: '新一代。', tags: ['社会'] },
-      { id: 'derecho', word: 'derecho', meaning: '权利/法律', image: '⚖️', example: 'Tenemos derechos.', exampleZh: '我们有权利。', tags: ['社会'] },
-      { id: 'deber', word: 'deber', meaning: '义务/应该', image: '📋', example: 'Debes estudiar.', exampleZh: '你应该学习。', tags: ['社会'] },
+      { id: 'b1_derecho', word: 'derecho', meaning: '权利/法律', image: '⚖️', example: 'Tenemos derechos.', exampleZh: '我们有权利。', tags: ['社会'] },
+      { id: 'b1_deber', word: 'deber', meaning: '义务/应该', image: '📋', example: 'Debes estudiar.', exampleZh: '你应该学习。', tags: ['社会'] },
       { id: 'opinion', word: 'opinión', meaning: '意见', image: '💭', example: 'En mi opinión...', exampleZh: '在我看来...', tags: ['社会'] },
       { id: 'decision', word: 'decisión', meaning: '决定', image: '✅', example: 'Toma una decisión.', exampleZh: '做一个决定。', tags: ['社会'] },
       { id: 'solucion', word: 'solución', meaning: '解决方案', image: '💡', example: 'Encontré la solución.', exampleZh: '我找到了解决方案。', tags: ['社会'] },
