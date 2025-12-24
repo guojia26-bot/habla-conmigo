@@ -10749,6 +10749,23 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               </div>
             </div>
             
+            <!-- 📖 技能训练（阅读理解 + 听力练习） -->
+            <div class="mb-4 fade-in-up" style="animation-delay: 0.28s;">
+              <div class="text-sm font-semibold mb-3" style="color: var(--text-secondary);">🎯 ${t('skillPractice') || '技能训练'}</div>
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="state.view='reading';render()" class="card-premium p-4 text-center btn-press" style="background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(99,102,241,0.1) 100%);">
+                  <div class="text-3xl mb-2">📖</div>
+                  <div class="font-semibold text-sm">${t('readingComprehension') || '阅读理解'}</div>
+                  <div class="text-xs mt-1" style="color: var(--text-tertiary);">${t('readingDesc') || '分级文章'}</div>
+                </button>
+                <button onclick="state.view='listening';render()" class="card-premium p-4 text-center btn-press" style="background: linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(236,72,153,0.1) 100%);">
+                  <div class="text-3xl mb-2">🎧</div>
+                  <div class="font-semibold text-sm">${t('listeningPractice') || '听力练习'}</div>
+                  <div class="text-xs mt-1" style="color: var(--text-tertiary);">${t('listeningDesc') || '听写训练'}</div>
+                </button>
+              </div>
+            </div>
+            
             <!-- 学习趋势图表 -->
             <div class="fade-in-up" style="animation-delay: 0.25s;">
               ${renderTrendChart()}
@@ -12009,11 +12026,21 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     // 更新每日设置（保持滚动位置）
     function updateDailySetting(field, delta, min, max) {
       const current = state.wordSettings[field] || 0;
-      state.wordSettings[field] = Math.max(min, Math.min(max, current + delta));
+      const newValue = Math.max(min, Math.min(max, current + delta));
+      state.wordSettings[field] = newValue;
       if (state.user) {
         Storage.setUserData(state.user.id, 'wordSettings', state.wordSettings);
       }
-      renderWithScroll();
+      
+      // 只更新显示的数字，避免重新渲染整个页面导致闪烁
+      const displayId = field === 'dailyNew' ? 'dailyNewDisplay' : 'dailyReviewDisplay';
+      const display = document.getElementById(displayId);
+      if (display) {
+        display.textContent = newValue;
+      } else {
+        // 如果找不到元素，才重新渲染
+        renderWithScroll();
+      }
     }
     
     // 渲染并保持滚动位置
@@ -13574,7 +13601,7 @@ ${starText}
                   </div>
                   <div class="flex items-center gap-3">
                     <button onclick="updateDailySetting('dailyNew', -5, 5, 50)" class="w-8 h-8 rounded-full flex items-center justify-center btn-press" style="background: rgba(255,255,255,0.05);">−</button>
-                    <span class="w-8 text-center font-bold" style="color: var(--accent-blue-light);">${settings.dailyNew}</span>
+                    <span id="dailyNewDisplay" class="w-8 text-center font-bold" style="color: var(--accent-blue-light);">${settings.dailyNew}</span>
                     <button onclick="updateDailySetting('dailyNew', 5, 5, 50)" class="w-8 h-8 rounded-full flex items-center justify-center btn-press" style="background: rgba(255,255,255,0.05);">+</button>
                   </div>
                 </div>
@@ -13585,7 +13612,7 @@ ${starText}
                   </div>
                   <div class="flex items-center gap-3">
                     <button onclick="updateDailySetting('dailyReview', -10, 10, 100)" class="w-8 h-8 rounded-full flex items-center justify-center btn-press" style="background: rgba(255,255,255,0.05);">−</button>
-                    <span class="w-8 text-center font-bold" style="color: var(--accent-blue-light);">${settings.dailyReview}</span>
+                    <span id="dailyReviewDisplay" class="w-8 text-center font-bold" style="color: var(--accent-blue-light);">${settings.dailyReview}</span>
                     <button onclick="updateDailySetting('dailyReview', 10, 10, 100)" class="w-8 h-8 rounded-full flex items-center justify-center btn-press" style="background: rgba(255,255,255,0.05);">+</button>
                   </div>
                 </div>
