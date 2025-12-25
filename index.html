@@ -11313,8 +11313,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
     
     // 渲染学习中心
     function renderStudyCenter() {
-      const t = state.tutor;
-      if (!t || t.type !== ROLE_TYPES.TEACHER) {
+      const tutor = state.tutor;
+      if (!tutor || tutor.type !== ROLE_TYPES.TEACHER) {
         state.view = 'home';
         render();
         return '';
@@ -11347,11 +11347,11 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
               <span class="text-sm">${t('back')}</span>
             </button>
             <div class="flex items-center gap-4">
-              <div class="avatar-premium avatar-lg avatar-blue">${t.name.charAt(0)}</div>
+              <div class="avatar-premium avatar-lg avatar-blue">${tutor.name.charAt(0)}</div>
               <div>
-                <div class="text-xl font-bold">${t.name}</div>
-                <div style="color: var(--text-secondary);">${t.role}</div>
-                <div class="text-sm" style="color: var(--text-tertiary);">${t.personality}</div>
+                <div class="text-xl font-bold">${tutor.name}</div>
+                <div style="color: var(--text-secondary);">${tutor.role}</div>
+                <div class="text-sm" style="color: var(--text-tertiary);">${tutor.personality}</div>
               </div>
             </div>
           </div>
@@ -14728,14 +14728,14 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
     }
 
     function renderScenario() {
-      const t = state.tutor;
+      const tutor = state.tutor;
       const icons = {
         back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>`,
         home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
         mic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`,
       };
       const avatarColors = { 'profesor': 'amber', 'maria': 'rose', 'pedro': 'blue', 'sofia': 'pink', 'miguel': 'cyan', 'lucia': 'purple', 'ana': 'green', 'diego': 'blue' };
-      const avatarColor = avatarColors[t?.id] || 'blue';
+      const avatarColor = avatarColors[tutor?.id] || 'blue';
       
       return `
         <div class="h-full flex flex-col" style="background: var(--bg-primary);">
@@ -14757,11 +14757,11 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
               </button>
             </div>
             <div class="flex items-center gap-4">
-              <div class="avatar-premium avatar-lg avatar-${avatarColor}">${t.name.charAt(0)}</div>
+              <div class="avatar-premium avatar-lg avatar-${avatarColor}">${tutor.name.charAt(0)}</div>
               <div>
-                <div class="text-xl font-bold">${t.name} ${t.emoji}</div>
-                <div style="color: var(--text-secondary);">${t.role}</div>
-                <div class="text-sm" style="color: var(--text-tertiary);">${t.personality}</div>
+                <div class="text-xl font-bold">${tutor.name} ${tutor.emoji}</div>
+                <div style="color: var(--text-secondary);">${tutor.role}</div>
+                <div class="text-sm" style="color: var(--text-tertiary);">${tutor.personality}</div>
               </div>
             </div>
           </div>
@@ -14792,12 +14792,12 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
     }
 
     function renderChat() {
-      const t = state.tutor;
+      const tutor = state.tutor;
       const user = state.user;
-      const isCompanion = t?.type === ROLE_TYPES.COMPANION;
+      const isCompanion = tutor?.type === ROLE_TYPES.COMPANION;
       const moodDisplay = isCompanion ? getMoodDisplay(state.currentMood) : null;
       const avatarColors = { 'profesor': 'amber', 'maria': 'rose', 'pedro': 'blue', 'sofia': 'pink', 'miguel': 'cyan', 'lucia': 'purple', 'ana': 'green', 'diego': 'blue' };
-      const avatarColor = avatarColors[t?.id] || 'blue';
+      const avatarColor = avatarColors[tutor?.id] || 'blue';
       
       const icons = {
         back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>`,
@@ -14819,8 +14819,8 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
               </button>
               <div class="text-center">
                 <div class="flex items-center justify-center gap-2">
-                  <div class="avatar-premium avatar-sm avatar-${avatarColor}">${t.name.charAt(0)}</div>
-                  <span class="font-semibold">${t.name}</span>
+                  <div class="avatar-premium avatar-sm avatar-${avatarColor}">${tutor.name.charAt(0)}</div>
+                  <span class="font-semibold">${tutor.name}</span>
                   ${moodDisplay ? `<span class="text-lg animate-float" title="${moodDisplay.name}">${moodDisplay.emoji}</span>` : ''}
                 </div>
                 <div class="text-xs mt-0.5" style="color: var(--text-tertiary);">${state.scenario?.name || t('freeChat')} · ${user.level}</div>
@@ -14834,7 +14834,7 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
           <!-- 消息列表 -->
           <div id="messages" class="flex-1 overflow-auto p-4 custom-scrollbar">
             <div class="max-w-lg mx-auto space-y-4">
-              ${state.messages.map(msg => renderMessage(msg, t)).join('')}
+              ${state.messages.map(msg => renderMessage(msg, tutor)).join('')}
               
               ${state.isLoading ? `
                 <div class="flex justify-start fade-in">
