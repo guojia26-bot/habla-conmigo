@@ -1713,6 +1713,8 @@
         enterSpanishWord: '输入西班牙语单词...',
         translating: '正在翻译...',
         enterMeaning: '输入中文意思',
+        enterWordToSave: '输入要收藏的单词',
+        enterWordTip: '输入单词后点击翻译按钮',
         enterExample: '可以输入一个例句',
         enterNameHint: '输入你的名字或昵称',
         selectCompanionTitle: '选择伴侣/朋友',
@@ -2174,6 +2176,8 @@
         selectValidWord: '请选择有效的单词或短语',
         enterWord: '请输入单词',
         enterMeaning: '请输入中文意思',
+        enterWordToSave: '输入要收藏的单词',
+        enterWordTip: '输入单词后点击翻译按钮',
         chatCorrupted: '对话记录损坏，无法打开',
         importFailed: '导入失败：文件格式错误',
         fillWordAndMeaning: '请填写单词和中文意思',
@@ -2448,6 +2452,8 @@
         typeInSpanish: 'Type in Spanish...',
         enterWord: 'Enter word...',
         enterSpanishWord: 'Enter Spanish word...',
+        enterWordToSave: 'Enter word to save',
+        enterWordTip: 'Enter word then tap translate',
         translating: 'Translating...',
         enterMeaning: 'Enter meaning',
         enterExample: 'Enter an example sentence',
@@ -2911,6 +2917,8 @@
         selectValidWord: 'Please select a valid word or phrase',
         enterWord: 'Please enter a word',
         enterMeaning: 'Please enter the meaning',
+        enterWordToSave: 'Enter word to save',
+        enterWordTip: 'Enter word then tap translate',
         chatCorrupted: 'Chat record corrupted, cannot open',
         importFailed: 'Import failed: Invalid file format',
         fillWordAndMeaning: 'Please fill in word and meaning',
@@ -14912,7 +14920,13 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
                 <div class="p-5 space-y-4">
                   <div>
                     <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">${t('spanishWord')}</label>
-                    <input id="vocabModalWord" type="text" value="${state.vocabModal.word}" oninput="state.vocabModal.word=this.value" class="w-full p-3.5 rounded-xl text-lg font-semibold" style="background: var(--bg-tertiary); border: 1px solid var(--border-default);">
+                    <div class="flex gap-2">
+                      <input id="vocabModalWord" type="text" value="${state.vocabModal.word}" oninput="state.vocabModal.word=this.value" onkeydown="if(event.key==='Enter')translateVocabWord()" class="flex-1 p-3.5 rounded-xl text-lg font-semibold" style="background: var(--bg-tertiary); border: 1px solid var(--border-default);" placeholder="${t('enterWordToSave')}">
+                      <button onclick="translateVocabWord()" class="px-4 rounded-xl font-medium btn-press flex items-center gap-2" style="background: rgba(59,130,246,0.15); color: var(--accent-blue-light); white-space: nowrap;">
+                        🔍 ${t('translate')}
+                      </button>
+                    </div>
+                    <p class="text-xs mt-1.5" style="color: var(--text-tertiary);">💡 ${t('enterWordTip')}</p>
                   </div>
                   <div>
                     <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">${t('chineseMeaning')}</label>
@@ -14927,7 +14941,7 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
                   </div>
                 </div>
                 <div class="p-5 flex gap-3" style="border-top: 1px solid var(--border-subtle);">
-                  <button onclick="closeVocabModal()" class="flex-1 py-3.5 rounded-xl font-semibold btn-press" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); color: var(--text-secondary);"${t('cancel')}</button>
+                  <button onclick="closeVocabModal()" class="flex-1 py-3.5 rounded-xl font-semibold btn-press" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); color: var(--text-secondary);">${t('cancel')}</button>
                   <button onclick="saveVocabFromModal()" class="flex-1 py-3.5 rounded-xl font-semibold btn-press" style="background: linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(52,211,153,0.2) 100%); color: var(--accent-green);">${t('saveBtn')}</button>
                 </div>
               </div>
@@ -16115,41 +16129,52 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
     // ==================== 快速收藏词汇功能 ====================
     // 打开词汇收藏模态框
     function openVocabModalFromSelection(msgId) {
-      // 获取用户选中的文字
+      // 获取用户选中的文字（桌面端可能有效）
       const selection = window.getSelection();
-      let selectedText = selection.toString().trim();
-      
-      // 如果没有选中文字，提示用户
-      if (!selectedText) {
-        // 尝试获取整个单词（如果用户点击了某个位置）
-        alert(t('selectWordFirst'));
-        return;
-      }
+      let selectedText = selection ? selection.toString().trim() : '';
       
       // 清理选中的文字（去除标点符号）
-      selectedText = selectedText.replace(/[.,!?¡¿;:"()]/g, '').trim();
-      
-      if (!selectedText) {
-        alert(t('selectValidWord'));
-        return;
+      if (selectedText) {
+        selectedText = selectedText.replace(/[.,!?¡¿;:"()]/g, '').trim();
       }
       
       // 获取当前消息作为例句
       const msg = state.messages.find(m => m.id === msgId);
       const example = msg ? msg.text.substring(0, 100) : '';
       
-      // 设置模态框状态
+      // 设置模态框状态 - 无论是否有选中文字都打开模态框
       state.vocabModal = {
         show: true,
-        word: selectedText,
+        word: selectedText, // 可能为空，用户可以手动输入
         meaning: '',
         example: example,
-        isLoading: true
+        isLoading: false,
+        msgId: msgId // 保存消息ID用于后续操作
       };
       render();
       
-      // 自动翻译
-      autoTranslateWord(selectedText);
+      // 如果有选中的文字，自动翻译
+      if (selectedText) {
+        state.vocabModal.isLoading = true;
+        render();
+        autoTranslateWord(selectedText);
+      } else {
+        // 聚焦到单词输入框
+        setTimeout(() => {
+          const input = document.getElementById('vocabModalWord');
+          if (input) input.focus();
+        }, 100);
+      }
+    }
+    
+    // 手动输入单词后翻译
+    function translateVocabWord() {
+      const word = state.vocabModal.word.trim();
+      if (!word) return;
+      
+      state.vocabModal.isLoading = true;
+      render();
+      autoTranslateWord(word);
     }
     
     // 自动翻译单词
