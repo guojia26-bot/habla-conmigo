@@ -2096,6 +2096,8 @@
         markAsMastered: '标记为已掌握',
         backToHome: '返回首页',
         speakBtn: '朗读',
+        read: '朗读',
+        addToVocab: '收藏',
         translateBtn: '翻译',
         selectWordToSave: '选中单词后收藏',
         
@@ -2831,6 +2833,8 @@
         markAsMastered: 'Mark as mastered',
         backToHome: 'Back to home',
         speakBtn: 'Listen',
+        read: 'Listen',
+        addToVocab: 'Save',
         translateBtn: 'Translate',
         selectWordToSave: 'Select word to save',
         
@@ -9006,6 +9010,8 @@ REGLAS:
       grammarTransCache: {}, // msgId_grammar -> translation
       // 快速收藏词汇
       vocabModal: { show: false, word: '', meaning: '', example: '', isLoading: false },
+      // 消息工具栏展开状态（移动端点击显示）
+      expandedMsgId: null,
       // 闪卡复习
       flashcard: { 
         cards: [], // 要复习的单词列表
@@ -12310,7 +12316,7 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
         ? Math.round(totalCorrect / (totalCorrect + totalWrong) * 100) 
         : 0;
       
-      const last7Days = getLast7DaysData();
+      const last7Days = getWordSlash7DaysData();
       const maxValue = Math.max(...last7Days.map(d => d.total), 1);
       
       let totalNewLearned = 0, totalReviewed = 0;
@@ -12470,8 +12476,8 @@ ${grammarContext ? '2. 开始语法课的教学' : '2. 自然地带入场景'}
       `;
     }
     
-    // 获取最近7天数据
-    function getLast7DaysData() {
+    // 获取最近7天数据（斩单词报告用）
+    function getWordSlash7DaysData() {
       const result = [];
       const dayLabels = ['日', '一', '二', '三', '四', '五', '六'];
       
@@ -14981,28 +14987,35 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
               </div>
             ` : ''}
             
-            <div class="relative group">
-              <div id="msg-${msg.id}" class="p-4 rounded-2xl text-sm select-text transition-shadow ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}" style="background: ${isUser ? 'var(--accent-blue)' : 'var(--bg-tertiary)'}; color: ${isUser ? '#fff' : 'var(--text-primary)'}; ${!isUser ? 'border: 1px solid var(--border-subtle);' : ''}">
+            <div class="relative">
+              <!-- 消息气泡 -->
+              <div id="msg-${msg.id}" 
+                class="p-4 rounded-2xl text-sm select-text transition-shadow ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}" 
+                style="background: ${isUser ? 'var(--accent-blue)' : 'var(--bg-tertiary)'}; color: ${isUser ? '#fff' : 'var(--text-primary)'}; ${!isUser ? 'border: 1px solid var(--border-subtle);' : ''}">
                 ${msg.text}
               </div>
+              
+              <!-- AI消息工具栏 - 始终显示 -->
+              ${!isUser ? `
+                <div class="flex gap-2 mt-2" id="tools-${msg.id}">
+                  <button onclick="handleSpeakClick(${msg.id})" class="flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 btn-press text-xs font-medium" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); color: var(--text-secondary);">
+                    <span class="w-4 h-4">${icons.volume}</span>
+                    <span>${t('read')}</span>
+                  </button>
+                  <button onclick="handleTranslateClick(${msg.id})" class="flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 btn-press text-xs font-medium" style="background: ${showTrans ? 'rgba(59,130,246,0.15)' : 'var(--bg-tertiary)'}; border: 1px solid ${showTrans ? 'rgba(59,130,246,0.3)' : 'var(--border-subtle)'}; color: ${showTrans ? 'var(--accent-blue-light)' : 'var(--text-secondary)'};">
+                    <span class="w-4 h-4">${icons.globe}</span>
+                    <span>${t('translate')}</span>
+                  </button>
+                  <button onclick="openVocabModalFromSelection(${msg.id})" class="flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 btn-press text-xs font-medium" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); color: var(--text-secondary);">
+                    <span class="w-4 h-4">${icons.book}</span>
+                    <span>${t('addToVocab')}</span>
+                  </button>
+                </div>
+              ` : ''}
               
               ${!isUser && showTrans && translation ? `
                 <div class="mt-2 p-3.5 rounded-xl text-sm whitespace-pre-line fade-in" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--accent-blue-light);">
                   ${translation}
-                </div>
-              ` : ''}
-              
-              ${!isUser ? `
-                <div class="absolute -right-11 top-0 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onclick="handleSpeakClick(${msg.id})" class="w-8 h-8 rounded-xl flex items-center justify-center btn-press" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); color: var(--text-secondary);" title="${t('speakBtn')}">
-                    <span class="w-4 h-4">${icons.volume}</span>
-                  </button>
-                  <button onclick="handleTranslateClick(${msg.id})" class="w-8 h-8 rounded-xl flex items-center justify-center btn-press ${showTrans ? '' : ''}" style="background: ${showTrans ? 'rgba(59,130,246,0.15)' : 'var(--bg-tertiary)'}; border: 1px solid ${showTrans ? 'rgba(59,130,246,0.3)' : 'var(--border-subtle)'}; color: ${showTrans ? 'var(--accent-blue-light)' : 'var(--text-secondary)'};" title="${t('translateBtn')}">
-                    <span class="w-4 h-4">${icons.globe}</span>
-                  </button>
-                  <button onclick="openVocabModalFromSelection(${msg.id})" class="w-8 h-8 rounded-xl flex items-center justify-center btn-press" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); color: var(--text-secondary);" title="${t('selectWordToSave')}">
-                    <span class="w-4 h-4">${icons.book}</span>
-                  </button>
                 </div>
               ` : ''}
             </div>
