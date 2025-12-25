@@ -1134,6 +1134,28 @@
     .btn-press { transition: all 0.15s ease; }
     .btn-press:active { transform: scale(0.97); }
     
+    /* 可点击单词（用于收藏） */
+    .clickable-word {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin: -2px -4px;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      display: inline-block;
+    }
+    .clickable-word:hover {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--accent-blue-light);
+    }
+    .clickable-word:active {
+      background: rgba(59, 130, 246, 0.4);
+      transform: scale(0.95);
+    }
+    
     .card-interactive {
       transition: all 0.3s var(--ease-smooth);
     }
@@ -2168,6 +2190,10 @@
         // Alert消息
         microphonePermission: '请允许麦克风权限以使用语音输入',
         browserNotSupported: '您的浏览器不支持语音识别，请使用Chrome',
+        iosVoiceNotSupported: 'iOS设备暂不支持语音输入，请直接打字输入',
+        voiceError: '语音识别出错，请重试',
+        networkError: '网络错误，请检查网络连接',
+        tapWordToSave: '点击单词即可收藏',
         noWordsToLearn: '没有需要学习的单词了！',
         wrongBookEmpty: '错题集为空！',
         markStarredFirst: '请先标记一些重点词汇！',
@@ -2909,6 +2935,10 @@
         // Alert Messages
         microphonePermission: 'Please allow microphone access for voice input',
         browserNotSupported: 'Your browser doesn\'t support voice recognition. Please use Chrome',
+        iosVoiceNotSupported: 'Voice input is not supported on iOS. Please type instead',
+        voiceError: 'Voice recognition error. Please try again',
+        networkError: 'Network error. Please check your connection',
+        tapWordToSave: 'Tap any word to save',
         noWordsToLearn: 'No more words to learn!',
         wrongBookEmpty: 'Wrong words list is empty!',
         markStarredFirst: 'Please mark some words as starred first!',
@@ -9168,7 +9198,16 @@ REGLAS:
       };
       
       r.onerror = (e) => {
-        if (e.error === 'not-allowed') alert(t('microphonePermission'));
+        console.log('Speech recognition error:', e.error);
+        if (e.error === 'not-allowed') {
+          alert(t('microphonePermission'));
+        } else if (e.error === 'no-speech') {
+          // 用户没说话，不提示
+        } else if (e.error === 'network') {
+          alert(t('networkError'));
+        } else {
+          alert(t('voiceError'));
+        }
         state.isListening = false;
         render();
       };
@@ -9191,7 +9230,7 @@ REGLAS:
       
       state.isListening = !state.isListening;
       if (state.isListening) {
-        try { recognition.start(); } catch(e) {}
+        try { recognition.start(); } catch(e) { console.log('Start error:', e); }
       } else {
         try { recognition.stop(); } catch(e) {}
       }
@@ -14991,6 +15030,17 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
         book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
       };
       
+      // 将AI消息文本转换为可点击的单词
+      function makeWordsClickable(text, msgId) {
+        // 使用正则分割，保留标点和空格
+        // 使用data属性存储信息，更安全
+        return text.replace(/([a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+)/g, function(match) {
+          return '<span class="clickable-word" data-word="' + match + '" data-msgid="' + msgId + '" ontouchend="handleWordTap(event)" onclick="handleWordClick(event)">' + match + '</span>';
+        });
+      }
+      
+      const messageContent = !isUser ? makeWordsClickable(msg.text, msg.id) : msg.text;
+      
       return `
         <div class="flex ${isUser ? 'justify-end' : 'justify-start'} fade-in-up">
           <div class="max-w-[85%]">
@@ -15004,10 +15054,14 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
             <div class="relative">
               <!-- 消息气泡 -->
               <div id="msg-${msg.id}" 
-                class="p-4 rounded-2xl text-sm select-text transition-shadow ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}" 
+                class="p-4 rounded-2xl text-sm transition-shadow ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}" 
                 style="background: ${isUser ? 'var(--accent-blue)' : 'var(--bg-tertiary)'}; color: ${isUser ? '#fff' : 'var(--text-primary)'}; ${!isUser ? 'border: 1px solid var(--border-subtle);' : ''}">
-                ${msg.text}
+                ${messageContent}
               </div>
+              
+              ${!isUser ? `
+                <p class="text-xs mt-1 px-1" style="color: var(--text-tertiary);">💡 ${t('tapWordToSave')}</p>
+              ` : ''}
               
               <!-- AI消息工具栏 - 始终显示 -->
               ${!isUser ? `
@@ -16193,6 +16247,51 @@ ${t('longestStreakDays').replace('{count}', streak.longestStreak)}
       } catch (err) {
         state.vocabModal.isLoading = false;
         render();
+      }
+    }
+    
+    // 快速保存单词（点击单词触发）
+    function quickSaveWord(word, msgId) {
+      // 获取当前消息作为例句
+      const msg = state.messages.find(m => m.id === msgId);
+      const example = msg ? msg.text.substring(0, 100) : '';
+      
+      // 设置模态框状态
+      state.vocabModal = {
+        show: true,
+        word: word,
+        meaning: '',
+        example: example,
+        isLoading: true,
+        msgId: msgId
+      };
+      render();
+      
+      // 自动翻译
+      autoTranslateWord(word);
+    }
+    
+    // 处理单词点击（桌面端）
+    function handleWordClick(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const span = event.target;
+      const word = span.dataset.word;
+      const msgId = parseInt(span.dataset.msgid);
+      if (word && msgId) {
+        quickSaveWord(word, msgId);
+      }
+    }
+    
+    // 处理单词触摸（移动端）
+    function handleWordTap(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const span = event.target;
+      const word = span.dataset.word;
+      const msgId = parseInt(span.dataset.msgid);
+      if (word && msgId) {
+        quickSaveWord(word, msgId);
       }
     }
     
